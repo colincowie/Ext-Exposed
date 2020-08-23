@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="CRX Hunt" src="https://raw.githubusercontent.com/colincowie/CRX-Hunt/master/static/logo.png" height="140" />
+  <img alt="CRX Hunt" src="https://github.com/colincowie/CRX-Hunt/raw/master/static/logo.png" height="140" />
 </p>
 
 # CRX-Hunt

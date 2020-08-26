@@ -18,6 +18,7 @@
 - Run extension with proxy
 - Record extension network communications
 #### Query Extension Information
+- Search by extension, domain or IP address
 - Elasticsearch database
 #### Web UI
 - Python Flask web interface

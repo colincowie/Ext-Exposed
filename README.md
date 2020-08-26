@@ -4,6 +4,8 @@
   <b>CRX Hunt</b>
   <br>
   <i>A threat hunting platform for chrome extensions</i>
+  <br>
+  <img src="https://img.shields.io/github/last-commit/colincowie/CRX-Hunt"/> <img src="https://img.shields.io/github/repo-size/colincowie/CRX-Hunt"/>
 </p>
 
 

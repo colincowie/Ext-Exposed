@@ -4,7 +4,6 @@
   <b>CRX Hunt</b>
   <br>
   <i>A threat hunting platform for chrome extensions</i>
-
 </p>
 
 
@@ -24,3 +23,6 @@
 ## Requirements 
 - Elasticsearch
 - Python 3
+
+## Design
+<img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>

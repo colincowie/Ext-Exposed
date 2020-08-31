@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Extension report</h1>
+<ul class="list-group" style="padding-bottom:5px;">
+  <li class="list-group-item">Extension ID: {{id}}</li>
+  <li class="list-group-item">Name: {{name}}</li>
+  <li class="list-group-item">Users: {{users}}</li>
+</ul>
+<div class="container">
+  <div class="row">
+    <div class="col-sm">
+      Permissions ({{perms|count}}):
+      <br>
+      <ul class="list-group" style="padding-bottom:5px;">
+        {% for perm in perms%}
+        <li class="list-group-item">{{perm}}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="col-sm">
+      Static URLs ({{urls|count}}):
+      <div style="overflow-y: scroll; height:400px;">
+        <ul class="list-group" style="padding-bottom:5px;">
+          {% for url in urls %}
+            <li class="list-group-item font-small" style="font-size: 12px;">{{url}}</li>
+          {% endfor %}
+        </ul>
+    </div>
+
+  </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

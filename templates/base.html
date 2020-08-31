@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>CRX Hunt</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="{{ url_for('static', filename='css/simple-sidebar.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
+  <link href="{{ url_for('static', filename='css/bootstrap-theme.css') }}" rel="stylesheet" >
+
+
+</head>
+
+<body class = "bg-dark">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+    {% if messages %}
+      {% for message in get_flashed_messages() %}
+        <div class="alert alert-primary">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+          {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="bg-dark border-right" id="sidebar-wrapper">
+      <a href="/">
+      <div class="sidebar-heading"><img style="filter: invert(100%)" width="40" src="/static/logo.png"/>CRX Hunt</div>
+      </a>
+      <div class="list-group list-group-flush border-danger">
+        <a href="/" class="list-group-item list-group-item-action bg-dark text-light border-light">Search</a>
+        <a href="/hunt" class="list-group-item list-group-item-action bg-dark text-light border-light">Hunt</a>
+        <a href="/yara" class="list-group-item list-group-item-action bg-dark text-light border-light">Yara Signatures</a>
+        <a href="/status" class="list-group-item list-group-item-action bg-dark text-light border-light">Status</a>
+        <a href="/logout" class="list-group-item list-group-item-action bg-dark text-light border-light">Logout</a>
+      </div>
+      <div class="es_status">
+      {% if es_status == True %}
+        Elasticsearch Status:   <span style='color:green'>connected</span>
+      {% else %}
+        Elasticsearch Status:   <span style='color:red'>disconnected</span>
+      {% endif %}
+    </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+      <div class="container-fluid">
+        <div class="row">
+            <div class="center-block" style="width:800px;padding-left:8%;padding-top:10px;">
+
+                {% block content %} {% endblock %}
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+
+
+</body>
+
+</html>

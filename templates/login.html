@@ -1,0 +1,37 @@
+{% extends 'external.html' %}
+
+{% block content %}
+{% block body %}
+{% if session['logged_in'] %}
+
+You're logged in already!
+
+{% else %}
+<div class="container">
+  <br>
+  <br>
+  <div class="row">
+    <div class="col"><img style="filter: invert(100%)" width="70" src="/static/logo.png"/>CRX Hunt</div>
+</div>
+    <div class="w-100"></div>
+    <div class="col">  <div class="" >
+      <form action="/login" method="POST" style="padding:5px;">
+        <input type="username" name="username" placeholder="Username">
+        <br>
+        <input type="password" name="password" placeholder="Password">
+        <br>
+        <br>
+        <input type="submit" class="" value="Log in">
+      </form>
+      {% if message %}
+            <h4 style='color:red;'>{{ message }}</h4>
+      {% endif %}
+  </div>
+</div>
+</div>
+
+<br>
+
+{% endif %}
+{% endblock %}
+{% endblock %}

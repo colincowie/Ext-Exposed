@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type=text/javascript>
+        $(function() {
+          $('a#update_all').bind('click', function() {
+            $.getJSON('/update_all',
+                function(data) {
+                  window.alert("sometext");
+
+            });
+            return false;
+          });
+        });
+        $(function() {
+          $('a#update_urls').bind('click', function() {
+            $.getJSON('/update_urls',
+                function(data) {
+              //do nothing
+            });
+            return false;
+          });
+        });
+</script>
+
+<h1>Status Page</h1>
+<h4>Total extensions in database: {{total}}</h4>
+<form>
+    <a href=# id='update_all'><button onclick="alert('The extension data update has started. It may take up to 12 hours to finish.');" class='btn btn-primary'>Update all</button></a>
+    <a href=# id='update_urls'><button onclick="alert('The extension url update has started. It may take a few hours to finish.');" class='btn btn-primary'>Update URLS</button></a>
+</form>
+<div>update status:
+{{output}}
+</div>
+
+{% endblock %}

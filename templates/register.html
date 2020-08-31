@@ -1,0 +1,11 @@
+{% extends 'external.html' %}
+{% block content %}
+{% block body %}
+<h2>Register</h2>
+<form action="/nobotsplz/register/" method="POST">
+  <input type="username" name="username" placeholder="Username">
+  <input type="password" name="password" placeholder="Password">
+  <input type="submit" value="Log in">
+</form>
+{% endblock %}
+{% endblock %}

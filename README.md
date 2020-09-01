@@ -26,6 +26,7 @@
 ## Requirements 
 - Elasticsearch
 - Python 3
+- Webdriver
 
 ## Usage
 #### Install

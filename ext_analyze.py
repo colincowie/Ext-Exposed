@@ -1,4 +1,4 @@
-# @th3_protoCOL 
+# @th3_protoCOL
 import os, re, csv, time, jsbeautifier, requests, zipfile
 
 class EXT_Analyze():
@@ -50,9 +50,9 @@ class EXT_Analyze():
                         script = open(os.path.join(r, file), "r", encoding="utf8")
                         try:
                             content = jsbeautifier.beautify(script.read())
-                            # Todo: change the url extracting!
                             # This regex only matches with these protocols. adding a ? results in some false positives with javascript varibles
-                            matches = re.findall('(http://|ftp://|ws://|https://|file://)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?', content)
+                            matches = re.findall('(http://|ftp://|ws://|https://|ws://|file://)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?', content)
+                            #matches = re.findall(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))',content)
                             matches = list(dict.fromkeys(matches))
                             for url in matches:
                                 # Todo: upload to ES
@@ -70,8 +70,7 @@ class EXT_Analyze():
         print("\033[94m[+]\n[+]\033[00m Report on:  "+id+"\n\033[94m[+]\033[00m")
         print("[*] Found "+str(len(found_urls))+" URLs!")
         found_urls.sort()
-        for url in found_urls:
-            print("[*] "+ url)
+        print('\033[32m[!]\033[0m found a total of '+str(len(found_urls)))
 
     def run(self, id):
         self.download_ext(id)

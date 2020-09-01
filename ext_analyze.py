@@ -1,5 +1,6 @@
 # @th3_protoCOL
 import os, re, csv, time, jsbeautifier, requests, zipfile
+from tqdm import tqdm
 
 class EXT_Analyze():
     def __init__(self):
@@ -42,11 +43,11 @@ class EXT_Analyze():
         print("\033[93m[*]\033[00m Starting analysis on "+id)
         results = [['Extension ID, File, URL']]
         dir = os.path.abspath("output")
-        for r, d, f in os.walk(dir):
+        for r, d, f in  tqdm(os.walk(dir), unit='files'):
                 for file in f:
                     # Todo: add hash checks
                     if file.endswith(".js") or file.endswith(".json"):
-                        print("[*] Extrating links from "+str(file))
+                        #print("[*] Extrating links from "+str(file))
                         script = open(os.path.join(r, file), "r", encoding="utf8")
                         try:
                             content = jsbeautifier.beautify(script.read())
@@ -67,7 +68,7 @@ class EXT_Analyze():
                             print(e)
 
         found_urls = list(dict.fromkeys(found_urls))
-        print("\033[94m[+]\n[+]\033[00m Report on:  "+id+"\n\033[94m[+]\033[00m")
+        print("[+]\033[00m Finished:  "+id)
         print("[*] Found "+str(len(found_urls))+" URLs!")
         found_urls.sort()
         print('\033[32m[!]\033[0m found a total of '+str(len(found_urls)))

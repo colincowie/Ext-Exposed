@@ -58,10 +58,21 @@ class EXT_Sandbox():
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
 
             driver.get("chrome://extensions/?id="+id)
-            time.sleep(30)
-            #print(driver.page_source.encode("utf-8"))
-            print("\u001b[32m[+]\u001b Done\u001b[0m")
+            time.sleep(60)
             return True
+
+    def start_mitm(self):
+            print('[*] Starting mitmproxy on 127.0.0.1:8080')
+            options = Options(listen_host='127.0.0.1', listen_port=8080, http2=True)
+            m = DumpMaster(options, with_termlog=False, with_dumper=False)
+            config = ProxyConfig(options)
+            m.server = ProxyServer(config)
+            m.addons.add(MitmAddon())
+            # run mitmproxy in backgroud
+            loop = asyncio.get_event_loop()
+            t = threading.Thread( target=loop_in_thread, args=(loop,m) )
+            t.start()
+            return m
 
 # Addon class for Mitmproxy recording
 class MitmAddon(object):
@@ -82,19 +93,11 @@ def loop_in_thread(loop, m):
     m.run_loop(loop.run_forever)
 
 if __name__ == "__main__":
-    print('[*] Starting mitmproxy on 127.0.0.1:8080')
-    options = Options(listen_host='127.0.0.1', listen_port=8080, http2=True)
-    m = DumpMaster(options, with_termlog=False, with_dumper=False)
-    config = ProxyConfig(options)
-    m.server = ProxyServer(config)
-    m.addons.add(MitmAddon())
-    # run mitmproxy in backgroud
-    loop = asyncio.get_event_loop()
-    t = threading.Thread( target=loop_in_thread, args=(loop,m) )
-    t.start()
+    ext = input("[!] Please provide a chrome extension id: ")
     # Create instance of the sandbox class and run with an extension id
     box = EXT_Sandbox()
-    box.run("benjmhnicaokfjhdoolkkjiiccceigdm")
-    time.sleep(20)
-    print('Shutting down mitmproxy')
-    m.shutdown()
+    mitm = box.start_mitm()
+    box.run(ext)
+    time.sleep(60)
+    print('Shutting down mitmproxy...')
+    mitm.shutdown()

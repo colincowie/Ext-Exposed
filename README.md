@@ -28,10 +28,23 @@
 - Python 3
 
 ## Usage
+#### Install
+
+1. Create a new python virutal enviroment (option) 
+  - `python3 -m venv env`
+  - `source env/bin/activate`
+
+2. Install python requirements 
+  - `python3 -m pip install -r requirements.txt`
+
 ##### Static analysis (only urls currently)
+1. `python3 ext_analyze.py`
+2. Provide extension ID
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/analyze_demo.png"/>
 
-##### Dynamic analysis 
+##### Dynamic analysis (currently only logs to terminal)
+1. `python3 ext_sandbox.py`
+2. Provide extension ID
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/dynamic_demo.png"/>
 
 ## Design

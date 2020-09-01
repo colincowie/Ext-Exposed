@@ -27,6 +27,13 @@
 - Elasticsearch
 - Python 3
 
+## Usage
+##### Static analysis (only urls currently)
+<img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/analyze_demo.png"/>
+
+##### Dynamic analysis 
+<img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/dynamic_demo.png"/>
+
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>
 

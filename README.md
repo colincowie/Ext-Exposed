@@ -29,3 +29,20 @@
 
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>
+
+## Development Tracking 
+##### Dynamic
+- [x] Script intergration
+- [x] Run extension with proxy
+- [ ] Record extension network communications
+- [ ] Elasticsearch uploading
+##### Static
+- [x] Script intergration
+- [ ] Javascript URLs
+- [ ] Permissions
+- [ ] Extension Metadata
+- [ ] Elasticsearch uploading
+##### Front End
+- [ ] Extension Submitting
+- [ ] Search Autodetect or two tabs
+- [ ] Stats page information populating 

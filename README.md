@@ -38,6 +38,14 @@
 2. Install python requirements 
   - `python3 -m pip install -r requirements.txt`
 
+#### Elasticsearch setup
+1. Pull docker
+  - `docker pull docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
+2. Start a single docker node
+  - `docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
+3. Create a index for CRX Hunt
+  - `curl -X PUT "localhost:9200/crx?pretty"`
+  
 ##### Static analysis (only urls currently)
 1. `python3 ext_analyze.py`
 2. Provide extension ID

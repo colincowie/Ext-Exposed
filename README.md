@@ -51,7 +51,7 @@
 2. Provide extension ID
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/analyze_demo.png"/>
 
-##### Dynamic analysis (currently only logs to terminal)
+##### Dynamic analysis (saves request to "report/mitm_[extension_id])
 1. `python3 ext_sandbox.py`
 2. Provide extension ID
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/dynamic_demo.png"/>
@@ -63,7 +63,7 @@
 ##### Dynamic
 - [x] Script intergration
 - [x] Run extension with proxy
-- [ ] Record extension network communications
+- [x] Record extension network communications
 - [ ] Elasticsearch uploading
 ##### Static
 - [x] Script intergration

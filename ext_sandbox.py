@@ -67,7 +67,8 @@ class EXT_Sandbox():
             m = DumpMaster(options, with_termlog=False, with_dumper=False)
             config = ProxyConfig(options)
             m.server = ProxyServer(config)
-            m.addons.add(MitmAddon(output))
+            addon = MitmAddon(output)
+            m.addons.add(addon)
             # run mitmproxy in backgroud
             loop = asyncio.get_event_loop()
             t = threading.Thread( target=loop_in_thread, args=(loop,m) )
@@ -83,6 +84,9 @@ class MitmAddon(object):
     def request(self, flow):
         flow.request.headers["count"] = str(self.num)
         print("\033[0;35m[request] \033[0m"+flow.request.url)
+        # Save reques to data (format [VERB, url])
+        with open(self.output, 'a') as f:
+            f.write(str(flow.request.method) + ' ' + str(flow.request.url) + ' ' + '\n')
 
     def response(self, flow):
         self.num = self.num + 1
@@ -91,15 +95,13 @@ class MitmAddon(object):
         url = flow.request.url
         if not os.path.exists("reports"):
             os.makedirs("reports")
-         # Save reques to file
-        with open(self.output, 'a') as f:
-            f.write(str(flow.request.method) + ' ' + str(flow.request.url) + '\n')
+
+        with open(self.output+"_contents", 'a') as f:
+            f.write(str(flow.request.method) + ' ' + str(flow.request.url) +  '\n')
+            f.write("--------")
             for k, v in flow.request.headers.items():
-                f.write(str(k) + ': ' + str(v) + '\n')
                 f.write('\n' + str(flow.request.content.decode('utf-8')) + '\n')
-                f.write('---\n')
                 for k, v in flow.response.headers.items():
-                    f.write(str(k) + ': ' + str(v) + '\n')
                     f.write('\n' + str(flow.response.content.decode('utf-8')) + '\n')
 
 
@@ -113,6 +115,7 @@ if __name__ == "__main__":
     # Create instance of the sandbox class and run with an extension id
     box = EXT_Sandbox()
     output = "reports/mitm_"+ext
+    requests.put('http://localhost:9200/mitm')
     mitm = box.start_mitm(output)
     box.run(ext)
     time.sleep(60)

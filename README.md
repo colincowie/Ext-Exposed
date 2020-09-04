@@ -77,7 +77,8 @@ Saves request to `reports/mitm_[extension_id`
 - [ ] Extension Submitting
 - [ ] improved extension Reporting
 - [x] Search Autodetect or two tabs
-- [ ] Stats page information populating 
+- [x] Stats page information populating 
+- [ ] Stats page button improvement
 ##### Yara
 - [ ] Search output 
 - [ ] Web UI

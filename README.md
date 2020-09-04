@@ -51,10 +51,12 @@
 2. Provide extension ID
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/analyze_demo.png"/>
 
-##### Dynamic analysis (saves request to "report/mitm_[extension_id])
+##### Dynamic analysis
 1. `python3 ext_sandbox.py`
 2. Provide extension ID
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/dynamic_demo.png"/>
+
+Saves request to `reports/mitm_[extension_id`
 
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>

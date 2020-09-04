@@ -61,13 +61,13 @@ class EXT_Sandbox():
             time.sleep(60)
             return True
 
-    def start_mitm(self):
+    def start_mitm(self, output):
             print('[*] Starting mitmproxy on 127.0.0.1:8080')
             options = Options(listen_host='127.0.0.1', listen_port=8080, http2=True)
             m = DumpMaster(options, with_termlog=False, with_dumper=False)
             config = ProxyConfig(options)
             m.server = ProxyServer(config)
-            m.addons.add(MitmAddon())
+            m.addons.add(MitmAddon(output))
             # run mitmproxy in backgroud
             loop = asyncio.get_event_loop()
             t = threading.Thread( target=loop_in_thread, args=(loop,m) )
@@ -76,8 +76,9 @@ class EXT_Sandbox():
 
 # Addon class for Mitmproxy recording
 class MitmAddon(object):
-    def __init__(self):
+    def __init__(self, output_dir):
         self.num = 1
+        self.output = output_dir
 
     def request(self, flow):
         flow.request.headers["count"] = str(self.num)
@@ -86,6 +87,21 @@ class MitmAddon(object):
     def response(self, flow):
         self.num = self.num + 1
         flow.response.headers["count"] = str(self.num)
+
+        url = flow.request.url
+        if not os.path.exists("reports"):
+            os.makedirs("reports")
+         # Save reques to file
+        with open(self.output, 'a') as f:
+            f.write(str(flow.request.method) + ' ' + str(flow.request.url) + '\n')
+            for k, v in flow.request.headers.items():
+                f.write(str(k) + ': ' + str(v) + '\n')
+                f.write('\n' + str(flow.request.content.decode('utf-8')) + '\n')
+                f.write('---\n')
+                for k, v in flow.response.headers.items():
+                    f.write(str(k) + ': ' + str(v) + '\n')
+                    f.write('\n' + str(flow.response.content.decode('utf-8')) + '\n')
+
 
 # function used for proxy async - source: https://gist.github.com/BigSully/3da478792ee331cb2e5ece748393f8c4
 def loop_in_thread(loop, m):
@@ -96,7 +112,8 @@ if __name__ == "__main__":
     ext = input("[!] Please provide a chrome extension id: ")
     # Create instance of the sandbox class and run with an extension id
     box = EXT_Sandbox()
-    mitm = box.start_mitm()
+    output = "reports/mitm_"+ext
+    mitm = box.start_mitm(output)
     box.run(ext)
     time.sleep(60)
     print('Shutting down mitmproxy...')

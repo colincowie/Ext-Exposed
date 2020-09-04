@@ -67,11 +67,15 @@
 - [ ] Elasticsearch uploading
 ##### Static
 - [x] Script intergration
-- [ ] Javascript URLs
+- [x] Javascript URLs
 - [ ] Permissions
 - [ ] Extension Metadata
 - [ ] Elasticsearch uploading
 ##### Front End
 - [ ] Extension Submitting
-- [ ] Search Autodetect or two tabs
+- [ ] improved extension Reporting
+- [x] Search Autodetect or two tabs
 - [ ] Stats page information populating 
+##### Yara
+- [ ] Search output 
+- [ ] Web UI

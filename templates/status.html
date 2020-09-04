@@ -5,30 +5,49 @@
 <script type=text/javascript>
         $(function() {
           $('a#update_all').bind('click', function() {
-            $.getJSON('/update_all',
-                function(data) {
-                  window.alert("sometext");
+        //    $.getJSON('/update_all',
+              //  function(data) {
+                  window.alert("This button is not yet supported"");
 
-            });
+//            });
             return false;
           });
         });
         $(function() {
           $('a#update_urls').bind('click', function() {
-            $.getJSON('/update_urls',
-                function(data) {
+          //  $.getJSON('/update_urls',
+            //    function(data) {
               //do nothing
-            });
+        //    });
+          window.alert("This button is not yet supported");
             return false;
           });
         });
 </script>
 
 <h1>Status Page</h1>
-<h4>Total extensions in database: {{total}}</h4>
+<br>
+
+<div id="flat_bar">
+  <h4 id="flat_bar" h4>
+    Total extensions in database:&nbsp;&nbsp;&nbsp;&nbsp;</h4>
+    <div id="stat_box">{{es_total}}</div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<div id="flat_bar">
+  <h4 id="flat_bar">Total extensions on disk:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4>
+ <div id="stat_box">{{disk_total}}</div>
+</div>
+<br>
+<br>
+<br>
+<br>
 <form>
-    <a href=# id='update_all'><button onclick="alert('The extension data update has started. It may take up to 12 hours to finish.');" class='btn btn-primary'>Update all</button></a>
-    <a href=# id='update_urls'><button onclick="alert('The extension url update has started. It may take a few hours to finish.');" class='btn btn-primary'>Update URLS</button></a>
+    <a href=# id='update_all'><button onclick="alert('This button is not yet supported');" class='btn btn-primary'>Update all</button></a>
+    <a href=# id='update_urls'><button onclick="alert('This button is not yet supported');" class='btn btn-primary'>Update URLS</button></a>
 </form>
 <div>update status:
 {{output}}

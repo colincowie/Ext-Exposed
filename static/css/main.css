@@ -7,12 +7,45 @@
   bottom:0;
   color:grey;
 }
+#flat_bar {
+display: inline;
+   vertical-align: top;
+ }
+#stat_box {
+    /* Within a circle, centered text looks prettier. */
+  text-align : center;
+
+  padding : 0.5em;
+
+  /* The border will make the circle visible.
+     You could also use a background, as
+     backgrounds are clipped by border radius */
+  border : 0.2em solid #696969;
+
+  /* Let's make sure we have a square.
+     If it's not a square, we'll get an
+     ellipsis rather than a circle ;) */
+  width  : 50;
+  font-size: 36px;
+  height : 50;
+  color:black;
+  background-color: #778899;
+  /* and let's turn the square into a circle */
+  border-radius: 3%;
+  display: inline;
+  vertical-align: top;
+
+
+}
+
 .wrapper {
     display: block;
 }
 
 #sidebar.active {
     margin-left: -250px;
+    background: #f1d74c;
+    color: #ffffff;
 }
 #sidebar .sidebar-header {
     padding: 20px;

@@ -1,4 +1,4 @@
-import csv, re
+import csv, re, os
 import hashlib
 import argparse
 
@@ -9,6 +9,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from wtforms import StringField, PasswordField, SubmitField
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, flash, redirect, render_template, request, session ,url_for
+# import my python scripts for extensions
+from ext_sandbox import EXT_Sandbox
 
 class LoginForm(FlaskForm):
     username = StringField('Username')
@@ -36,7 +38,7 @@ class User(db.Model):
         self.password = password
 
 
-@app.route('/')
+@app.route('/hunt')
 def home():
     """ Session control"""
     if not session.get('logged_in'):
@@ -48,7 +50,8 @@ def home():
             es_status = False
         else:
             es_status = True
-        return render_template("index.html",es_status=es_status)
+        return render_template("hunt.html",es_status=es_status)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Login Form"""
@@ -67,8 +70,6 @@ def login():
             return redirect(url_for('home'))
         else:
             return render_template('login.html',message='Invalid Login')
-
-
 
 @app.route('/nobotsplz/register/', methods=['GET', 'POST'])
 def register():
@@ -108,6 +109,8 @@ def search():
             es_status = True
         # Get search query
         keyword = request.form['keyword']
+        if "chrome.google.com/webstore/detail/" in keyword:
+            flash("Starting scan extension: ")
         # build search for elasticsearch
         search_object = {'query': {'query_string': {'query': keyword}}}
         # query es
@@ -178,9 +181,18 @@ def status():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
         search = {'query': {'match': {'name': '*'}}}
-        res = es.search(index="crx", doc_type="ext", body=search,size=0)
-        return render_template('status.html', total=res['_shards']['total'])
+        if es.indices.exists(index="index"):
+            res = es.search(index="crx", doc_type="ext", body=search,size=0)
+            es_total=res['_shards']['total']
+        else:
+            es_total=0
+        disk_total = len(next(os.walk('output'))[1])
+        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total)
 
 @app.route('/update_all')
 def update_all():
@@ -199,19 +211,27 @@ def update_urls():
 
 
 
-@app.route('/hunt')
+@app.route('/')
 def hunt():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
-        return render_template('hunt.html')
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+        return render_template('index.html',es_status=True)
 
 @app.route('/yara')
 def yara():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
-        return render_template('yara.html')
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+        return render_template('yara.html',es_status=es_status)
 
 def load_es():
     print("[!] Deleteing old data")

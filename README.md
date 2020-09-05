@@ -23,7 +23,7 @@
 #### Web UI
 - Python Flask web interface
 
-## Requirements 
+## Requirements
 - Elasticsearch
 - Python 3
 - Webdriver
@@ -31,11 +31,11 @@
 ## Usage
 #### Install
 
-1. Create a new python virutal enviroment (option) 
+1. Create a new python virutal enviroment (option)
   - `python3 -m venv env`
   - `source env/bin/activate`
 
-2. Install python requirements 
+2. Install python requirements
   - `python3 -m pip install -r requirements.txt`
 
 #### Elasticsearch setup
@@ -45,7 +45,7 @@
   - `docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
 3. Create a index for CRX Hunt
   - `curl -X PUT "localhost:9200/crx?pretty"`
-  
+
 ##### Static analysis (only urls currently)
 1. `python3 ext_analyze.py`
 2. Provide extension ID
@@ -63,7 +63,7 @@ Saves request and responses to `reports/extension_id/mitm_content.txt`
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>
 
-## Development Tracking 
+## Development Tracking
 ##### Dynamic
 - [x] Script intergration
 - [x] Run extension with proxy
@@ -73,15 +73,15 @@ Saves request and responses to `reports/extension_id/mitm_content.txt`
 ##### Static
 - [x] Script intergration
 - [x] Javascript URLs
-- [ ] Permissions
+- [x] Permissions
 - [ ] Extension Metadata
 - [ ] Elasticsearch uploading
 ##### Front End
 - [ ] Extension Submitting
 - [ ] improved extension Reporting
 - [x] Search Autodetect or two tabs
-- [x] Stats page information populating 
+- [x] Stats page information populating
 - [ ] Stats page button improvement
 ##### Yara
-- [ ] Search output 
+- [ ] Search output
 - [ ] Web UI

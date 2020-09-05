@@ -46,37 +46,38 @@ class EXT_Analyze():
 
         print("\033[93m[*]\033[00m Starting analysis on "+id)
         results = [['Extension ID, File, URL']]
-        dir = os.path.abspath("output/"+id)
-        for r, d, f in  tqdm(os.walk(dir), unit='files'):
-                for file in f:
-                    # Todo: add hash checks
-                    if file.endswith(".js") or file.endswith(".json"):
-                        #print("[*] Extrating links from "+str(file))
-                        script = open(os.path.join(r, file), "r", encoding="utf8")
-                        try:
-                            content = jsbeautifier.beautify(script.read())
-                            # This regex only matches with these protocols. adding a ? results in some false positives with javascript varibles
-                            matches = re.findall('(http://|ftp://|ws://|https://|ws://|file://)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?', content)
-                            #matches = re.findall(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))',content)
-                            matches = list(dict.fromkeys(matches))
-                            for url in matches:
-                                # Todo: upload to ES
-                                # The regex returns a tuplet so some things are done to clear the url
-                                found_urls.append((' '.join(url)).replace(" ", ""))
-                                with open('reports/'+id+'/static_urls.csv','a', newline='') as csvfile:
-                                    obj=csv.writer(csvfile)
-                                    obj.writerow([str(id), str(file), str(url)])
-                                    csvfile.close()
-                            return found_urls
-                        except Exception as e:
-                            print("\033[91m[-] Error: \033[1;0mcould not decode.")
-                            print(e)
+        ext_dir = os.path.join("output", id)
+        files = os.scandir(ext_dir)
+        for (root,dirs,files) in os.walk(ext_dir, topdown=True):
+            # Scan files in  dirs
+            for file in files:
+                # Todo: add hash checks
+                if file.endswith(".js") or file.endswith(".json"):
+                    print("[*] Extrating links from "+str(file))
+                    script = open(os.path.join(root,file), "r", encoding="utf8")
+                    try:
+                        content = jsbeautifier.beautify(script.read())
+                        # This regex only matches with these protocols. adding a ? results in some false positives with javascript varibles
+                        matches = re.findall('(http://|ftp://|ws://|https://|ws://|file://)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?', content)
+                        #matches = re.findall(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))',content)
+                        matches = list(dict.fromkeys(matches))
+                        for url in matches:
+                            # Todo: upload to ES
+                            # The regex returns a tuplet so some things are done to clear the url
+                            found_urls.append((' '.join(url)).replace(" ", ""))
+                            with open('reports/'+id+'/static_urls.csv','a', newline='') as csvfile:
+                                obj=csv.writer(csvfile)
+                                obj.writerow([str(id), str(file),(' '.join(url)).replace(" ", "")])
+                                csvfile.close()
+                    except Exception as e:
+                        print("\033[91m[-] Error: \033[1;0mcould not decode.")
+                        print(e)
 
+        return found_urls
         found_urls = list(dict.fromkeys(found_urls))
         print("[+]\033[00m Finished:  "+id)
-        print("[*] Found "+str(len(found_urls))+" URLs!")
         found_urls.sort()
-        print('\033[32m[!]\033[0m found a total of '+str(len(found_urls)))
+        print('\033[32m[!]\033[0m Total URLS: '+str(len(found_urls)))
 
     def get_perms(self, id):
         # get perms

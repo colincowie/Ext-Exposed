@@ -1,5 +1,5 @@
 # @th3_protoCOL
-import os, re, csv, time, jsbeautifier, requests, zipfile
+import os, re, csv, time, json, jsbeautifier, requests, zipfile
 from tqdm import tqdm
 
 class EXT_Analyze():
@@ -39,10 +39,14 @@ class EXT_Analyze():
 
     def get_urls(self, id):
         found_urls = []
+        if not os.path.exists("reports"):
+            os.makedirs("reports")
+        if not os.path.exists("reports/"+id+"/"):
+            os.makedirs("reports/"+id+"/")
 
         print("\033[93m[*]\033[00m Starting analysis on "+id)
         results = [['Extension ID, File, URL']]
-        dir = os.path.abspath("output")
+        dir = os.path.abspath("output/"+id)
         for r, d, f in  tqdm(os.walk(dir), unit='files'):
                 for file in f:
                     # Todo: add hash checks
@@ -59,10 +63,11 @@ class EXT_Analyze():
                                 # Todo: upload to ES
                                 # The regex returns a tuplet so some things are done to clear the url
                                 found_urls.append((' '.join(url)).replace(" ", ""))
-                                with open('results.csv','a', newline='') as csvfile:
+                                with open('reports/'+id+'/static_urls.csv','a', newline='') as csvfile:
                                     obj=csv.writer(csvfile)
-                                    obj.writerow([str(id),str(file), (' '.join(url)).replace(" ", ""), str(id)])
+                                    obj.writerow([str(id), str(file), str(url)])
                                     csvfile.close()
+                            return found_urls
                         except Exception as e:
                             print("\033[91m[-] Error: \033[1;0mcould not decode.")
                             print(e)
@@ -73,6 +78,22 @@ class EXT_Analyze():
         found_urls.sort()
         print('\033[32m[!]\033[0m found a total of '+str(len(found_urls)))
 
+    def get_perms(self, id):
+        # get perms
+        file_path = 'output/'+id+'/manifest.json'
+        perms = []
+        with open(file_path,'r') as manifest:
+            data = None
+            data = json.load(manifest)
+            #print("Data loading error")
+            if data is not None:
+                if 'permissions' not in data:
+                    print("No perms found ")
+                    perms =  None
+                else:
+                    perms = data['permissions']
+        return perms
+
     def run(self, id):
         self.download_ext(id)
         self.get_urls(id)
@@ -81,3 +102,5 @@ if __name__ == "__main__":
     ext = input("[!] Please provide a chrome extension id: ")
     ext_scan = EXT_Analyze()
     ext_scan.run(ext)
+    print("[*] Permissions: ")
+    print(ext_scan.get_perms(ext))

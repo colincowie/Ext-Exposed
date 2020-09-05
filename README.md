@@ -56,7 +56,9 @@
 2. Provide extension ID
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/dynamic_demo.png"/>
 
-Saves request to `reports/mitm_[extension_id`
+Saves URLs to `reports/extension_id/mitm_urls.txt`
+
+Saves request and responses to `reports/extension_id/mitm_content.txt`
 
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>
@@ -66,6 +68,7 @@ Saves request to `reports/mitm_[extension_id`
 - [x] Script intergration
 - [x] Run extension with proxy
 - [x] Record extension network communications
+- [ ] Options
 - [ ] Elasticsearch uploading
 ##### Static
 - [x] Script intergration

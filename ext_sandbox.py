@@ -85,7 +85,9 @@ class MitmAddon(object):
         flow.request.headers["count"] = str(self.num)
         print("\033[0;35m[request] \033[0m"+flow.request.url)
         # Save reques to data (format [VERB, url])
-        with open(self.output, 'a') as f:
+        output = self.output+"mitm_urls.txt"
+        print(output)
+        with open(output, 'a') as f:
             f.write(str(flow.request.method) + ' ' + str(flow.request.url) + ' ' + '\n')
 
     def response(self, flow):
@@ -93,10 +95,9 @@ class MitmAddon(object):
         flow.response.headers["count"] = str(self.num)
 
         url = flow.request.url
-        if not os.path.exists("reports"):
-            os.makedirs("reports")
 
-        with open(self.output+"_contents", 'a') as f:
+        output = self.output+"mitm_content.txt"
+        with open(output, 'a') as f:
             f.write(str(flow.request.method) + ' ' + str(flow.request.url) +  '\n')
             f.write("--------")
             for k, v in flow.request.headers.items():
@@ -114,7 +115,11 @@ if __name__ == "__main__":
     ext = input("[!] Please provide a chrome extension id: ")
     # Create instance of the sandbox class and run with an extension id
     box = EXT_Sandbox()
-    output = "reports/mitm_"+ext
+    if not os.path.exists("reports"):
+        os.makedirs("reports")
+    if not os.path.exists("reports/"+ext+"/"):
+        os.makedirs("reports/"+ext+"/")
+    output = "reports/"+ext+"/"
     requests.put('http://localhost:9200/mitm')
     mitm = box.start_mitm(output)
     box.run(ext)

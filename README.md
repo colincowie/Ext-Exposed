@@ -64,24 +64,26 @@ Saves request and responses to `reports/extension_id/mitm_content.txt`
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>
 
 ## Development Tracking
+##### Priority
+- [ ] improved extension reporting
+- [ ] update requirements.txt
 ##### Dynamic
-- [x] Script intergration
-- [x] Run extension with proxy
-- [x] Record extension network communications
 - [ ] Options
 - [ ] Elasticsearch uploading
+- [x] Script integration
+- [x] Run extension with proxy
+- [x] Record extension network communications
 ##### Static
-- [x] Script intergration
+- [x] Script integration
 - [x] Javascript URLs
 - [x] Permissions
-- [ ] Extension Metadata
-- [ ] Elasticsearch uploading
+- [x] Download count
+- [x] Elasticsearch uploading
 ##### Front End
-- [ ] Extension Submitting
-- [ ] improved extension Reporting
+- [ ] Stats page buttons?
+- [x] Extension Submitting
 - [x] Search Autodetect or two tabs
 - [x] Stats page information populating
-- [ ] Stats page button improvement
 ##### Yara
 - [ ] Search output
 - [ ] Web UI

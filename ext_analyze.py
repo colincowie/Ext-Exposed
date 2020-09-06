@@ -1,6 +1,7 @@
 # @th3_protoCOL
-import os, re, csv, time, json, jsbeautifier, requests, zipfile
+import os, re, csv, time, json, jsbeautifier, requests, zipfile, urllib
 from tqdm import tqdm
+from bs4 import BeautifulSoup
 
 class EXT_Analyze():
     def __init__(self):
@@ -53,7 +54,7 @@ class EXT_Analyze():
             for file in files:
                 # Todo: add hash checks
                 if file.endswith(".js") or file.endswith(".json"):
-                    print("[*] Extrating links from "+str(file))
+                    #print("[*] Extrating links from "+str(file))
                     script = open(os.path.join(root,file), "r", encoding="utf8")
                     try:
                         content = jsbeautifier.beautify(script.read())
@@ -72,12 +73,9 @@ class EXT_Analyze():
                     except Exception as e:
                         print("\033[91m[-] Error: \033[1;0mcould not decode.")
                         print(e)
-
+        print('\033[32m[!]\033[0m Total URLs found: '+str(len(found_urls)))
         return found_urls
-        found_urls = list(dict.fromkeys(found_urls))
-        print("[+]\033[00m Finished:  "+id)
-        found_urls.sort()
-        print('\033[32m[!]\033[0m Total URLS: '+str(len(found_urls)))
+
 
     def get_perms(self, id):
         # get perms
@@ -95,13 +93,38 @@ class EXT_Analyze():
                     perms = data['permissions']
         return perms
 
+    def get_downloads(self, id):
+        ext_page = None
+        # Google redirects as long as you have the id!
+        url = "https://chrome.google.com/webstore/detail/z/"+id
+        try:
+            ext_page = requests.get(url)
+        except Exception as e:
+            print("\033[91m[-] Error: \033[1;0m")
+            print(e)
+            return None
+        # set up soup for some parsing
+        soup = BeautifulSoup(ext_page.content,features="lxml")
+        # Parse the <meta> tag for the exact number, remove junk characters and round it.
+        download_tag = soup.find(itemprop="interactionCount")
+        if download_tag is not None:
+            download_tag = download_tag.get("content")
+            download_tag = download_tag.rstrip()
+            download_count = round(float(download_tag.rsplit(':',1)[1].replace(',','').replace('+','').replace('.','')))
+        else:
+            download_count = 0
+        return download_count
+
+
     def run(self, id):
         self.download_ext(id)
-        self.get_urls(id)
+        urls = self.get_urls(id)
+        return urls
 
 if __name__ == "__main__":
     ext = input("[!] Please provide a chrome extension id: ")
     ext_scan = EXT_Analyze()
+    print("[*] Total Downloads: "+str(ext_scan.get_downloads(ext)))
     ext_scan.run(ext)
     print("[*] Permissions: ")
     print(ext_scan.get_perms(ext))

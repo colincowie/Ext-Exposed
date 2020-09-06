@@ -8,9 +8,17 @@ from mitmproxy.proxy.server import ProxyServer
 from mitmproxy.tools.dump import DumpMaster
 
 class EXT_Sandbox():
-    def __init__(self):
+    def __init__(self,ext_id,time):
+        self.ext_id = ext_id
+        self.time = time
         if not os.path.exists('output'):
             os.makedirs('output')
+        if not os.path.exists("reports"):
+            os.makedirs("reports")
+        if not os.path.exists("reports/"+self.ext_id+"/"):
+            os.makedirs("reports/"+self.ext_id+"/")
+
+
         pass
 
     def download_ext(self, id):
@@ -42,7 +50,10 @@ class EXT_Sandbox():
             print("[-] Error! Status Code: "+str(r.status_code))
             return False
 
-    def run(self, id):
+    def run(self):
+        id = self.ext_id
+        requests.put('http://localhost:9200/mitm')
+        mitm = self.start_mitm()
         ext_download = self.download_ext(id)
         if ext_download:
             print("[*] Creating chrome webdriver")
@@ -58,35 +69,39 @@ class EXT_Sandbox():
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
 
             driver.get("chrome://extensions/?id="+id)
-            time.sleep(60)
+            print("[*] Sleeping while extension is running")
+            time.sleep(self.time)
+            print('[*] Shutting down mitmproxy...')
+            mitm.shutdown()
             return True
 
-    def start_mitm(self, output):
+    def start_mitm(self):
+            asyncio.set_event_loop(asyncio.new_event_loop())
             print('[*] Starting mitmproxy on 127.0.0.1:8080')
             options = Options(listen_host='127.0.0.1', listen_port=8080, http2=True)
             m = DumpMaster(options, with_termlog=False, with_dumper=False)
             config = ProxyConfig(options)
             m.server = ProxyServer(config)
-            addon = MitmAddon(output)
+            addon = MitmAddon(self.ext_id)
             m.addons.add(addon)
             # run mitmproxy in backgroud
-            loop = asyncio.get_event_loop()
+            loop = asyncio.new_event_loop()
             t = threading.Thread( target=loop_in_thread, args=(loop,m) )
             t.start()
             return m
 
 # Addon class for Mitmproxy recording
 class MitmAddon(object):
-    def __init__(self, output_dir):
+    def __init__(self,ext_id):
+        self.ext_id = ext_id
         self.num = 1
-        self.output = output_dir
 
     def request(self, flow):
+        output = "reports/"+self.ext_id+"/mitm_urls.txt"
         flow.request.headers["count"] = str(self.num)
         print("\033[0;35m[request] \033[0m"+flow.request.url)
         # Save reques to data (format [VERB, url])
-        output = self.output+"mitm_urls.txt"
-        print(output)
+
         with open(output, 'a') as f:
             f.write(str(flow.request.method) + ' ' + str(flow.request.url) + ' ' + '\n')
 
@@ -96,7 +111,7 @@ class MitmAddon(object):
 
         url = flow.request.url
 
-        output = self.output+"mitm_content.txt"
+        output = "reports/"+self.ext_id+"/mitm_content.txt"
         with open(output, 'a') as f:
             f.write(str(flow.request.method) + ' ' + str(flow.request.url) +  '\n')
             f.write("--------")
@@ -114,15 +129,5 @@ def loop_in_thread(loop, m):
 if __name__ == "__main__":
     ext = input("[!] Please provide a chrome extension id: ")
     # Create instance of the sandbox class and run with an extension id
-    box = EXT_Sandbox()
-    if not os.path.exists("reports"):
-        os.makedirs("reports")
-    if not os.path.exists("reports/"+ext+"/"):
-        os.makedirs("reports/"+ext+"/")
-    output = "reports/"+ext+"/"
-    requests.put('http://localhost:9200/mitm')
-    mitm = box.start_mitm(output)
-    box.run(ext)
-    time.sleep(60)
-    print('Shutting down mitmproxy...')
-    mitm.shutdown()
+    box = EXT_Sandbox(ext, 60)
+    box.run()

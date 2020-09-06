@@ -1,6 +1,7 @@
 import csv, re, os
 import hashlib
 import argparse
+import requests
 
 from flask_wtf import FlaskForm
 from elasticsearch import Elasticsearch
@@ -9,23 +10,28 @@ from sqlalchemy.ext.declarative import declarative_base
 from wtforms import StringField, PasswordField, SubmitField
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, flash, redirect, render_template, request, session ,url_for
-# import my python scripts for extensions
-from ext_sandbox import EXT_Sandbox
 
-class LoginForm(FlaskForm):
-    username = StringField('Username')
-    password = PasswordField('Password')
-    submit = SubmitField('Submit')
+import redis
+from rq import Queue
+
+# import my python scripts for extensions
+from ext_sandbox import EXT_Sandbox, sandbox_run
+from ext_analyze import EXT_Analyze
 
 app = Flask(__name__)
 es = Elasticsearch()
-
+r = redis.Redis()
+q = Queue(connection=r)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
 db = SQLAlchemy(app)
 Base = declarative_base()
 Base.query = db.session.query_property()
 
+class LoginForm(FlaskForm):
+    username = StringField('Username')
+    password = PasswordField('Password')
+    submit = SubmitField('Submit')
 
 class User(db.Model):
     """ Create user table"""
@@ -37,9 +43,8 @@ class User(db.Model):
         self.username = username
         self.password = password
 
-
 @app.route('/hunt')
-def home():
+def hunt():
     """ Session control"""
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -95,6 +100,59 @@ def logout():
     session['logged_in'] = False
     return redirect(url_for('home'))
 
+@app.route('/scan', methods=['POST'])
+def scan():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    elif not es:
+        return "Elasticsearch database error"
+    else:
+        if not es.ping():
+            flash('Error: The elasticsearch database is not connected.')
+            return redirect(url_for('home'))
+        else:
+            es_status = True
+        # Get search query
+        keyword = request.form['keyword']
+        # get ext id
+        ext_id = re.findall('[a-z]{32}',keyword)     # Parse the extension id from url
+        ext_id = ext_id[0]
+        # Static Analysis
+        print("[!] Queuing sandbox for "+ext_id)
+        ext_scan = EXT_Analyze()
+        ext_downloads = ext_scan.get_downloads(ext_id)
+        ext_urls = ext_scan.run(ext_id)
+        ext_perms = ext_scan.get_perms(ext_id)
+        ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
+        try:
+            es.indices.create(index='crx')
+        except:
+            pass
+        body = {
+        'ext_id':ext_id,
+        'name':ext_name,
+        'users':ext_downloads,
+        'permissions':ext_perms,
+        'urls':ext_urls
+        }
+        print("[+] Static analysis results:\n"+str(body))
+        try:
+            es.index(index='crx',body=body)
+            print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_name.rstrip())
+        except:
+            print("Failed to import ")
+
+        # Sandbox
+        time = 60
+        jobs = q.jobs
+        box = EXT_Sandbox(ext_id, time)
+        job = q.enqueue(sandbox_run, box)
+        print("[!] Extension enqueued at "+str(job.enqueued_at)+" with job id: "+str(job.id))
+
+
+        return render_template('index.html', es_status=es_status)
+
+
 @app.route('/search', methods=['POST'])
 def search():
     if not session.get('logged_in'):
@@ -109,12 +167,10 @@ def search():
             es_status = True
         # Get search query
         keyword = request.form['keyword']
-        if "chrome.google.com/webstore/detail/" in keyword:
-            flash("Starting scan extension: ")
         # build search for elasticsearch
         search_object = {'query': {'query_string': {'query': keyword}}}
         # query es
-        res = es.search(index="crx", doc_type="ext", body=search_object,size=1000)
+        res = es.search(index="crx", body=search_object,size=1000)
         exts = []
         for hit in res['hits']['hits']:
             row = []
@@ -135,7 +191,7 @@ def search():
         for ext in exts:
             if ext not in ext_data:
                 ext_search = {'query': {'match': {'name': ext}}}
-                ext_res = es.search(index="crx", doc_type="ext", body=ext_search)
+                ext_res = es.search(index="crx", body=ext_search)
                 hits = []
                 for hit in ext_res['hits']['hits']:
                     if len(hits) < 1:
@@ -156,7 +212,7 @@ def report(ext):
         # build search for elasticsearch
         search_object = {'query': {'match': {'extension': ext}}}
         # query es for urls
-        res = es.search(index="intel", doc_type="urls", body=search_object)
+        res = es.search(index="intel", body=search_object)
         exts = []
         urls = []
         for hit in res['hits']['hits']:
@@ -166,7 +222,7 @@ def report(ext):
         print(urls)
 
         ext_search = {'query': {'match': {'name': ext}}}
-        ext_res = es.search(index="crx", doc_type="ext", body=ext_search)
+        ext_res = es.search(index="crx", body=ext_search)
         for hit in ext_res['hits']['hits']:
             if ext == hit['_source']['name']:
                 print("found: "+hit['_source']['ext_id'])
@@ -186,8 +242,8 @@ def status():
         else:
             es_status = True
         search = {'query': {'match': {'name': '*'}}}
-        if es.indices.exists(index="index"):
-            res = es.search(index="crx", doc_type="ext", body=search,size=0)
+        if es.indices.exists(index="crx"):
+            res = es.search(index="crx", body=search,size=0)
             es_total=res['_shards']['total']
         else:
             es_total=0
@@ -209,10 +265,8 @@ def update_urls():
     else:
         print("first: update urls list via webstore.py")
 
-
-
 @app.route('/')
-def hunt():
+def home():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
@@ -249,7 +303,7 @@ def load_es():
             'name':row[1],
             'users':row[2]
             }
-            es.index(index='crx',doc_type='ext',body=body)
+            es.index(index='crx',body=body)
 
     print("[*] Loading url data (results.csv) into elasticsearch...")
     # load exts and urls

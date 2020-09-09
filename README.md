@@ -1,11 +1,11 @@
 <p align="center">
-  <img alt="CRX Hunt" src="https://github.com/colincowie/CRX-Hunt/raw/master/static/logo.png" height="140" />
+  <img alt="Ext Exposed" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/logo.png" height="140" />
   <br>
-  <b>CRX Hunt</b>
+  <b>Ext Exposed</b>
   <br>
   <i>A threat hunting platform for chrome extensions</i>
   <br>
-  <img src="https://img.shields.io/github/last-commit/colincowie/CRX-Hunt"/> <img src="https://img.shields.io/github/repo-size/colincowie/CRX-Hunt"/>
+  <img src="https://img.shields.io/github/last-commit/colincowie/Ext-Exposed"/> <img src="https://img.shields.io/github/repo-size/colincowie/Ext-Exposed"/>
 </p>
 
 

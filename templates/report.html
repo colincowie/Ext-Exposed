@@ -27,6 +27,33 @@
           {% endfor %}
         </ul>
     </div>
+    <div class="col-sm">
+      Sandbox Runs ({{sandboxs|count}}):
+      <div style="overflow-y: scroll; height:400px;">
+        <ul class="list-group" style="padding-bottom:5px;">
+          {% for sandbox in sandboxs %}
+            <li class="list-group-item font-small" style="font-size: 12px;">
+              <table>
+                  <thead>
+                    <tr>
+                      <th>Start Time</th>
+                      <th>Time Limit</th>
+                      <th>URLs</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>{{sandbox['_source']['start_time']}}</td>
+                      <td> {{sandbox['_source']['time_limit']}}</td>
+                      <td>{{sandbox['_source']['urls']|count}}</td>
+                    </tr>
+                  </tbody>
+                  </table>
+            </li>
+          {% endfor %}
+        </ul>
+    </div>
+
 
   </div>
 </div>

@@ -46,6 +46,12 @@
 3. Create a index for CRX Hunt
   - `curl -X PUT "localhost:9200/crx?pretty"`
 
+#### Redis setup
+1. run redis server
+  - `redis-server`
+2. run rq working in project directory
+  - `rq worker`
+
 ##### Static analysis (only urls currently)
 1. `python3 ext_analyze.py`
 2. Provide extension ID
@@ -69,17 +75,19 @@ Saves request and responses to `reports/extension_id/mitm_content.txt`
 - [ ] update requirements.txt
 ##### Dynamic
 - [ ] Options
-- [ ] Elasticsearch uploading
+- [x] Elasticsearch uploading
 - [x] Script integration
 - [x] Run extension with proxy
 - [x] Record extension network communications
 ##### Static
+- [ ] validate duplicate scanning?
 - [x] Script integration
 - [x] Javascript URLs
 - [x] Permissions
 - [x] Download count
 - [x] Elasticsearch uploading
 ##### Front End
+- [ ] reporting page
 - [ ] Stats page buttons?
 - [x] Extension Submitting
 - [x] Search Autodetect or two tabs

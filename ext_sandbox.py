@@ -1,16 +1,20 @@
 # @th3_protoCOL
-import os, time, asyncio, threading, requests, zipfile
+import os, sys, time, asyncio, threading, requests, zipfile, json
 from selenium import webdriver
 from multiprocessing import Process
 from mitmproxy.options import Options
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy.tools.dump import DumpMaster
+from elasticsearch import Elasticsearch
+
+from flask import current_app
 
 class EXT_Sandbox():
-    def __init__(self,ext_id,time):
+    def __init__(self,ext_id,time_limit):
         self.ext_id = ext_id
-        self.time = time
+        self.time = time_limit
+        # Set up output dirs
         if not os.path.exists('output'):
             os.makedirs('output')
         if not os.path.exists("reports"):
@@ -18,8 +22,6 @@ class EXT_Sandbox():
         if not os.path.exists("reports/"+self.ext_id+"/"):
             os.makedirs("reports/"+self.ext_id+"/")
 
-
-        pass
 
     def download_ext(self, id):
         # Download extension webstore url
@@ -73,7 +75,14 @@ class EXT_Sandbox():
             time.sleep(self.time)
             print('[*] Shutting down mitmproxy...')
             mitm.shutdown()
-            return True
+            output = "reports/"+id+"/mitm_urls.txt"
+            data = []
+            url_file = open(output, 'r')
+            for line in url_file.readlines():
+                verb = line.split()[0]
+                url = line.split()[1]
+                data.append([verb,url])
+            return data
 
     def start_mitm(self):
             asyncio.set_event_loop(asyncio.new_event_loop())
@@ -85,7 +94,7 @@ class EXT_Sandbox():
             addon = MitmAddon(self.ext_id)
             m.addons.add(addon)
             # run mitmproxy in backgroud
-            loop = asyncio.new_event_loop()
+            loop = asyncio.get_event_loop()
             t = threading.Thread( target=loop_in_thread, args=(loop,m) )
             t.start()
             return m
@@ -101,7 +110,6 @@ class MitmAddon(object):
         flow.request.headers["count"] = str(self.num)
         print("\033[0;35m[request] \033[0m"+flow.request.url)
         # Save reques to data (format [VERB, url])
-
         with open(output, 'a') as f:
             f.write(str(flow.request.method) + ' ' + str(flow.request.url) + ' ' + '\n')
 
@@ -120,11 +128,31 @@ class MitmAddon(object):
                 for k, v in flow.response.headers.items():
                     f.write('\n' + str(flow.response.content.decode('utf-8')) + '\n')
 
-
 # function used for proxy async - source: https://gist.github.com/BigSully/3da478792ee331cb2e5ece748393f8c4
 def loop_in_thread(loop, m):
     asyncio.set_event_loop(loop)
     m.run_loop(loop.run_forever)
+
+def sandbox_run(box, uuid):
+    url_data = box.run()
+    print("[!] Updating ES record")
+    es = Elasticsearch()
+    try:
+        es.indices.create(index='sandbox_data')
+    except:
+        pass
+    ext_id = str(box.ext_id)
+    res = es.search(index='sandbox_data',body={'query':{'match':{'uuid':uuid}}})
+    es_data = res['hits']['hits'][0]
+    #print("ES found "+str(es_data))
+    sandbox_body = {"doc": {"urls":url_data}}
+    try:
+        es.update(index='sandbox_data', id=es_data['_id'], body=sandbox_body)
+        return True
+    except:
+        return False
+
+
 
 if __name__ == "__main__":
     ext = input("[!] Please provide a chrome extension id: ")

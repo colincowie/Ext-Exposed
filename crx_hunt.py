@@ -2,6 +2,8 @@ import csv, re, os
 import hashlib
 import argparse
 import requests
+import logging
+import uuid
 
 from flask_wtf import FlaskForm
 from elasticsearch import Elasticsearch
@@ -11,7 +13,7 @@ from wtforms import StringField, PasswordField, SubmitField
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, flash, redirect, render_template, request, session ,url_for
 
-import redis
+import redis, time
 from rq import Queue
 
 # import my python scripts for extensions
@@ -22,6 +24,8 @@ app = Flask(__name__)
 es = Elasticsearch()
 r = redis.Redis()
 q = Queue(connection=r)
+logger = logging.getLogger("testing")
+logger.info("test with a new log")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
 db = SQLAlchemy(app)
@@ -116,7 +120,7 @@ def scan():
         keyword = request.form['keyword']
         # get ext id
         ext_id = re.findall('[a-z]{32}',keyword)     # Parse the extension id from url
-        ext_id = ext_id[0]
+        ext_id = str(ext_id[0])
         # Static Analysis
         print("[!] Queuing sandbox for "+ext_id)
         ext_scan = EXT_Analyze()
@@ -136,6 +140,21 @@ def scan():
         'urls':ext_urls
         }
         print("[+] Static analysis results:\n"+str(body))
+
+        # check if ext is in database:
+        dup_search = {'query': {'match': {'ext_id': ext_id}}}
+        ext_res = es.search(index="crx", body=dup_search)
+        hits = []
+        uploaded = False
+        for hit in ext_res['hits']['hits']:
+            if len(hits) > 0:
+                print("[*] extension "+str(ext_id)+" is already in the database. Attempting to update")
+                try:
+                    es.update(index='crx',body=body,id=hit['_id'])
+
+                except:
+                    print("")
+
         try:
             es.index(index='crx',body=body)
             print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_name.rstrip())
@@ -143,14 +162,30 @@ def scan():
             print("Failed to import ")
 
         # Sandbox
-        time = 60
+        time_limit = 10
         jobs = q.jobs
-        box = EXT_Sandbox(ext_id, time)
-        job = q.enqueue(sandbox_run, box)
+        id = uuid.uuid4()
+        box = EXT_Sandbox(ext_id, time_limit)
+        job = q.enqueue(sandbox_run, box, id)
+        time.sleep(2)
+        print(job.result)
         print("[!] Extension enqueued at "+str(job.enqueued_at)+" with job id: "+str(job.id))
+        sandbox_body = {
+            'uuid':id,
+            'ext_id':ext_id,
+            'start_time':str(job.enqueued_at),
+            'job_id':str(job.id),
+            'time_limit':time_limit,
+            'urls':[],
+        }
 
+        try:
+            es.index(index='sandbox_data',body=sandbox_body)
+            print("\x1b[32m[+] Extension mitm data index created in ES: \033[1;0m"+ext_id)
+        except:
+            print("Failed to create extension mitm data index")
 
-        return render_template('index.html', es_status=es_status)
+        return redirect('/report/'+ext_id)#es_status=es_status
 
 
 @app.route('/search', methods=['POST'])
@@ -208,28 +243,19 @@ def report(ext):
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
-        # Get URLS for ext
         # build search for elasticsearch
-        search_object = {'query': {'match': {'extension': ext}}}
-        # query es for urls
-        res = es.search(index="intel", body=search_object)
-        exts = []
-        urls = []
-        for hit in res['hits']['hits']:
-            if ext == hit['_source']['extension']:
-                urls = hit['_source']['urls']
-        urls = sorted(set(urls))
-        print(urls)
-
-        ext_search = {'query': {'match': {'name': ext}}}
+        ext_search = {'query': {'match': {'ext_id': ext}}}
         ext_res = es.search(index="crx", body=ext_search)
         for hit in ext_res['hits']['hits']:
-            if ext == hit['_source']['name']:
+            if ext == hit['_source']['ext_id']:
                 print("found: "+hit['_source']['ext_id'])
                 print(hit['_source']['name'])
                 print(hit['_source']['users'])
-                return render_template('report.html',name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'])
-
+                # Get ext dynamic data
+                ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+                ext_sandbox = ext_sandbox['hits']['hits']
+                print(ext_sandbox)
+                return render_template('report.html',name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox)
         return("No report found...")
 
 @app.route('/status')
@@ -241,6 +267,7 @@ def status():
             es_status = False
         else:
             es_status = True
+        check_queue()
         search = {'query': {'match': {'name': '*'}}}
         if es.indices.exists(index="crx"):
             res = es.search(index="crx", body=search,size=0)
@@ -287,26 +314,15 @@ def yara():
             es_status = True
         return render_template('yara.html',es_status=es_status)
 
-def load_es():
-    print("[!] Deleteing old data")
-    es.indices.delete(index='crx', ignore=[400, 404])
-    print("[*] Done")
-    print("[*] Loading extension data (data.txt) into elasticsearch...")
-    with open('data.txt', 'r') as f:
-        csv_reader = csv.reader(f, delimiter=',')
-        for row in csv_reader:
-            print(str("id: "+row[0]))
-            print(str("name: "+row[1]))
-            print(str("users: "+row[2]))
-            body = {
-            'ext_id':row[0],
-            'name':row[1],
-            'users':row[2]
-            }
-            es.index(index='crx',body=body)
+def check_queue():
+    # Retrieving jobs
+    #queued_job_ids = q.job_ids # Gets a list of job IDs from the queue
+    #queued_jobs = # Gets a list of enqueued job instances
+    print("check")
+    for job in q.jobs:
+        print(job)
+    #job = q.fetch_job('my_id') # Returns job having ID "my_id"
 
-    print("[*] Loading url data (results.csv) into elasticsearch...")
-    # load exts and urls
 
 
 # Parse script arguments
@@ -318,7 +334,6 @@ def parse_args():
 
 def load_user(user_id):
     return User.get(user_id)
-
 
 if __name__ == '__main__':
     args = parse_args()

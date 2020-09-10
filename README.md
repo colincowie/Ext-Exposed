@@ -23,7 +23,7 @@
 #### Web UI
 - Python Flask web interface
 
-<img height="650px;" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/github/demo.png" />
+<img height="500px;" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/github/demo.png" />
 
 ## Requirements
 - Elasticsearch

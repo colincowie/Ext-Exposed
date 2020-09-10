@@ -203,7 +203,7 @@ def scan():
         except:
             print("Failed to create extension mitm data index")
 
-        return redirect('/report/'+ext_id,es_status=es_status)
+        return redirect('/report/'+ext_id)
 
 
 @app.route('/search', methods=['POST'])
@@ -221,49 +221,62 @@ def search():
         # Get search query
         keyword = request.form['keyword']
         keyword = str(keyword)
+        sandbox_search = False
+        exts = []
+        url_data = []
         search_fields = []
-        if request.form.get("urls"):
+        if request.form.get("static_urls"):
             search_fields.append("urls")
         if request.form.get("ext_names"):
             search_fields.append("name")
         if request.form.get("permissions"):
             search_fields.append("permissions")
-        # build search for elasticsearch
-        search_object = { "query": {"multi_match" : {'query':keyword, 'fields':search_fields}}}
-        print(str(search_object))
-        # query es
-        res = es.search(index="crx", body=search_object,size=1000)
-        exts = []
-        for hit in res['hits']['hits']:
-            row = []
-            exts.append(hit['_source']['ext_id'])
-        # Filter dups
-        exts = sorted(set(exts))
-        url_data = []
+        if request.form.get("sandbox_urls"):
+            sandbox_search = True
 
-        for ext in exts:
-            for hit in res['hits']['hits']:
-                if ext == hit['_source']['ext_id']:
-                    results = hit['_source']
-            if results:
-                url_data.append(results)
+        if sandbox_search:
+            ext_search = {
+                "query": {
+                    "query_string" : {
+                        "query" : keyword,
+                         "default_field": "urls"
+                    }
+                }
 
-        ext_data = []
-        # get es data for ext data
-        for ext in exts:
-            if ext not in ext_data:
-                ext_search = {'query': {'match': {'name': ext}}}
-                ext_res = es.search(index="crx", body=ext_search)
-                hits = []
+            }
+            ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+            ext_sandboxs = ext_sandbox['hits']['hits']
+            for sandbox in ext_sandboxs:
+                if sandbox['_source']['ext_id'] not in exts:
+                    exts.append(sandbox['_source']['ext_id'])
+                    print("Found sandbox url matches")
+            # Filter dups
+            exts = sorted(set(exts))
+            for ext in exts:
+                search_obj = {'query': {'match': {'ext_id': ext}}}
+                ext_res = es.search(index="crx", body=search_obj)
                 for hit in ext_res['hits']['hits']:
-                    if len(hits) < 1:
-                        if ext == hit['_source']['name']:
-                            hits.append([hit['_source']['ext_id'],hit['_source']['name'],hit['_source']['users']])
-                            ext_data.append([hit['_source']['ext_id'],hit['_source']['name'],hit['_source']['users']],hit['_source']['urls'])
-        # strip regex to use the keyword in ui display
-        keyword = re.sub(r'\W+', '', keyword)
+                    if ext == hit['_source']['ext_id']:
+                        results = hit['_source']
+                        url_data.append(results)
 
-        return render_template('results.html', url_data=url_data,keyword=keyword,ext_data=ext_data,es_status=es_status)
+        if search_fields != [] or not sandbox_search:
+            # build search for elasticsearch
+            search_object = { "query": {"multi_match" : {'query':keyword, 'fields':search_fields}}}
+            # query es
+            res = es.search(index="crx", body=search_object,size=1000)
+            for hit in res['hits']['hits']:
+                row = []
+                exts.append(hit['_source']['ext_id'])
+            # Filter dups
+            exts = sorted(set(exts))
+            for ext in exts:
+                for hit in res['hits']['hits']:
+                    if ext == hit['_source']['ext_id']:
+                        results = hit['_source']
+                        url_data.append(results)
+
+        return render_template('results.html', url_data=url_data,keyword=keyword,es_status=es_status)
 
 @app.route('/report/<ext>')
 def report(ext):
@@ -291,6 +304,7 @@ def report(ext):
 
 @app.route('/status')
 def status():
+    """Logout Form"""
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
@@ -304,7 +318,7 @@ def status():
             es_total=res['_shards']['total']
         else:
             es_total=0
-        disk_total = len(next(os.walk('output'))[1])
+        disk_total = len(next(os.walk('static/output'))[1])
         return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total)
 
 @app.route('/update_all')

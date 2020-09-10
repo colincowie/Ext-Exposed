@@ -23,6 +23,8 @@
 #### Web UI
 - Python Flask web interface
 
+<img height="650px;" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/github/demo.png" />
+
 ## Requirements
 - Elasticsearch
 - Python 3
@@ -52,29 +54,15 @@
 2. run rq working in project directory
   - `rq worker`
 
-##### Static analysis (only urls currently)
-1. `python3 ext_analyze.py`
-2. Provide extension ID
-<img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/analyze_demo.png"/>
-
-##### Dynamic analysis
-1. `python3 ext_sandbox.py`
-2. Provide extension ID
-<img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/dynamic_demo.png"/>
-
-Saves URLs to `reports/extension_id/mitm_urls.txt`
-
-Saves request and responses to `reports/extension_id/mitm_content.txt`
-
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>
 
 ## Development Tracking
 ##### Priority
-- [ ] improved extension reporting
+- [x] improved extension reporting
 - [ ] update requirements.txt
 ##### Dynamic
-- [ ] Options
+- [x] Options
 - [x] Elasticsearch uploading
 - [x] Script integration
 - [x] Run extension with proxy
@@ -87,7 +75,7 @@ Saves request and responses to `reports/extension_id/mitm_content.txt`
 - [x] Download count
 - [x] Elasticsearch uploading
 ##### Front End
-- [ ] reporting page
+- [x] reporting page
 - [ ] Stats page buttons?
 - [x] Extension Submitting
 - [x] Search Autodetect or two tabs

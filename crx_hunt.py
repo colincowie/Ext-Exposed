@@ -4,6 +4,8 @@ import argparse
 import requests
 import logging
 import uuid
+import types
+
 
 from flask_wtf import FlaskForm
 from elasticsearch import Elasticsearch
@@ -12,6 +14,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from wtforms import StringField, PasswordField, SubmitField
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, flash, redirect, render_template, request, session ,url_for
+from Screenshot import Screenshot_Clipping
+from selenium import webdriver
 
 import redis, time
 from rq import Queue
@@ -123,20 +127,34 @@ def scan():
         ext_id = str(ext_id[0])
         # Static Analysis
         print("[!] Queuing sandbox for "+ext_id)
+        #ext_img(ext_id)
         ext_scan = EXT_Analyze()
         ext_downloads = ext_scan.get_downloads(ext_id)
         ext_urls = ext_scan.run(ext_id)
         ext_perms = ext_scan.get_perms(ext_id)
         ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
+        logo_path = ext_scan.get_icon(ext_id)
+        if not isinstance(logo_path, str):
+            logo_path=logo_path['32']
+            print("!!!! "+str(logo_path))
+
         try:
             es.indices.create(index='crx')
         except:
             pass
+        ext_search = {'query': {'match': {'ext_id': ext_id}}}
+        ext_res = es.search(index="crx", body=ext_search)
+        if ext_res['hits']['hits']:
+            for hit in ext_res['hits']['hits']:
+                if ext_id == hit['_source']['ext_id']:
+                    print("Deleting: "+str(hit['_source']))
+                    es.delete(index="crx",id=hit['_id'])
         body = {
         'ext_id':ext_id,
         'name':ext_name,
         'users':ext_downloads,
         'permissions':ext_perms,
+        'logo':logo_path,
         'urls':ext_urls
         }
         print("[+] Static analysis results:\n"+str(body))
@@ -168,7 +186,7 @@ def scan():
         box = EXT_Sandbox(ext_id, time_limit)
         job = q.enqueue(sandbox_run, box, id)
         time.sleep(2)
-        print(job.result)
+        #print(job.result)
         print("[!] Extension enqueued at "+str(job.enqueued_at)+" with job id: "+str(job.id))
         sandbox_body = {
             'uuid':id,
@@ -185,7 +203,7 @@ def scan():
         except:
             print("Failed to create extension mitm data index")
 
-        return redirect('/report/'+ext_id)#es_status=es_status
+        return redirect('/report/'+ext_id,es_status=es_status)
 
 
 @app.route('/search', methods=['POST'])
@@ -202,22 +220,31 @@ def search():
             es_status = True
         # Get search query
         keyword = request.form['keyword']
+        keyword = str(keyword)
+        search_fields = []
+        if request.form.get("urls"):
+            search_fields.append("urls")
+        if request.form.get("ext_names"):
+            search_fields.append("name")
+        if request.form.get("permissions"):
+            search_fields.append("permissions")
         # build search for elasticsearch
-        search_object = {'query': {'query_string': {'query': keyword}}}
+        search_object = { "query": {"multi_match" : {'query':keyword, 'fields':search_fields}}}
+        print(str(search_object))
         # query es
         res = es.search(index="crx", body=search_object,size=1000)
         exts = []
         for hit in res['hits']['hits']:
             row = []
-            exts.append(hit['_source']['name'])
+            exts.append(hit['_source']['ext_id'])
         # Filter dups
         exts = sorted(set(exts))
         url_data = []
 
         for ext in exts:
             for hit in res['hits']['hits']:
-                if ext == hit['_source']['name']:
-                    results = [hit['_source']['name'], hit['_source']['urls']]
+                if ext == hit['_source']['ext_id']:
+                    results = hit['_source']
             if results:
                 url_data.append(results)
 
@@ -232,30 +259,34 @@ def search():
                     if len(hits) < 1:
                         if ext == hit['_source']['name']:
                             hits.append([hit['_source']['ext_id'],hit['_source']['name'],hit['_source']['users']])
-                            ext_data.append([hit['_source']['ext_id'],hit['_source']['name'],hit['_source']['users']])
+                            ext_data.append([hit['_source']['ext_id'],hit['_source']['name'],hit['_source']['users']],hit['_source']['urls'])
         # strip regex to use the keyword in ui display
         keyword = re.sub(r'\W+', '', keyword)
 
-        return render_template('results.html', url_data=url_data,keyword=keyword,ext_data=ext_data, url_filter=url_filter)
+        return render_template('results.html', url_data=url_data,keyword=keyword,ext_data=ext_data,es_status=es_status)
 
 @app.route('/report/<ext>')
 def report(ext):
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
         # build search for elasticsearch
         ext_search = {'query': {'match': {'ext_id': ext}}}
         ext_res = es.search(index="crx", body=ext_search)
         for hit in ext_res['hits']['hits']:
             if ext == hit['_source']['ext_id']:
-                print("found: "+hit['_source']['ext_id'])
-                print(hit['_source']['name'])
-                print(hit['_source']['users'])
+                print("found: "+str(hit['_source']))
+                #print(hit['_source']['name'])
+                #print(hit['_source']['users'])
                 # Get ext dynamic data
                 ext_sandbox = es.search(index="sandbox_data", body=ext_search)
                 ext_sandbox = ext_sandbox['hits']['hits']
-                print(ext_sandbox)
-                return render_template('report.html',name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox)
+                #print(ext_sandbox)
+                return render_template('report.html',icon=hit['_source']['logo'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status)
         return("No report found...")
 
 @app.route('/status')
@@ -267,7 +298,6 @@ def status():
             es_status = False
         else:
             es_status = True
-        check_queue()
         search = {'query': {'match': {'name': '*'}}}
         if es.indices.exists(index="crx"):
             res = es.search(index="crx", body=search,size=0)
@@ -314,17 +344,19 @@ def yara():
             es_status = True
         return render_template('yara.html',es_status=es_status)
 
-def check_queue():
-    # Retrieving jobs
-    #queued_job_ids = q.job_ids # Gets a list of job IDs from the queue
-    #queued_jobs = # Gets a list of enqueued job instances
-    print("check")
-    for job in q.jobs:
-        print(job)
-    #job = q.fetch_job('my_id') # Returns job having ID "my_id"
-
-
-
+def ext_img(ext_id):
+    if not os.path.isfile('./static/img/exts/'+ext_id+'.png'):
+        ob=Screenshot_Clipping.Screenshot()
+        driver = webdriver.Chrome()
+        url = "https://chrome.google.com/webstore/detail/z/"+ext_id
+        driver.get(url)
+        file_path = "./static/img/exts/"+ext_id+".png"
+        time.sleep(2)
+        print(file_path)
+        driver.save_screenshot(file_path)
+        driver.close()
+        driver.quit()
+        print("Saved image!")
 # Parse script arguments
 def parse_args():
     parser = argparse.ArgumentParser(description="CRX Hunt platform ")

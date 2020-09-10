@@ -7,6 +7,14 @@
   bottom:0;
   color:grey;
 }
+#ext_name{
+  font-size: 24px;
+}
+.sandbox_table td{
+  padding-right:55px;
+}
+.sandbox_table th{  text-align: left;
+}
 #flat_bar {
 display: inline;
    vertical-align: top;
@@ -34,8 +42,6 @@ display: inline;
   border-radius: 3%;
   display: inline;
   vertical-align: top;
-
-
 }
 
 .wrapper {

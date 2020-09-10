@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 
 class EXT_Analyze():
     def __init__(self):
-        if not os.path.exists('output'):
-            os.makedirs('output')
+        if not os.path.exists('static/output'):
+            os.makedirs('static/output')
         pass
 
     def download_ext(self, id):
@@ -18,7 +18,7 @@ class EXT_Analyze():
         # Save output of download
         if r.status_code == 200 :
             # Save ext to .crx file
-            crx = os.path.join('output', id)+'.crx'
+            crx = os.path.join('static/output', id)+'.crx'
             open(crx, 'wb').write(r.content)
             print("[*] Unzipping Extension")
             try:
@@ -47,7 +47,7 @@ class EXT_Analyze():
 
         print("\033[93m[*]\033[00m Starting analysis on "+id)
         results = [['Extension ID, File, URL']]
-        ext_dir = os.path.join("output", id)
+        ext_dir = os.path.join("static/output", id)
         files = os.scandir(ext_dir)
         for (root,dirs,files) in os.walk(ext_dir, topdown=True):
             # Scan files in  dirs
@@ -79,8 +79,9 @@ class EXT_Analyze():
 
     def get_perms(self, id):
         # get perms
-        file_path = 'output/'+id+'/manifest.json'
+        file_path = 'static/output/'+id+'/manifest.json'
         perms = []
+        icon = ""
         with open(file_path,'r') as manifest:
             data = None
             data = json.load(manifest)
@@ -91,7 +92,26 @@ class EXT_Analyze():
                     perms =  None
                 else:
                     perms = data['permissions']
+                # Get default icon path
         return perms
+    def get_icon(self,id):
+        # get perms
+        file_path = 'static/output/'+id+'/manifest.json'
+        icon = ""
+        with open(file_path,'r') as manifest:
+            data = None
+            data = json.load(manifest)
+            #print("Data loading error")
+            if data is not None:
+                try:
+                    icon = data['browser_action']['default_icon']
+                except:
+                    print("default_icon not found ")
+                    icon =  ""
+                    print(data)
+        return icon
+
+
 
     def get_downloads(self, id):
         ext_page = None

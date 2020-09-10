@@ -15,8 +15,8 @@ class EXT_Sandbox():
         self.ext_id = ext_id
         self.time = time_limit
         # Set up output dirs
-        if not os.path.exists('output'):
-            os.makedirs('output')
+        if not os.path.exists('static/output'):
+            os.makedirs('static/output')
         if not os.path.exists("reports"):
             os.makedirs("reports")
         if not os.path.exists("reports/"+self.ext_id+"/"):
@@ -32,7 +32,7 @@ class EXT_Sandbox():
         # Save output of download
         if r.status_code == 200 :
             # Save ext to .crx file
-            crx = os.path.join('output', id)+'.crx'
+            crx = os.path.join('static/output', id)+'.crx'
             open(crx, 'wb').write(r.content)
             print("[*] Unzipping Extension")
             try:
@@ -62,7 +62,7 @@ class EXT_Sandbox():
             # Create the webdriver with proxy and extension
             options = webdriver.ChromeOptions()
             # Load chrome extension
-            options.add_argument('load-extension='+os.path.abspath("output")+'/'+str(id));
+            options.add_argument('load-extension='+os.path.abspath("static/output")+'/'+str(id));
             options.add_argument('--proxy-server=127.0.0.1:8080')
             options.add_argument('--allow-running-insecure-content')
             options.add_argument('--ignore-certificate-errors')
@@ -73,6 +73,8 @@ class EXT_Sandbox():
             driver.get("chrome://extensions/?id="+id)
             print("[*] Sleeping while extension is running")
             time.sleep(self.time)
+            driver.close()
+            driver.quit()
             print('[*] Shutting down mitmproxy...')
             mitm.shutdown()
             output = "reports/"+id+"/mitm_urls.txt"

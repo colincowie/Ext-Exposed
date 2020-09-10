@@ -11,51 +11,25 @@
           <th>Total URLs</th>
     </thead>
     <tbody>
-        {% for hit in url_data %}
+        {% for url in url_data %}
         <tr data-toggle="collapse" data-target="#accordion_{{loop.index}}" class="clickable">
-            <td>{{hit[0]}}</td>
-            {% for ext in ext_data %}
-                {% if hit[0]== ext[1] %}
-                <td>{{ext[2]}}</td>
-                {% endif %}
-            {% endfor %}
-            <td>{{hit[1]|count}}</td>
+            <td><img style="width:32px;height:32px;" src="/static/output/{{url['ext_id']}}/{{url['logo']}}"/> &nbsp;&nbsp;{{url['name']}}</td>
+            <td>{{url['users']}}</td>
+            <td>{{url['urls']|count}}</td>
         </tr>
         <tr>
             <td id="accordion_{{loop.index}}" class="collapse">
                 <div id="accordion_{{loop.index}}"  class="collapse">
-                  {% for ext in ext_data %}
-                      {% if hit[0] == ext[1] %}
-                      <ul class="list-group" style="padding-bottom:5px;">
-                        <li class="list-group-item">Extension ID: {{ext[0]}}</li>
-                        <li class="list-group-item">Name: {{ext[1]}}</li>
-                        <li class="list-group-item">Users: {{ext[2]}}</li>
-                      </ul>
-                      <button class="btn-secondary" style="border-radius: 5px;" onclick="window.location.href='report/{{ext[1]}}';">
+                      <button class="btn-secondary" style="border-radius: 5px;" onclick="window.location.href='report/{{url['ext_id']}}';">
                       Open report</button>
-                      <button class="btn-secondary" style="border-radius: 5px;" onclick="window.location.href='https://chrome.google.com/webstore/detail/{{ext[1]}}/{{ext[0]}}';">
+                      <button class="btn-secondary" style="border-radius: 5px;" onclick="window.location.href='https://chrome.google.com/webstore/detail/{{url['name']}}/{{url['ext_id']}}';">
                       Chrome Webstore</button>
-
-                      {% endif %}
-                  {% endfor %}
                   <br>
                   Extension URLs:
-                  <div style="overflow-y: scroll; height:400px;">
+                  <div style="overflow-y: scroll; max-height:200px;">
                     <ul>
-
-                      {% for url in url_data %}
-                      {% for u in url[1]%}
-                      <li>{{u}}</li>
-                      {% endfor %}
-
-                        {% if url_filter == 'on' %}
-
-                        {% if keyword in url %}
-                          <li>{{url}}</li>
-                        {% endif %}
-                      {% else %}
-                        <li>{{url}}</li>
-                      {% endif %}
+                      {% for u in url['urls'] %}
+                        <li>{{u}}</li>
                       {% endfor %}
                     </ul>
                   </div>

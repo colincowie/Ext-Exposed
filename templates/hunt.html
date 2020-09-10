@@ -13,7 +13,10 @@
 
         <div class="form-group text-center text-dark">
           <button type="submit" class="btn btn-primary">Search</button>
+          <button type="submit" class="btn btn-secondary">Search only for extensions</button>
+
         </div>
+
 
         <div class="form-group advanced-search-panel bg-primary">
           <div class="panel panel-default">
@@ -29,25 +32,21 @@
                   <div class="col-xs-8">
                     <div class="row">
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="exts"  autocomplete="off" checked>
+                        <input type="checkbox" name="urls"  autocomplete="off" checked>
                         URLs
                       </fieldset>
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="urls" autocomplete="off" checked>
-                        Domains
+                        <input type="checkbox" name="permissions" autocomplete="off">
+                        Permissions
                       </fieldset>
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="domains" autocomplete="off" checked>
-                        Extension Names
+                        <input type="checkbox" name="ext_names" autocomplete="off" checked>
+                          Extension Names
                       </fieldset>
 
                       <fieldset class="col-xs-12 col-sm-6">
                         <input type="checkbox" name="strings" autocomplete="off" disabled>
                         Strings
-                      </fieldset>
-                      <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="permissions" autocomplete="off" >
-                        Permissions
                       </fieldset>
                     </div>
                   </div>

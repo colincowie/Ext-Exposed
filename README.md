@@ -43,7 +43,7 @@
   - `docker pull docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
 2. Start a single docker node
   - `docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
-3. Create a index for CRX Hunt
+3. Create a index for Ext Exposed
   - `curl -X PUT "localhost:9200/crx?pretty"`
 
 #### Redis setup

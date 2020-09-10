@@ -13,7 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
 from wtforms import StringField, PasswordField, SubmitField
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, flash, redirect, render_template, request, session ,url_for
+from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory
 from Screenshot import Screenshot_Clipping
 from selenium import webdriver
 
@@ -78,7 +78,7 @@ def login():
         if user and user.password == password:
             # Todo: Research how to improve access tokens
             session['logged_in'] = True
-            flash('Welcome to CRX Hunt, '+str(name)+'!')
+            flash('Welcome to Ext Exposed, '+str(name)+'!')
 
             return redirect(url_for('home'))
         else:
@@ -125,83 +125,86 @@ def scan():
         # get ext id
         ext_id = re.findall('[a-z]{32}',keyword)     # Parse the extension id from url
         ext_id = str(ext_id[0])
-        # Static Analysis
-        print("[!] Queuing sandbox for "+ext_id)
-        #ext_img(ext_id)
-        ext_scan = EXT_Analyze()
-        ext_downloads = ext_scan.get_downloads(ext_id)
-        ext_urls = ext_scan.run(ext_id)
-        ext_perms = ext_scan.get_perms(ext_id)
-        ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
-        logo_path = ext_scan.get_icon(ext_id)
-        if not isinstance(logo_path, str):
-            logo_path=logo_path['32']
-            print("!!!! "+str(logo_path))
 
-        try:
-            es.indices.create(index='crx')
-        except:
-            pass
-        ext_search = {'query': {'match': {'ext_id': ext_id}}}
-        ext_res = es.search(index="crx", body=ext_search)
-        if ext_res['hits']['hits']:
-            for hit in ext_res['hits']['hits']:
-                if ext_id == hit['_source']['ext_id']:
-                    print("Deleting: "+str(hit['_source']))
-                    es.delete(index="crx",id=hit['_id'])
-        body = {
-        'ext_id':ext_id,
-        'name':ext_name,
-        'users':ext_downloads,
-        'permissions':ext_perms,
-        'logo':logo_path,
-        'urls':ext_urls
-        }
-        print("[+] Static analysis results:\n"+str(body))
+        if request.form.get("static") != None:
+            # Static Analysis
+            ext_scan = EXT_Analyze()
+            ext_downloads = ext_scan.get_downloads(ext_id)
+            ext_urls = ext_scan.run(ext_id)
+            ext_perms = ext_scan.get_perms(ext_id)
+            ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
+            logo_path = ext_scan.get_icon(ext_id)
+            if not isinstance(logo_path, str):
+                logo_path=logo_path['32']
+                print("!!!! "+str(logo_path))
 
-        # check if ext is in database:
-        dup_search = {'query': {'match': {'ext_id': ext_id}}}
-        ext_res = es.search(index="crx", body=dup_search)
-        hits = []
-        uploaded = False
-        for hit in ext_res['hits']['hits']:
-            if len(hits) > 0:
-                print("[*] extension "+str(ext_id)+" is already in the database. Attempting to update")
-                try:
-                    es.update(index='crx',body=body,id=hit['_id'])
+            try:
+                es.indices.create(index='crx')
+            except:
+                pass
 
-                except:
-                    print("")
-
-        try:
-            es.index(index='crx',body=body)
-            print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_name.rstrip())
-        except:
-            print("Failed to import ")
-
-        # Sandbox
-        time_limit = 10
-        jobs = q.jobs
-        id = uuid.uuid4()
-        box = EXT_Sandbox(ext_id, time_limit)
-        job = q.enqueue(sandbox_run, box, id)
-        time.sleep(2)
-        #print(job.result)
-        print("[!] Extension enqueued at "+str(job.enqueued_at)+" with job id: "+str(job.id))
-        sandbox_body = {
-            'uuid':id,
+            ext_search = {'query': {'match': {'ext_id': ext_id}}}
+            ext_res = es.search(index="crx", body=ext_search)
+            if ext_res['hits']['hits']:
+                for hit in ext_res['hits']['hits']:
+                    if ext_id == hit['_source']['ext_id']:
+                        print("Deleting: "+str(hit['_source']))
+                        es.delete(index="crx",id=hit['_id'])
+            body = {
             'ext_id':ext_id,
-            'start_time':str(job.enqueued_at),
-            'job_id':str(job.id),
-            'time_limit':time_limit,
-            'urls':[],
-        }
+            'name':ext_name,
+            'users':ext_downloads,
+            'permissions':ext_perms,
+            'logo':logo_path,
+            'urls':ext_urls
+            }
+            print("[+] Static analysis results:\n"+str(body))
 
-        try:
-            es.index(index='sandbox_data',body=sandbox_body)
-            print("\x1b[32m[+] Extension mitm data index created in ES: \033[1;0m"+ext_id)
-        except:
-            print("Failed to create extension mitm data index")
+            # check if ext is in database:
+            dup_search = {'query': {'match': {'ext_id': ext_id}}}
+            ext_res = es.search(index="crx", body=dup_search)
+            hits = []
+            uploaded = False
+            for hit in ext_res['hits']['hits']:
+                if len(hits) > 0:
+                    print("[*] extension "+str(ext_id)+" is already in the database. Attempting to update")
+                    try:
+                        es.update(index='crx',body=body,id=hit['_id'])
+
+                    except:
+                        print("")
+
+            try:
+                es.index(index='crx',body=body)
+                print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_id)
+            except:
+                print("Failed to import ")
+        if request.form.get("sandbox") != None:
+            print("[!] Queuing sandbox for "+ext_id)
+            # Sandbox
+            time_limit = request.form.get('time_limit')
+            print("Time limit:"+str(time_limit))
+            jobs = q.jobs
+            id = uuid.uuid4()
+            box = EXT_Sandbox(ext_id, time_limit)
+            job = q.enqueue(sandbox_run, box, id)
+            time.sleep(2)
+            #print(job.result)
+            print("[!] Extension enqueued at "+str(job.enqueued_at)+" with job id: "+str(job.id))
+            sandbox_body = {
+                'uuid':id,
+                'ext_id':ext_id,
+                'start_time':str(job.enqueued_at),
+                'job_id':str(job.id),
+                'time_limit':time_limit,
+                'urls':[],
+            }
+
+            try:
+                es.index(index='sandbox_data',body=sandbox_body)
+                print("\x1b[32m[+] Extension mitm data index created in ES: \033[1;0m"+ext_id)
+            except:
+                print("Failed to create extension mitm data index")
 
         return redirect('/report/'+ext_id)
 
@@ -292,13 +295,9 @@ def report(ext):
         ext_res = es.search(index="crx", body=ext_search)
         for hit in ext_res['hits']['hits']:
             if ext == hit['_source']['ext_id']:
-                print("found: "+str(hit['_source']))
-                #print(hit['_source']['name'])
-                #print(hit['_source']['users'])
                 # Get ext dynamic data
                 ext_sandbox = es.search(index="sandbox_data", body=ext_search)
                 ext_sandbox = ext_sandbox['hits']['hits']
-                #print(ext_sandbox)
                 return render_template('report.html',icon=hit['_source']['logo'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status)
         return("No report found...")
 
@@ -358,6 +357,11 @@ def yara():
             es_status = True
         return render_template('yara.html',es_status=es_status)
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                          'favicon.ico',mimetype='image/vnd.microsoft.icon')
+
 def ext_img(ext_id):
     if not os.path.isfile('./static/img/exts/'+ext_id+'.png'):
         ob=Screenshot_Clipping.Screenshot()
@@ -373,7 +377,7 @@ def ext_img(ext_id):
         print("Saved image!")
 # Parse script arguments
 def parse_args():
-    parser = argparse.ArgumentParser(description="CRX Hunt platform ")
+    parser = argparse.ArgumentParser(description="Ext Exposed platform ")
     parser.add_argument('-es', help="Load elastic search data",action='store_true', required=False)
     args = parser.parse_args()
     return args

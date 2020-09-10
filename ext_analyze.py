@@ -54,7 +54,7 @@ class EXT_Analyze():
             for file in files:
                 # Todo: add hash checks
                 if file.endswith(".js") or file.endswith(".json"):
-                    #print("[*] Extrating links from "+str(file))
+                    print("[*] Extrating links from "+str(file))
                     script = open(os.path.join(root,file), "r", encoding="utf8")
                     try:
                         content = jsbeautifier.beautify(script.read())

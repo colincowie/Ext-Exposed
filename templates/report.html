@@ -51,9 +51,10 @@
       Sandbox Runs ({{sandboxs|count}}):
       <div style="overflow-y: scroll; height:400px;">
         <ul class="list-group" style="padding-bottom:5px;">
+          <tbody>
           {% for sandbox in sandboxs %}
-            <li class="list-group-item font-small" style="font-size: 12px; ">
-              <table class=sandbox_table>
+            <li data-toggle="collapse" data-target="#accordion_{{loop.index}}" class="clickable list-group-item font-small" style="font-size: 12px; ">
+              <table class = "sandbox_table">
                   <thead>
                     <tr>
                       <th>Start Time</th>
@@ -69,8 +70,15 @@
                     </tr>
                   </tbody>
                   </table>
+              <div id="accordion_{{loop.index}}"  class="collapse">
+                <hr>
+                {% for url in sandbox['_source']['urls']%}
+                {{url[0]}} {{url[1]}}<br>
+                {% endfor %}
+                </div>
             </li>
           {% endfor %}
+          </tbody>
         </ul>
     </div>
 

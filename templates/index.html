@@ -2,7 +2,7 @@
 
 {% block content %}
 <br>
-<h1 style="text-align:center;"><img style="filter: invert(100%)" width="100" src="/static/logo.png"/>{% block title %}CRX Hunt{% endblock %}</h1>
+<h1 style="text-align:center;"><img style="filter: invert(100%)" width="100" src="/static/logo.png"/>{% block title %}Ext Exposed{% endblock %}</h1>
 <div class="container">
   <div class="center">
     <form action="/scan"  method="POST">
@@ -17,7 +17,6 @@
     <div class="form-group advanced-search-panel bg-primary">
       <div class="panel panel-default">
         <ul class="list-group">
-
           <!-- add options here -->
           <li class="list-group-item">
             <div class="form-group">
@@ -28,11 +27,11 @@
               <div class="col-xs-8">
                 <div class="row">
                   <fieldset class="col-xs-12 col-sm-6">
-                    <input type="checkbox" name="exts"  autocomplete="off" checked>
+                    <input type="checkbox" name="static"  autocomplete="off" checked>
                     Static Analysis
                   </fieldset>
                   <fieldset class="col-xs-12 col-sm-6">
-                    <input type="checkbox" name="urls" autocomplete="off" checked>
+                    <input type="checkbox" name="sandbox" autocomplete="off" checked>
                     Dynamic Analysis (sandbox)
                   </fieldset>
                   <fieldset class="col-xs-12 col-sm-6">
@@ -40,8 +39,9 @@
                     Yara Rules (comming soon)
                   </fieldset>
                   <fieldset class="col-xs-12 col-sm-6">
-                    <input type="checkbox" name="permissions" autocomplete="off" disabled>
-                    Permissions
+                    <input id="sandbox_range" name="time_limit" class="slider form-control" type="range" min="5" max="600" value="20">
+                    <br>
+                    Duration (seconds): <span id="range_text"/>
                   </fieldset>
                 </div>
               </div>
@@ -59,7 +59,7 @@
               <div class="col-xs-8">
                 <div class="row">
                   <fieldset class="col-xs-12 col-sm-6">
-                    <input type="checkbox" name="search-location" value="option1" autocomplete="off" checked>
+                    <input type="checkbox" name="lnkr value="enabled" autocomplete="off" checked>
                     Lnkr
                   </fieldset>
 
@@ -77,4 +77,13 @@
   </form>
   </div>
 </div>
+<script>
+var slider = document.getElementById("sandbox_range");
+var output = document.getElementById("range_text");
+output.innerHTML = slider.value;
+
+slider.oninput = function() {
+  output.innerHTML = this.value;
+}
+</script>
 {% endblock %}

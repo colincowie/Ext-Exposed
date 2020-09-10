@@ -16,9 +16,33 @@
 .sandbox_table th{  text-align: left;
 }
 #flat_bar {
-display: inline;
+  display: inline;
    vertical-align: top;
  }
+ .slider {
+   -webkit-appearance: none;
+   width: 180px;
+   height: 20px;
+   background: #d3d3d3;
+   outline: none;
+   opacity: 0.7;
+   -webkit-transition: .2s;
+   transition: opacity .2s;
+ }
+
+ .slider:hover {
+   opacity: 1;
+ }
+
+ .slider::-webkit-slider-thumb {
+   -webkit-appearance: none;
+   appearance: none;
+   width: 25px;
+   height: 20px;
+   background: #4CAF50;
+   cursor: pointer;
+ }
+
 #stat_box {
     /* Within a circle, centered text looks prettier. */
   text-align : center;

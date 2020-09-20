@@ -73,8 +73,11 @@ class EXT_Sandbox():
             driver.get("chrome://extensions/?id="+id)
             print("[*] Sleeping while extension is running")
             time.sleep(self.time)
-            driver.close()
-            driver.quit()
+            try:
+                driver.close()
+                driver.quit()
+            except:
+                print("[?] Error: browser is already closed")
             print('[*] Shutting down mitmproxy...')
             mitm.shutdown()
             output = "reports/"+id+"/mitm_urls.txt"

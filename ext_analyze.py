@@ -76,7 +76,6 @@ class EXT_Analyze():
         print('\033[32m[!]\033[0m Total URLs found: '+str(len(found_urls)))
         return found_urls
 
-
     def get_perms(self, id):
         # get perms
         file_path = 'static/output/'+id+'/manifest.json'
@@ -94,6 +93,7 @@ class EXT_Analyze():
                     perms = data['permissions']
                 # Get default icon path
         return perms
+
     def get_icon(self,id):
         # get perms
         file_path = 'static/output/'+id+'/manifest.json'
@@ -110,8 +110,6 @@ class EXT_Analyze():
                     icon =  ""
                     print(data)
         return icon
-
-
 
     def get_downloads(self, id):
         ext_page = None
@@ -130,11 +128,11 @@ class EXT_Analyze():
         if download_tag is not None:
             download_tag = download_tag.get("content")
             download_tag = download_tag.rstrip()
-            download_count = round(float(download_tag.rsplit(':',1)[1].replace(',','').replace('+','').replace('.','')))
+            print(download_tag)
+            download_count = download_tag.rsplit(':',1)[1].replace(',','').strip('+').strip('.').rstrip('\xa0000')
         else:
             download_count = 0
-        return download_count
-
+        return int(download_count)
 
     def run(self, id):
         self.download_ext(id)

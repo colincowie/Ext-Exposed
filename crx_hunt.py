@@ -14,7 +14,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from wtforms import StringField, PasswordField, SubmitField
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory
-from Screenshot import Screenshot_Clipping
 from selenium import webdriver
 
 import redis, time
@@ -135,7 +134,17 @@ def scan():
             ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
             logo_path = ext_scan.get_icon(ext_id)
             if not isinstance(logo_path, str):
-                logo_path=logo_path['32']
+                try:
+                    logo_path=logo_path['32']
+                except:
+                    try:
+                        logo_path=logo_path['24']
+                    except:
+                        try:
+                            logo_path=logo_path['64']
+                        except:
+                            logo_path=logo_path['128']
+
                 print("!!!! "+str(logo_path))
 
             try:
@@ -182,9 +191,13 @@ def scan():
         if request.form.get("sandbox") != None:
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
-            time_limit = request.form.get('time_limit')
+            time_limit = int(request.form.get('time_limit'))
             print("Time limit:"+str(time_limit))
-            jobs = q.jobs
+            try:
+                jobs = q.jobs
+            except:
+                return "Critial Error: redis server not working, sandbox not ran. Please run `redis-server` and `rq worker`"
+
             id = uuid.uuid4()
             box = EXT_Sandbox(ext_id, time_limit)
             job = q.enqueue(sandbox_run, box, id)
@@ -344,7 +357,7 @@ def home():
             es_status = False
         else:
             es_status = True
-        return render_template('index.html',es_status=True)
+        return render_template('index.html',es_status=es_status)
 
 @app.route('/yara')
 def yara():

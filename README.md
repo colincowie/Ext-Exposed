@@ -23,12 +23,16 @@
 #### Web UI
 - Python Flask web interface
 
+<img max-height="500px;" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/github/demo.png" />
+
 ## Requirements
 - Elasticsearch
 - Python 3
 - Webdriver
 
 ## Usage
+`python3 crx_hunt.py`
+
 #### Install
 
 1. Create a new python virutal enviroment (option)
@@ -52,46 +56,46 @@
 2. run rq working in project directory
   - `rq worker`
 
-##### Static analysis (only urls currently)
-1. `python3 ext_analyze.py`
-2. Provide extension ID
-<img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/analyze_demo.png"/>
-
-##### Dynamic analysis
-1. `python3 ext_sandbox.py`
-2. Provide extension ID
-<img src="https://github.com/colincowie/CRX-Hunt/raw/master/static/github/dynamic_demo.png"/>
-
-Saves URLs to `reports/extension_id/mitm_urls.txt`
-
-Saves request and responses to `reports/extension_id/mitm_content.txt`
-
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>
 
 ## Development Tracking
 ##### Priority
+- [ ] handle no redis errors
 - [ ] improved extension reporting
-- [ ] update requirements.txt
+- [ ] Source code viewer?
 ##### Dynamic
-- [ ] Options
+- [ ] Figure out how to proxy only extension network request
+##### Static
+- [ ] validate duplicate scanning?
+##### Front End
+- [ ] Stats page buttons?
+#### Deployment Prep 
+- [ ] update requirements.txt
+- [ ] check for unused dependenies 
+- [ ] Security bot deployments 
+- [ ] CI Testing
+- [ ] Docker Image! 
+##### Yara
+- [ ] Yara scanning 
+- [ ] Rule storage
+- [ ] Search output
+- [ ] Web UI
+
+##### Completed
+- [x] reporting page
+- [x] Extension Submitting
+- [x] Search Autodetect or two tabs
+- [x] Stats page information populating
+- [x] Download count
+- [x] Elasticsearch uploading
+- [x] Script integration
+- [x] Javascript URLs
+- [x] Permissions
+- [x] Options
 - [x] Elasticsearch uploading
 - [x] Script integration
 - [x] Run extension with proxy
 - [x] Record extension network communications
-##### Static
-- [ ] validate duplicate scanning?
-- [x] Script integration
-- [x] Javascript URLs
-- [x] Permissions
-- [x] Download count
-- [x] Elasticsearch uploading
-##### Front End
-- [ ] reporting page
-- [ ] Stats page buttons?
-- [x] Extension Submitting
-- [x] Search Autodetect or two tabs
-- [x] Stats page information populating
-##### Yara
-- [ ] Search output
-- [ ] Web UI
+
+</div>

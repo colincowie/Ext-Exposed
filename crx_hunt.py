@@ -218,8 +218,9 @@ def scan():
                 print("\x1b[32m[+] Extension mitm data index created in ES: \033[1;0m"+ext_id)
             except:
                 print("Failed to create extension mitm data index")
+        ext_path=os.path.join('static/output', id)
 
-        return redirect('/report/'+ext_id)
+        return redirect('/report/'+ext_id, tree=make_tree(ext_path))
 
 
 @app.route('/search', methods=['POST'])
@@ -312,7 +313,8 @@ def report(ext):
                 # Get ext dynamic data
                 ext_sandbox = es.search(index="sandbox_data", body=ext_search)
                 ext_sandbox = ext_sandbox['hits']['hits']
-                return render_template('report.html',icon=hit['_source']['logo'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status)
+                ext_path=os.path.join('static/output', str(hit['_source']['ext_id']))
+                return render_template('report.html',icon=hit['_source']['logo'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tree=make_tree(ext_path))
         return("No report found...")
 
 @app.route('/status')
@@ -396,6 +398,19 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def make_tree(path):
+    tree = dict(name=os.path.basename(path), children=[])
+    try: lst = os.listdir(path)
+    except OSError:
+        pass #ignore errors
+    else:
+        for name in lst:
+            fn = os.path.join(path, name)
+            if os.path.isdir(fn):
+                tree['children'].append(make_tree(fn))
+            else:
+                tree['children'].append(dict(name=name))
+    return tree
 def load_user(user_id):
     return User.get(user_id)
 

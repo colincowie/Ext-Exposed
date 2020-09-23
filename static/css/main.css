@@ -159,3 +159,39 @@ ul ul a {
     top: 10px;
     right: 10px;
 }
+.caret {
+  cursor: pointer;
+  -webkit-user-select: none; /* Safari 3.1+ */
+  -moz-user-select: none; /* Firefox 2+ */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
+}
+
+.caret::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.caret-down::before {
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Safari */'
+  transform: rotate(90deg);
+}
+
+.nested {
+  display: none;
+}
+ul, #myUL {
+  list-style-type: none;
+}
+
+#myUL {
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+}
+.active {
+  display: block;
+}

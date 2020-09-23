@@ -61,13 +61,19 @@
 
 ## Development Tracking
 ##### Priority
-- [ ] Run chrome headless with virtual display
-- [ ] Bulk import of extension
+1. [ ] Run chrome headless with virtual display
+2. [ ] Scan in progress view
+3. [ ] Queue information 
+4. [ ] Bulk import of extension
+5. [ ] Source file viewing 
+6. [ ] Profile / settings 
+7. [ ] Deploy alpha! 
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
 - [ ] More details about request 
+- [ ] whitelist filtering
 ##### Static
-- [ ] source code viewer
+- [ ] source code file viewer
 ##### Front End
 - [ ] Queue stats info
 - [ ] Update frontend in "real-time"
@@ -77,6 +83,7 @@
 - [ ] Security bot deployments
 - [ ] CI Testing
 - [ ] Docker Image!
+- [ ] Documentation 
 ##### Yara
 - [ ] Yara scanning
 - [ ] Rule storage

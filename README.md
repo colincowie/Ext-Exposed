@@ -61,7 +61,8 @@
 
 ## Development Tracking
 ##### Priority
-- [ ] run chrome headless with virtual display
+- [ ] Run chrome headless with virtual display
+- [ ] Bulk import of extension
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
 - [ ] improved extension reporting
@@ -69,6 +70,7 @@
 - [ ] source code viewer
 ##### Front End
 - [ ] Queue stats info
+- [ ] Update frontend in "real-time"
 #### Deployment Prep
 - [ ] update requirements.txt
 - [ ] check for unused imports
@@ -80,6 +82,7 @@
 - [ ] Rule storage
 - [ ] Search output
 - [ ] Web UI
+- [ ] Tags?
 
 ##### Completed
 - [x] handle no redis errors

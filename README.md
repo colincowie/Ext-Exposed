@@ -61,28 +61,28 @@
 
 ## Development Tracking
 ##### Priority
-- [ ] handle no redis errors
-- [ ] improved extension reporting
-- [ ] Source code viewer?
+- [ ] run chrome headless with virtual display
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
+- [ ] improved extension reporting
 ##### Static
-- [ ] validate duplicate scanning?
+- [ ] source code viewer
 ##### Front End
-- [ ] Stats page buttons?
-#### Deployment Prep 
+- [ ] Queue stats info
+#### Deployment Prep
 - [ ] update requirements.txt
-- [ ] check for unused dependenies 
-- [ ] Security bot deployments 
+- [ ] check for unused imports
+- [ ] Security bot deployments
 - [ ] CI Testing
-- [ ] Docker Image! 
+- [ ] Docker Image!
 ##### Yara
-- [ ] Yara scanning 
+- [ ] Yara scanning
 - [ ] Rule storage
 - [ ] Search output
 - [ ] Web UI
 
 ##### Completed
+- [x] handle no redis errors
 - [x] reporting page
 - [x] Extension Submitting
 - [x] Search Autodetect or two tabs
@@ -93,6 +93,7 @@
 - [x] Javascript URLs
 - [x] Permissions
 - [x] Options
+- [x] validate duplicate scanning
 - [x] Elasticsearch uploading
 - [x] Script integration
 - [x] Run extension with proxy

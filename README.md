@@ -65,7 +65,7 @@
 - [ ] Bulk import of extension
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
-- [ ] improved extension reporting
+- [ ] More details about request 
 ##### Static
 - [ ] source code viewer
 ##### Front End

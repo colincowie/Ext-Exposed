@@ -23,71 +23,129 @@
 <div>
 <hr>
 </div>
-<div class="container">
-  <div class="row">
-    <div class="col-sm">
-      Permissions ({{perms|count}}):
-      <br>
-      <ul class="list-group" style="padding-bottom:5px;">
-        {% for perm in perms%}
-        <li class="list-group-item">{{perm}}</li>
-        {% endfor %}
-      </ul>
-    </div>
-    <div class="col-sm">
-      Static URLs ({{urls|count}}):
-      <div style="overflow-y: scroll; max-height:200px;">
-        <ul class="list-group" style="padding-bottom:5px;">
-          {% for url in urls %}
-            <li class="list-group-item font-small" style="font-size: 12px;">{{url}}</li>
-          {% endfor %}
-        </ul>
-    </div>
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="col-lg">
-      Sandbox Runs ({{sandboxs|count}}):
-      <div style="overflow-y: scroll; height:400px;">
-        <ul class="list-group" style="padding-bottom:5px;">
-          <tbody>
-          {% for sandbox in sandboxs %}
-            <li data-toggle="collapse" data-target="#accordion_{{loop.index}}" class="clickable list-group-item font-small" style="font-size: 12px; ">
-              <table class = "sandbox_table">
-                  <thead>
-                    <tr>
-                      <th>Start Time</th>
-                      <th>Time Limit</th>
-                      <th>URLs</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>{{sandbox['_source']['start_time']}}</td>
-                      <td> {{sandbox['_source']['time_limit']}}</td>
-                      <td>{{sandbox['_source']['urls']|count}}</td>
-                    </tr>
-                  </tbody>
-                  </table>
-              <div id="accordion_{{loop.index}}"  class="collapse">
-                <hr>
-                {% for url in sandbox['_source']['urls']%}
-                {{url[0]}} {{url[1]}}<br>
-                {% endfor %}
+<div class="bs-example">
+    <ul id="reportTab" class="nav nav-tabs">
+        <li class="nav-item">
+            <a href="#overview" class="nav-link active" data-toggle="tab">Overview</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" class="nav-link" data-toggle="tab">Source code</a>
+        </li>
+        <li class="nav-item">
+            <a href="#related" class="nav-link" data-toggle="tab">Related</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="overview">
+            <br>
+                <div class="row">
+                <div class="col-sm-6">
+                <div class="card">
+                  <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+                  Permissions <span class="badge badge-primary badge-pill bg-secondary">{{perms|count}}</span>
+                  </div>
+                  <div style="overflow-y: scroll; max-height:200px;">
+                  <ul class="list-group" style="padding-bottom:5px;">
+                    {% for perm in perms%}
+                    <li class="list-group-item">{{perm}}</li>
+                    {% endfor %}
+                  </ul>
+                  </div>
                 </div>
-            </li>
-          {% endfor %}
-          </tbody>
-        </ul>
+                </div>
+                <div class="col-sm-6">
+                <div class="card">
+                  <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+                  Static URLs  <span class="badge badge-primary badge-pill bg-secondary">{{urls|count}}</span>
+                  </div>
+                  <div style="overflow-y: scroll; max-height:200px;">
+                    <ul class="list-group" style="padding-bottom:5px;">
+                      {% for url in urls %}
+                        <li class="list-group-item font-small" style="font-size: 12px;">{{url}}</li>
+                      {% endfor %}
+                    </ul>
+                </div>
+                </div>
+                </div>
+              </div>
+              <br>
+              <div class="row">
+                <div class="col">
+
+                <div class="card d-flex">
+                  <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+
+                  Sandbox Runs  <span class="badge badge-primary badge-pill bg-secondary">{{sandboxs|count}}</span>
+                  </div>
+                  <div style="overflow-y: scroll; height:400px;">
+                    <ul class="list-group" style="padding-bottom:5px;">
+                      <tbody>
+                      {% for sandbox in sandboxs %}
+                        <li  class="clickable list-group-item font-small" style="font-size: 12px; ">
+                          <table class="sandbox_table table-dark">
+                              <thead class="thead-dark">
+                                <tr>
+                                  <th>Start Time</th>
+                                  <th>Time Limit</th>
+                                  <th>URLs</th>
+                                  <th></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+
+                                <tr>
+                                  <td>{{sandbox['_source']['start_time']}}</td>
+                                  <td> {{sandbox['_source']['time_limit']}}</td>
+                                  <td>{{sandbox['_source']['urls']|count}}</td>
+                                  <td><button id="btn_toggle" class="btn-primary"  data-toggle="collapse" data-target="#accordion_{{loop.index}}">Show details</button><td>
+                                </tr>
+                              </tbody>
+
+                              </table>
+
+
+                          <div id="accordion_{{loop.index}}"  class="collapse">
+                            <hr>
+                            <table class="table-dark sandbox_detail">
+                              <thead class="thead-active">
+                              <tr>
+                                <th>Method</th>
+                                <th>URL</th>
+                              </tr>
+                              </thead>
+                              <tbody>
+                            {% for url in sandbox['_source']['urls']%}
+                            <tr>
+                              <td>{{url[0]}}</td>
+                              <td>{{url[1]}}<td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+                            </div>
+                        </li>
+                      {% endfor %}
+                      </tbody>
+                    </ul>
+                </div>
+
+
+              </div>
+              </div>
+        </div>
+        </div>
+        <div class="tab-pane active fade" id="source">
+            <h4 class="mt-2">Source code tab content</h4>
+            <p></p>
+        </div>
+        <div class="tab-pane active fade" id="related">
+            <h4 class="mt-2">Related tab content</h4>
+            <p>graph</p>
+        </div>
     </div>
-
-
-  </div>
+    <hr>
 </div>
-
-
-
-
 
 {% endblock %}

@@ -10,7 +10,15 @@
 #ext_name{
   font-size: 24px;
 }
+#reportTab a {
+
+}
+.sandbox_detail td{
+  border-width: 1px;
+  border-style: solid;
+}
 .sandbox_table td{
+
   padding-right:55px;
 }
 .sandbox_table th{  text-align: left;
@@ -20,28 +28,14 @@
    vertical-align: top;
  }
  .slider {
-   -webkit-appearance: none;
-   width: 180px;
+   width: 200px;
    height: 20px;
-   background: #d3d3d3;
-   outline: none;
-   opacity: 0.7;
-   -webkit-transition: .2s;
-   transition: opacity .2s;
  }
 
  .slider:hover {
    opacity: 1;
  }
 
- .slider::-webkit-slider-thumb {
-   -webkit-appearance: none;
-   appearance: none;
-   width: 25px;
-   height: 20px;
-   background: #4CAF50;
-   cursor: pointer;
- }
 
 #stat_box {
     /* Within a circle, centered text looks prettier. */
@@ -71,11 +65,14 @@
 .wrapper {
     display: block;
 }
+.list-group-item.active {
+      color: green;
+}
 
 #sidebar.active {
     margin-left: -250px;
     background: #f1d74c;
-    color: #ffffff;
+
 }
 #sidebar .sidebar-header {
     padding: 20px;
@@ -103,7 +100,7 @@
 }
 
 #sidebar ul li.active > a, a[aria-expanded="true"] {
-    color: #fff;
+    color: green;
     background: #6d7fcc;
 }
 ul ul a {
@@ -115,12 +112,19 @@ ul ul a {
 .wrapper {
     display: block;
 }
+.center-block{
+  margin-left: 20%;
+}
+#sidebar-wrapper {
+  position: fixed;
+  z-index: 9999;
 
+}
 #sidebar {
+    width:200px;
     min-width: 250px;
     max-width: 250px;
     height: 100vh;
-    position: fixed;
     top: 0;
     left: 0;
     /* top layer */

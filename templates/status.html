@@ -27,30 +27,55 @@
 
 <h1>Status Page</h1>
 <br>
-
-<div id="flat_bar">
-  <h4 id="flat_bar" h4>
-    Total extensions in database:&nbsp;&nbsp;&nbsp;&nbsp;</h4>
-    <div id="stat_box">{{es_total}}</div>
-</div>
-<br>
-<br>
-<br>
-<br>
-<div id="flat_bar">
-  <h4 id="flat_bar">Total extensions on disk:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4>
- <div id="stat_box">{{disk_total}}</div>
-</div>
+<div class="row">
+<div class="col">
+<div class="card">
+  <div class="card-header bg-primary">
+    Extension information
+    </div>
+    <ul class="list-group">
+    <li class="list-group-item">
+      Total extensions in database:&nbsp;&nbsp;&nbsp;&nbsp;</h4>
+      <span class="badge badge-primary badge-pill">{{es_total}}</span>
+      </li>
+      <li class="list-group-item">
+        Total extensions on disk:&nbsp;&nbsp;&nbsp;&nbsp;</h4>
+         <span class="badge badge-primary badge-pill">{{disk_total}}</span>
+         </li>
+  </div>
+  </div>
+  <div class="col">
+  <div class="card">
+    <div class="card-header bg-primary">
+      Extension Sandbox Queue
+    </div>
+    <table>
+        <thead>
+          <tr>
+            <th>Scan ID<br></th>
+            <th>Start time</th>
+            <th>Extension</th>
+            <th>User</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+    </table>
+    </div>
+    </div>
+  </div>
 <br>
 <br>
 <br>
 <br>
 <form>
     <a href=# id='update_all'><button onclick="alert('This button is not yet supported');" class='btn btn-primary'>Update all</button></a>
-    <a href=# id='update_urls'><button onclick="alert('This button is not yet supported');" class='btn btn-primary'>Update URLS</button></a>
 </form>
-<div>update status:
-{{output}}
-</div>
 
 {% endblock %}

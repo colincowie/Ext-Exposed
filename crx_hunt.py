@@ -278,7 +278,7 @@ def search():
 
         if search_fields != [] or not sandbox_search:
             # build search for elasticsearch
-            search_object = { "query": {"multi_match" : {'query':keyword, 'fields':search_fields}}}
+            search_object = { "query": {"multi_match" : {'query':keyword, 'type':'phrase', 'fields':search_fields}}}
             # query es
             res = es.search(index="crx", body=search_object,size=1000)
             for hit in res['hits']['hits']:
@@ -290,6 +290,7 @@ def search():
                 for hit in res['hits']['hits']:
                     if ext == hit['_source']['ext_id']:
                         results = hit['_source']
+                        #print("match: "+str(hit['_source']['ext_id']))
                         url_data.append(results)
 
         return render_template('results.html', url_data=url_data,keyword=keyword,es_status=es_status)

@@ -61,13 +61,13 @@
 
 ## Development Tracking
 ##### Priority
-1. [ ] Run chrome headless with virtual display
-2. [ ] Scan in progress view
-3. [ ] Queue information 
-4. [ ] Bulk import of extension
-5. [ ] Source file viewing 
-6. [ ] Profile / settings 
-7. [ ] Deploy alpha! 
+1. [ ] Scan log history in elasticsearch (in progress)
+2. [ ] Run chrome headless with virtual display
+3. [ ] Source file viewing 
+4. [ ] Profile / settings 
+5. [ ] Finish scan in progress / loading view 
+6. [ ] Deploy alpha! 
+7. [ ] Bulk import of extension
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
 - [ ] More details about request 
@@ -92,6 +92,7 @@
 - [ ] Tags?
 
 ##### Completed
+- [x] Queue information 
 - [x] handle no redis errors
 - [x] reporting page
 - [x] Extension Submitting

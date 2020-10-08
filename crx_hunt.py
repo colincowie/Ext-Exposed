@@ -1,43 +1,25 @@
-import csv, re, os
-import hashlib
-import argparse
-import requests
-import logging
-import uuid
-import types
-import json
-import redis, time
+import re, os, uuid, json, time,redis, hashlib, argparse
 from rq import Queue
-from flask_wtf import FlaskForm
-from elasticsearch import Elasticsearch
+from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
+from elasticsearch import Elasticsearch
 from sqlalchemy.ext.declarative import declarative_base
 from wtforms import StringField, PasswordField, SubmitField
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory
-from selenium import webdriver
-
-
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run
+
 
 app = Flask(__name__)
 es = Elasticsearch()
 r = redis.Redis()
 q = Queue(connection=r)
-logger = logging.getLogger("testing")
-logger.info("test with a new log")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
 db = SQLAlchemy(app)
 Base = declarative_base()
 Base.query = db.session.query_property()
-
-class LoginForm(FlaskForm):
-    username = StringField('Username')
-    password = PasswordField('Password')
-    submit = SubmitField('Submit')
 
 class User(db.Model):
     """ Create user table"""

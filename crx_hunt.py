@@ -140,12 +140,15 @@ def scan():
             ext_scan = EXT_Analyze(ext_id)
             ext_name = ext_scan.name
             print("name: "+ext_name)
+            new_jobs["name"] = ext_name
+            new_jobs["ext_id"] = ext_id
             static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name)
+
             time.sleep(2)
             #print(job.result)
             print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
             new_jobs['static'] = str(static_job.id)
-
+            new_jobs['enqueued_at'] = static_job.enqueued_at
         if request.form.get("sandbox") != None:
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
@@ -173,7 +176,19 @@ def scan():
                 print("\x1b[32m[+] Extension mitm data index created in ES: \033[1;0m"+ext_id)
             except:
                 print("Failed to create extension mitm data index")
-        return json.dumps(new_jobs)
+
+        scan_log_body = {
+            'name':new_jobs["name"],
+            'ext_id':new_jobs["ext_id"],
+            'enqueued_at':new_jobs['enqueued_at'],
+        }
+        try:
+            es.index(index='scan_log',body=scan_log_body)
+            print("\x1b[32m[+] Extension scan log index created in ES: \033[1;0m")
+        except:
+            print("Failed to create extension scan log index")
+        return new_jobs
+
         #return redirect('/report/'+ext_id)
 
 @app.route('/status/<job_id>')
@@ -303,23 +318,15 @@ def status():
         disk_total = len(next(os.walk('static/output'))[1])
         job_results=[]
         jobs = q.jobs
-        for j in q.jobs:
-            job_results.append([j,j.args[2],j.get_status()])
-        #print(str(job_results))
-        es_body = {
-            "query": {
-                "match_all": {}
-            }
-        }
-        scans = []
         try:
-            ext_sandboxs = es.search(index="sandbox_data", body={'query': {'match': {'uuid': '*'}}}, size=10)
-            scan_results = ext_sandboxs['hits']
-            for sandbox in scan_results:
-                scans.append(sandbox['_source'])
+            for j in q.jobs:
+                job_results.append([j,j.args[2],j.get_status()])
         except:
-            ext_sandboxs = []
-        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scans)
+            print("[*] No jobs")
+
+        scans = es.search(index="scan_log", q="*", size=10)
+        scan_results = scans['hits']['hits']
+        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results)
 
 @app.route('/update_all')
 def update_all():

@@ -146,13 +146,13 @@ class EXT_Analyze():
 
     def name(self):
         return str(self.name)
-def static_run(ext_scan, ext_id):
+
+def static_run(ext_scan, ext_id, name):
     es = Elasticsearch()
     ext_downloads = ext_scan.get_downloads(ext_id)
     ext_urls = ext_scan.run(ext_id)
     ext_perms = ext_scan.get_perms(ext_id)
-    ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
-    ext_scan.name = ext_name
+    ext_name = name
     logo_path = ext_scan.get_icon(ext_id)
     if not isinstance(logo_path, str):
         try:

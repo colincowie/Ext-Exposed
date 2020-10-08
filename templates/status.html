@@ -54,25 +54,25 @@
     </div>
         <br>
     <div class="row justify-content-center">
-    <table class="table-bordered">
+    <table class="scan_log_table" style="padding:5px;">
           <thead class="table-primary">
-          <tr style="text-align: center;">
-            <th>Scan ID<br></th>
-            <th>Start time</th>
+          <tr class="table-primary" style="text-align: center;">
             <th>Extension Name</th>
+            <th>ID<br></th>
+            <th>Start time</th>
             <th>Status</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="table-bordered">
         <tr>
           <td colspan="4" class="table-secondary" style="text-align: center; vertical-align: middle;">Active Queue</td>
         </tr>
         {% if jobs|length %}
           {% for job in jobs %}
-            <tr>
+            <tr class="table-dark">
+              <td>{{job[1]}}</td>
               <td style="font-size:10px;">{{job[0]['id']}}</td>
               <td>{{job[0]['enqueued_at']}}</td>
-              <td>{{job[1]}}</td>
               <td>{{job[2]}}</td>
             </tr>
           {% endfor %}
@@ -85,12 +85,11 @@
           <td colspan="4" class="table-secondary" style="text-align: center; vertical-align: middle;">Recent Scans</td>
         </tr>
         {% for scan in scans %}
-          <tr>
-            <td>{{scan['job_id']}}</td>
-            <td>{{scan['start_time']}}</td>
-            <td>{{scan['ext_id']}}</td>
-            <td> {{scan['time_limit']}}</td>
-
+          <tr  class="table-dark">
+            <td>{{scan['_source']['name']}}
+            <td>{{scan['_source']['ext_id']}}</td>
+            <td>{{scan['_source']['enqueued_at']}}</td>
+            <td></td>
           </tr>
         {% endfor %}
         </tbody>

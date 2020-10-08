@@ -35,11 +35,7 @@
 
 #### Install
 
-1. Create a new python virutal enviroment (option)
-  - `python3 -m venv env`
-  - `source env/bin/activate`
-
-2. Install python requirements
+1. Install python requirements
   - `python3 -m pip install -r requirements.txt`
 
 #### Elasticsearch setup
@@ -61,21 +57,19 @@
 
 ## Development Tracking
 ##### Priority
-1. [ ] Scan log history in elasticsearch (in progress)
-2. [ ] Run chrome headless with virtual display
-3. [ ] Source file viewing 
-4. [ ] Profile / settings 
-5. [ ] Finish scan in progress / loading view 
-6. [ ] Deploy alpha! 
-7. [ ] Bulk import of extension
+1. [ ] Run chrome headless with virtual display
+2. [ ] Source file viewing
+3. [ ] Profile / settings
+4. [ ] Finish scan in progress / loading view
+5. [ ] Deploy alpha!
+6. [ ] Bulk import of extension
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
-- [ ] More details about request 
+- [ ] More details about request
 - [ ] whitelist filtering
 ##### Static
 - [ ] source code file viewer
 ##### Front End
-- [ ] Queue stats info
 - [ ] Update frontend in "real-time"
 #### Deployment Prep
 - [ ] update requirements.txt
@@ -83,7 +77,7 @@
 - [ ] Security bot deployments
 - [ ] CI Testing
 - [ ] Docker Image!
-- [ ] Documentation 
+- [ ] Documentation
 ##### Yara
 - [ ] Yara scanning
 - [ ] Rule storage
@@ -92,7 +86,8 @@
 - [ ] Tags?
 
 ##### Completed
-- [x] Queue information 
+- [x] Scan log history in elasticsearch
+- [x] Queue information
 - [x] handle no redis errors
 - [x] reporting page
 - [x] Extension Submitting

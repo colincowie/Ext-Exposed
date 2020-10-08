@@ -5,8 +5,9 @@ import requests
 import logging
 import uuid
 import types
-
-
+import json
+import redis, time
+from rq import Queue
 from flask_wtf import FlaskForm
 from elasticsearch import Elasticsearch
 from flask_sqlalchemy import SQLAlchemy
@@ -16,12 +17,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory
 from selenium import webdriver
 
-import redis, time
-from rq import Queue
 
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
-from ext_analyze import EXT_Analyze
+from ext_analyze import EXT_Analyze, static_run
 
 app = Flask(__name__)
 es = Elasticsearch()
@@ -124,91 +123,47 @@ def scan():
         # get ext id
         ext_id = re.findall('[a-z]{32}',keyword)     # Parse the extension id from url
         ext_id = str(ext_id[0])
+        new_jobs = {
+            'static':'',
+            'dynamic':''
+        }
+        try:
+            jobs = q.jobs
+        except:
+            return "Critial Error: redis server not working, sandbox not ran. Please run `redis-server` and `rq worker`"
+
 
         if request.form.get("static") != None:
             # Static Analysis
-            ext_scan = EXT_Analyze()
-            ext_downloads = ext_scan.get_downloads(ext_id)
-            ext_urls = ext_scan.run(ext_id)
-            ext_perms = ext_scan.get_perms(ext_id)
-            ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
-            logo_path = ext_scan.get_icon(ext_id)
-            if not isinstance(logo_path, str):
-                try:
-                    logo_path=logo_path['32']
-                except:
-                    try:
-                        logo_path=logo_path['24']
-                    except:
-                        try:
-                            logo_path=logo_path['64']
-                        except:
-                            logo_path=logo_path['128']
+            print("[!] Queuing static analysis for "+ext_id)
 
-                print("!!!! "+str(logo_path))
+            ext_scan = EXT_Analyze(ext_id)
+            ext_name = ext_scan.name
+            print("name: "+ext_name)
+            static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name)
+            time.sleep(2)
+            #print(job.result)
+            print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
+            new_jobs['static'] = str(static_job.id)
 
-            try:
-                es.indices.create(index='crx')
-            except:
-                pass
-
-            ext_search = {'query': {'match': {'ext_id': ext_id}}}
-            ext_res = es.search(index="crx", body=ext_search)
-            if ext_res['hits']['hits']:
-                for hit in ext_res['hits']['hits']:
-                    if ext_id == hit['_source']['ext_id']:
-                        print("Deleting: "+str(hit['_source']))
-                        es.delete(index="crx",id=hit['_id'])
-            body = {
-            'ext_id':ext_id,
-            'name':ext_name,
-            'users':ext_downloads,
-            'permissions':ext_perms,
-            'logo':logo_path,
-            'urls':ext_urls
-            }
-            print("[+] Static analysis results:\n"+str(body))
-
-            # check if ext is in database:
-            dup_search = {'query': {'match': {'ext_id': ext_id}}}
-            ext_res = es.search(index="crx", body=dup_search)
-            hits = []
-            uploaded = False
-            for hit in ext_res['hits']['hits']:
-                if len(hits) > 0:
-                    print("[*] extension "+str(ext_id)+" is already in the database. Attempting to update")
-                    try:
-                        es.update(index='crx',body=body,id=hit['_id'])
-
-                    except:
-                        print("")
-
-            try:
-                es.index(index='crx',body=body)
-                print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_id)
-            except:
-                print("Failed to import ")
         if request.form.get("sandbox") != None:
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
             time_limit = int(request.form.get('time_limit'))
             print("Time limit:"+str(time_limit))
-            try:
-                jobs = q.jobs
-            except:
-                return "Critial Error: redis server not working, sandbox not ran. Please run `redis-server` and `rq worker`"
 
             id = uuid.uuid4()
             box = EXT_Sandbox(ext_id, time_limit)
-            job = q.enqueue(sandbox_run, box, id)
+            sandbox_job = q.enqueue(sandbox_run, box, id)
             time.sleep(2)
             #print(job.result)
-            print("[!] Extension enqueued at "+str(job.enqueued_at)+" with job id: "+str(job.id))
+            print("[!] Dynamic enqueued at "+str(sandbox_job.enqueued_at)+" with job id: "+str(sandbox_job.id))
+            new_jobs['dynamic'] = str(sandbox_job.id)
             sandbox_body = {
                 'uuid':id,
                 'ext_id':ext_id,
-                'start_time':str(job.enqueued_at),
-                'job_id':str(job.id),
+                'start_time':str(sandbox_job.enqueued_at),
+                'job_id':str(sandbox_job.id),
                 'time_limit':time_limit,
                 'urls':[],
             }
@@ -218,10 +173,22 @@ def scan():
                 print("\x1b[32m[+] Extension mitm data index created in ES: \033[1;0m"+ext_id)
             except:
                 print("Failed to create extension mitm data index")
-        ext_path=os.path.join('static/output', id)
+        return json.dumps(new_jobs)
+        #return redirect('/report/'+ext_id)
 
-        return redirect('/report/'+ext_id, tree=make_tree(ext_path))
-
+@app.route('/status/<job_id>')
+def job_status(job_id):
+    job = q.fetch_job(job_id)
+    if job is None:
+        response = {'status': 'unknown'}
+    else:
+        response = {
+            'status': job.get_status(),
+            'result': job.result,
+        }
+        if job.is_failed:
+            response['message'] = job.exc_info.strip().split('\n')[-1]
+    return json.dumps(response)
 
 @app.route('/search', methods=['POST'])
 def search():
@@ -334,7 +301,25 @@ def status():
         else:
             es_total=0
         disk_total = len(next(os.walk('static/output'))[1])
-        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total)
+        job_results=[]
+        jobs = q.jobs
+        for j in q.jobs:
+            job_results.append([j,j.args[2],j.get_status()])
+        #print(str(job_results))
+        es_body = {
+            "query": {
+                "match_all": {}
+            }
+        }
+        scans = []
+        try:
+            ext_sandboxs = es.search(index="sandbox_data", body={'query': {'match': {'uuid': '*'}}}, size=10)
+            scan_results = ext_sandboxs['hits']
+            for sandbox in scan_results:
+                scans.append(sandbox['_source'])
+        except:
+            ext_sandboxs = []
+        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scans)
 
 @app.route('/update_all')
 def update_all():
@@ -373,24 +358,23 @@ def yara():
             es_status = True
         return render_template('yara.html',es_status=es_status)
 
+@app.route('/scanning')
+def scanning():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+        return render_template('scanning.html',es_status=es_status)
+
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                           'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
-def ext_img(ext_id):
-    if not os.path.isfile('./static/img/exts/'+ext_id+'.png'):
-        ob=Screenshot_Clipping.Screenshot()
-        driver = webdriver.Chrome()
-        url = "https://chrome.google.com/webstore/detail/z/"+ext_id
-        driver.get(url)
-        file_path = "./static/img/exts/"+ext_id+".png"
-        time.sleep(2)
-        print(file_path)
-        driver.save_screenshot(file_path)
-        driver.close()
-        driver.quit()
-        print("Saved image!")
 # Parse script arguments
 def parse_args():
     parser = argparse.ArgumentParser(description="Ext Exposed platform ")
@@ -411,13 +395,11 @@ def make_tree(path):
             else:
                 tree['children'].append(dict(name=name))
     return tree
-def load_user(user_id):
-    return User.get(user_id)
 
 if __name__ == '__main__':
     args = parse_args()
     if args.es:
         load_es()
     db.create_all()
-    app.secret_key = "123"
+    app.secret_key = "changethiskey1337"
     app.run(host="127.0.0.1",port=5000,debug=True)

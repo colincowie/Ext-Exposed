@@ -2,9 +2,14 @@
 import os, re, csv, time, json, jsbeautifier, requests, zipfile, urllib
 from tqdm import tqdm
 from bs4 import BeautifulSoup
+from elasticsearch import Elasticsearch
+
 
 class EXT_Analyze():
-    def __init__(self):
+    def __init__(self, id):
+        self.id = id
+        ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
+        self.name = ext_name
         if not os.path.exists('static/output'):
             os.makedirs('static/output')
         pass
@@ -139,9 +144,73 @@ class EXT_Analyze():
         urls = self.get_urls(id)
         return urls
 
+    def name(self):
+        return str(self.name)
+def static_run(ext_scan, ext_id):
+    es = Elasticsearch()
+    ext_downloads = ext_scan.get_downloads(ext_id)
+    ext_urls = ext_scan.run(ext_id)
+    ext_perms = ext_scan.get_perms(ext_id)
+    ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
+    ext_scan.name = ext_name
+    logo_path = ext_scan.get_icon(ext_id)
+    if not isinstance(logo_path, str):
+        try:
+            logo_path=logo_path['32']
+        except:
+            try:
+                logo_path=logo_path['24']
+            except:
+                try:
+                    logo_path=logo_path['64']
+                except:
+                    logo_path=logo_path['128']
+    try:
+        es.indices.create(index='crx')
+    except:
+        pass
+
+    ext_search = {'query': {'match': {'ext_id': ext_id}}}
+    ext_res = es.search(index="crx", body=ext_search)
+    if ext_res['hits']['hits']:
+        for hit in ext_res['hits']['hits']:
+            if ext_id == hit['_source']['ext_id']:
+                print("Deleting: "+str(hit['_source']))
+                es.delete(index="crx",id=hit['_id'])
+    body = {
+    'ext_id':ext_id,
+    'name':ext_name,
+    'users':ext_downloads,
+    'permissions':ext_perms,
+    'logo':logo_path,
+    'urls':ext_urls
+    }
+    print("[+] Static analysis results:\n"+str(body))
+
+    # check if ext is in database:
+    dup_search = {'query': {'match': {'ext_id': ext_id}}}
+    ext_res = es.search(index="crx", body=dup_search)
+    hits = []
+    uploaded = False
+    for hit in ext_res['hits']['hits']:
+        if len(hits) > 0:
+            print("[*] extension "+str(ext_id)+" is already in the database. Attempting to update")
+            try:
+                es.update(index='crx',body=body,id=hit['_id'])
+            except:
+                print("")
+    try:
+        es.index(index='crx',body=body)
+        print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_id)
+        return True
+    except:
+        print("Failed to import to ES")
+        return False
+
+
 if __name__ == "__main__":
     ext = input("[!] Please provide a chrome extension id: ")
-    ext_scan = EXT_Analyze()
+    ext_scan = EXT_Analyze(ext)
     print("[*] Total Downloads: "+str(ext_scan.get_downloads(ext)))
     ext_scan.run(ext)
     print("[*] Permissions: ")

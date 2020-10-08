@@ -47,29 +47,55 @@
   <div class="col">
   <div class="card">
     <div class="card-header bg-primary">
-      Extension Sandbox Queue
+    Other Information
     </div>
-    <table>
-        <thead>
-          <tr>
+    </div>
+    </div>
+    </div>
+        <br>
+    <div class="row justify-content-center">
+    <table class="table-bordered">
+          <thead class="table-primary">
+          <tr style="text-align: center;">
             <th>Scan ID<br></th>
             <th>Start time</th>
-            <th>Extension</th>
-            <th>User</th>
+            <th>Extension Name</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
+        <tr>
+          <td colspan="4" class="table-secondary" style="text-align: center; vertical-align: middle;">Active Queue</td>
+        </tr>
+        {% if jobs|length %}
+          {% for job in jobs %}
+            <tr>
+              <td style="font-size:10px;">{{job[0]['id']}}</td>
+              <td>{{job[0]['enqueued_at']}}</td>
+              <td>{{job[1]}}</td>
+              <td>{{job[2]}}</td>
+            </tr>
+          {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="4" style="text-align: center; vertical-align: middle;">No items currently in the queue</td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td colspan="4" class="table-secondary" style="text-align: center; vertical-align: middle;">Recent Scans</td>
+        </tr>
+        {% for scan in scans %}
           <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>{{scan['job_id']}}</td>
+            <td>{{scan['start_time']}}</td>
+            <td>{{scan['ext_id']}}</td>
+            <td> {{scan['time_limit']}}</td>
+
           </tr>
+        {% endfor %}
         </tbody>
     </table>
-    </div>
-    </div>
-  </div>
+</div>
 <br>
 <br>
 <br>

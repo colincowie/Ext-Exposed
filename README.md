@@ -57,12 +57,13 @@
 
 ## Development Tracking
 ##### Priority
-1. [ ] Run chrome headless with virtual display
+1. [ ] Finish scan in progress / loading view
 2. [ ] Source file viewing
-3. [ ] Profile / settings
-4. [ ] Finish scan in progress / loading view
+3. [ ] Run chrome headless with virtual display (implemented but needs QA)
+4. [ ] Profile / settings
 5. [ ] Deploy alpha!
-6. [ ] Bulk import of extension
+6. [ ] Fix search bugs and add id support 
+7. [ ] Bulk import of extension
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
 - [ ] More details about request

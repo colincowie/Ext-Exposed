@@ -15,8 +15,12 @@
 
   <!-- Custom styles for this template -->
   <link href="{{ url_for('static', filename='css/simple-sidebar.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
+  <link href="{{ url_for('static', filename='css/material.css') }}" rel="stylesheet" >
   <script type="text/javascript" src="{{ url_for('static',filename='js/codemirror.js')}}"></script>
+  <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
+
+  <script src="{{ url_for('static',filename='js/javascript.js') }}"></script>
+
   <link type="text/javascript" rel="{{ url_for('static',filename='css/codemirror.css')}}">
 
 </head>
@@ -62,7 +66,7 @@
 
       <div class="container-fluid">
         <div class="row">
-            <div class="center-block" style="width:800px;padding-left:8%;padding-top:10px;">
+            <div class="center-block" style="width:75%;padding-left:5%;padding-top:10px;">
 
                 {% block content %} {% endblock %}
             </div>

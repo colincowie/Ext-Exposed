@@ -15,7 +15,7 @@
               <label>Users: {{users}}</label>
             </div>
             <div id="text3">
-              <label>ID: {{id}}</label>
+              <span>ID: <label id="ext_id">{{id}}</label></span>
             </div>
         </div>
     </div>
@@ -141,15 +141,39 @@
         </div>
         <div class="tab-pane active fade" id="source">
           <br>
-              <ul id="myUL">
-              {%- for item in tree.children recursive %}
-                  <li><span class="caret">{{ item.name }}</span>
-                  {%- if item.children -%}
-                      <ul class="nested">{{ loop(item.children) }}</ul>
-                  {%- endif %}</li>
-              {%- endfor %}
-              </ul>
-            <p></p>
+          <div class="container-fluid">
+          	<div class="row">
+          		<div class="col-md-4">
+                <ul id="myUL">
+                {%- for item in tree.children recursive %}
+                    <li><span class="caret">{{ item.name }}</span>
+                    {%- if item.children -%}
+                        <ul class="nested">{{loop(item.children)}}</ul>
+                    {%- endif %}</li>
+                {%- endfor %}
+                </ul>
+          		</div>
+          		<div class="col-md-8">
+                <div class="source_code">
+                <textarea  id="editor">
+                </textarea>
+                </div>
+          		</div>
+          	</div>
+          </div>
+          <div class="container">
+          <div class="row">
+              <div class="col-md">
+
+              </div>
+              <div class="col" style="background-color:red;">
+              <div>
+
+              </div>
+              </div>
+              </div>
+
+            </div>
         </div>
         <div class="tab-pane active fade" id="related">
             <h4 class="mt-2">Related tab content</h4>
@@ -161,4 +185,59 @@
         </div>
     <hr>
 </div>
+<script type="text/javascript">
+    var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+     theme: "material",
+     lineNumbers: true,
+     readOnly: false
+   });
+
+   function localLoad(files) {
+       if (files.length == 1) {
+            document.title = escape(files[0].name);
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              editor.setValue(e.target.result);
+            };
+            reader.readAsText(files[0]);
+         }
+    }
+var toggler = document.getElementsByClassName("caret");
+var i;
+
+for (i = 0; i < toggler.length; i++) {
+  toggler[i].addEventListener("click", function() {
+    if(this.parentElement.querySelector(".nested") == null) {
+      filename=this.innerText
+      var file_path = [];
+      $(this).parents('li').each(function() {
+          file_path.push(this.firstChild.innerText)
+      });
+      file_path = file_path.reverse();
+      file_path = file_path.join("/");
+      file_path = "static/output/"+$('#ext_id').text()+"/"+file_path;
+      $.post('/ext_file',
+      {
+        'file_path':file_path
+
+      }, function(content) {
+        $('textarea#editor').val(content);
+        $('textarea#editor').hide();
+        $('textarea#editor').show();
+        var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+         theme: 'material',
+         lineNumbers: true,
+         readOnly: false
+       });
+
+       });
+    }
+    else{
+      this.parentElement.querySelector(".nested").classList.toggle("active");
+      this.classList.toggle("caret-down");
+    };
+  });
+}
+
+</script>
 {% endblock %}

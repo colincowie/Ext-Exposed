@@ -362,7 +362,6 @@ def user_page():
 
     return render_template('user.html',es_status=es_status, user=username)
 
-
 @app.route('/scanning')
 def scanning():
     if not session.get('logged_in'):
@@ -373,6 +372,16 @@ def scanning():
         else:
             es_status = True
         return render_template('scanning.html',es_status=es_status)
+
+@app.route('/ext_file', methods=['POST'])
+def file_read():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        file_location = request.form['file_path']
+        fs = open(file_location, 'r', encoding='utf8')
+        file_source = fs.read()
+        return file_source
 
 @app.route('/favicon.ico')
 def favicon():

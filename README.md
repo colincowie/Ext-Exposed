@@ -57,7 +57,6 @@
 
 ## Development Tracking
 ##### Priority
-1. [ ] Finish scan in progress / loading view
 2. [ ] Source file viewing
 3. [ ] Run chrome headless with virtual display (implemented but needs QA)
 4. [ ] Profile / settings
@@ -87,6 +86,7 @@
 - [ ] Tags?
 
 ##### Completed
+- [x] Finish scan in progress / loading view
 - [x] Scan log history in elasticsearch
 - [x] Queue information
 - [x] handle no redis errors

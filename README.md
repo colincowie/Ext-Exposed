@@ -57,7 +57,6 @@
 
 ## Development Tracking
 ##### Priority
-2. [ ] Source file viewing
 3. [ ] Run chrome headless with virtual display (implemented but needs QA)
 4. [ ] Profile / settings
 5. [ ] Deploy alpha!
@@ -71,6 +70,8 @@
 - [ ] source code file viewer
 ##### Front End
 - [ ] Update frontend in "real-time"
+- [ ] Improve source view ui 
+- [ ] Display and record full extension name
 #### Deployment Prep
 - [ ] update requirements.txt
 - [ ] check for unused imports
@@ -86,6 +87,7 @@
 - [ ] Tags?
 
 ##### Completed
+- [x] Source file viewing
 - [x] Finish scan in progress / loading view
 - [x] Scan log history in elasticsearch
 - [x] Queue information

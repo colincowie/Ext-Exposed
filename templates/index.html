@@ -86,19 +86,20 @@
             </button>
           </div>
           <div class="modal-body">
-            <p>Static Analysis progress</p>
+            <span>Static Analysis:  <p style="display:inline;" id="static_output"> waiting</p></span>
             <div class="progress">
-              <div id="static_bar", class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+              <div id="static_bar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:5%"></div>
             </div>
-            <p>Dynamic Analysis progress</p>
+            <span>Dynamic Analysis:  <p style="display:inline;" id="dynamic_output"> waiting</p></span>
+
             <div class="progress">
-              <div id="dynamic_bar", class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+              <div id="dynamic_bar", aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:5%"></div>
             </div>
-            <p id=output>test</p>
+
 
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Save changes</button>
+            <a id="report_button" href="/"><button type="button" class="btn btn-primary" href="">Open report</button></a>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
         </div>
@@ -126,8 +127,13 @@
         method: "POST",
         dataType: "json",
         success: function(data, status, request) {
+          report_url ="/report/"+data['ext_id'];
+          $('#report_button').attr('href',report_url);
           if(data['static'] != ""){
-            check_job_status($SCRIPT_ROOT+"/status/"+data['static'],'static_0')
+            check_job_status($SCRIPT_ROOT+"/status/"+data['static'], 'static')
+          }
+          if(data['dynamic'] != ""){
+            check_job_status($SCRIPT_ROOT+"/status/"+data['dynamic'], 'dynamic')
           }
             $('#myModal').modal('show')
         },
@@ -137,28 +143,53 @@
       });
     });
 
-    function check_job_status(status_url, pbar) {
+    function check_job_status(status_url, type) {
     $.getJSON(status_url, function(data) {
-    $('#output').text(data.status).show();
 
     console.log(data);
+    if(type == "static"){
+      bar = $('#static_bar');
+      $('#static_output').text(data.status).show();
+    }
+    else if(type == "dynamic"){
+      bar = $('#dynamic_bar');
+      $('#dynamic_output').text(data.status).show();
+    }
     switch (data.status) {
       case "unknown":
-          alert("Unknown job id");
-          //$("#submit").removeAttr("disabled");
+          alert(data.status)
           break;
       case "finished":
-          //flash_alert(data.result, "success");
-          //$("#submit").removeAttr("disabled");
+          bar.attr('aria-valuenow',100);
+          bar.width('100%');
+          bar.addClass('bg-success');
           break;
       case "failed":
-        //  flash_alert("Job failed: " + data.message, "danger");
-          //$("#submit").removeAttr("disabled");
+          bar.attr('aria-valuenow',100);
+          bar.width('100%');
+          bar.addClass('bg-danger');
+          break;
+    case "started":
+        bar.attr('aria-valuenow',50);
+        bar.width('50%');
+        bar.addClass('bg-info');
+        setTimeout(function() {
+          check_job_status(status_url, type);
+        }, 2);
+        break;
+      case "queued":
+          bar.attr('aria-valuenow',15);
+          bar.width('10%');
+          bar.addClass('bg-primary');
+          setTimeout(function() {
+            check_job_status(status_url, type);
+          }, 2);
           break;
       default:
+        alert(data.status)
         // queued/started/deferred
         setTimeout(function() {
-          check_job_status(status_url);
+          check_job_status(status_url, type);
         }, 500);
     }
   });

@@ -10,7 +10,6 @@ from flask import Flask, flash, redirect, render_template, request, session ,url
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run
 
-
 app = Flask(__name__)
 es = Elasticsearch()
 r = redis.Redis()
@@ -20,6 +19,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
 db = SQLAlchemy(app)
 Base = declarative_base()
 Base.query = db.session.query_property()
+
+Build_Ver = "Alpha"
 
 class User(db.Model):
     """ Create user table"""
@@ -58,6 +59,7 @@ def login():
         if user and user.password == password:
             # Todo: Research how to improve access tokens
             session['logged_in'] = True
+            session['username'] = name
             flash('Welcome to Ext Exposed, '+str(name)+'!')
 
             return redirect(url_for('home'))
@@ -170,7 +172,6 @@ def scan():
         except:
             print("Failed to create extension scan log index")
         return new_jobs
-
         #return redirect('/report/'+ext_id)
 
 @app.route('/status/<job_id>')
@@ -183,6 +184,7 @@ def job_status(job_id):
             'status': job.get_status(),
             'result': job.result,
         }
+        print(response)
         if job.is_failed:
             response['message'] = job.exc_info.strip().split('\n')[-1]
     return json.dumps(response)
@@ -308,7 +310,7 @@ def status():
 
         scans = es.search(index="scan_log", q="*", size=10)
         scan_results = scans['hits']['hits']
-        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results)
+        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results, ver=Build_Ver)
 
 @app.route('/update_all')
 def update_all():
@@ -346,6 +348,20 @@ def yara():
         else:
             es_status = True
         return render_template('yara.html',es_status=es_status)
+@app.route('/user')
+def user_page():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+
+    username = session['username']
+
+    return render_template('user.html',es_status=es_status, user=username)
+
 
 @app.route('/scanning')
 def scanning():
@@ -357,7 +373,6 @@ def scanning():
         else:
             es_status = True
         return render_template('scanning.html',es_status=es_status)
-
 
 @app.route('/favicon.ico')
 def favicon():

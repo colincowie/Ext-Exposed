@@ -10,6 +10,8 @@ from elasticsearch import Elasticsearch
 
 from flask import current_app
 
+from pyvirtualdisplay import Display
+
 class EXT_Sandbox():
     def __init__(self,ext_id,time_limit):
         self.ext_id = ext_id
@@ -59,6 +61,11 @@ class EXT_Sandbox():
         ext_download = self.download_ext(id)
         if ext_download:
             print("[*] Creating chrome webdriver")
+            try:
+                display = Display(visible=0, size=(800, 600))
+                display.start()
+            except:
+                print("[-] Error! You need to install xvfb (linux package)")
             # Create the webdriver with proxy and extension
             options = webdriver.ChromeOptions()
             # Load chrome extension
@@ -78,6 +85,10 @@ class EXT_Sandbox():
                 driver.quit()
             except:
                 print("[?] Error: browser is already closed")
+            try:
+                display.stop()
+            except:
+                pass
             print('[*] Shutting down mitmproxy...')
             mitm.shutdown()
             output = "reports/"+id+"/mitm_urls.txt"

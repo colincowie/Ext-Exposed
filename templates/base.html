@@ -16,7 +16,8 @@
   <!-- Custom styles for this template -->
   <link href="{{ url_for('static', filename='css/simple-sidebar.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
-
+  <script type="text/javascript" src="{{ url_for('static',filename='js/codemirror.js')}}"></script>
+  <link type="text/javascript" rel="{{ url_for('static',filename='css/codemirror.css')}}">
 
 </head>
 
@@ -46,6 +47,7 @@
         <a href="/hunt" class="list-group-item list-group-item-action bg-dark border-light">Hunt</a>
         <a href="/yara" class="list-group-item list-group-item-action bg-dark  border-light">Yara Signatures</a>
         <a href="/status" class="list-group-item list-group-item-action bg-dark border-light">Status</a>
+        <a href="/user" class="list-group-item list-group-item-action bg-dark  border-light">Settings</a>
         <a href="/logout" class="list-group-item list-group-item-action bg-dark  border-light">Logout</a>
       </div>
       <div class="es_status">
@@ -75,17 +77,7 @@
 
   <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
-  <script>
-  var toggler = document.getElementsByClassName("caret");
-  var i;
 
-  for (i = 0; i < toggler.length; i++) {
-    toggler[i].addEventListener("click", function() {
-      this.parentElement.querySelector(".nested").classList.toggle("active");
-      this.classList.toggle("caret-down");
-    });
-  }
-  </script>
 
 
 </body>

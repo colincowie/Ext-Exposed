@@ -49,6 +49,11 @@
     <div class="card-header bg-primary">
     Other Information
     </div>
+    <ul class="list-group">
+    <li class="list-group-item">
+      Build Version:&nbsp;&nbsp;</h4>
+      <span class="badge badge-primary badge-pill">{{ver}}</span>
+      </li>
     </div>
     </div>
     </div>
@@ -73,7 +78,7 @@
               <td>{{job[1]}}</td>
               <td style="font-size:10px;">{{job[0]['id']}}</td>
               <td>{{job[0]['enqueued_at']}}</td>
-              <td>{{job[2]}}</td>
+              <td><span class="bg-info badge badge-primary badge-pill">{{job[2]}}<span></td>
             </tr>
           {% endfor %}
         {% else %}
@@ -89,18 +94,11 @@
             <td>{{scan['_source']['name']}}
             <td>{{scan['_source']['ext_id']}}</td>
             <td>{{scan['_source']['enqueued_at']}}</td>
-            <td></td>
+            <td><span class="bg-success badge badge-primary badge-pill">Finished</span></td>
           </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
 <br>
-<br>
-<br>
-<br>
-<form>
-    <a href=# id='update_all'><button onclick="alert('This button is not yet supported');" class='btn btn-primary'>Update all</button></a>
-</form>
-
 {% endblock %}

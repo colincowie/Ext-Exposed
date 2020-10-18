@@ -168,8 +168,8 @@ def scan():
         try:
             es.index(index='scan_log',body=scan_log_body)
             print("\x1b[32m[+] Extension scan log index created in ES: \033[1;0m")
-        except:
-            print("Failed to create extension scan log index")
+        except Exception as e: 
+            print("Failed to create extension scan log index:\n"+e)
         return new_jobs
         #return redirect('/report/'+ext_id)
 

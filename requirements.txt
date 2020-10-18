@@ -11,3 +11,4 @@ bs4
 redis
 mitmproxy
 pyvirtualdisplay
+lxml

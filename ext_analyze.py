@@ -127,7 +127,7 @@ class EXT_Analyze():
             print(e)
             return None
         # set up soup for some parsing
-        soup = BeautifulSoup(ext_page.content,features="")
+        soup = BeautifulSoup(ext_page.content,features="lxml")
         # Parse the <meta> tag for the exact number, remove junk characters and round it.
         download_tag = soup.find(itemprop="interactionCount")
         if download_tag is not None:

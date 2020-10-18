@@ -127,7 +127,7 @@ class EXT_Analyze():
             print(e)
             return None
         # set up soup for some parsing
-        soup = BeautifulSoup(ext_page.content,features="lxml")
+        soup = BeautifulSoup(ext_page.content,features="")
         # Parse the <meta> tag for the exact number, remove junk characters and round it.
         download_tag = soup.find(itemprop="interactionCount")
         if download_tag is not None:
@@ -192,13 +192,17 @@ def static_run(ext_scan, ext_id, name):
     ext_res = es.search(index="crx", body=dup_search)
     hits = []
     uploaded = False
-    for hit in ext_res['hits']['hits']:
-        if len(hits) > 0:
-            print("[*] extension "+str(ext_id)+" is already in the database. Attempting to update")
-            try:
-                es.update(index='crx',body=body,id=hit['_id'])
-            except:
-                print("")
+    # check for duplicates
+    try:
+        for hit in ext_res['hits']['hits']:
+            if len(hits) > 0:
+                print("[*] extension "+str(ext_id)+" is already in the database. Attempting to update")
+                try:
+                    es.update(index='crx',body=body,id=hit['_id'])
+                except:
+                    pass
+    except:
+        pass
     try:
         es.index(index='crx',body=body)
         print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_id)

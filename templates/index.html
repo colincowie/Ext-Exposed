@@ -127,6 +127,7 @@
         method: "POST",
         dataType: "json",
         success: function(data, status, request) {
+          $('#myModal').modal('show')
           report_url ="/report/"+data['ext_id'];
           $('#report_button').attr('href',report_url);
           if(data['static'] != ""){
@@ -135,10 +136,10 @@
           if(data['dynamic'] != ""){
             check_job_status($SCRIPT_ROOT+"/status/"+data['dynamic'], 'dynamic')
           }
-            $('#myModal').modal('show')
+
         },
-        error: function(jqXHR, textStatus, errorThrown) {
-          alert(jqXHR.responseText)
+        error: function(jqXHR, textStatus) {
+          alert("Error: "+textStatus)
         }
       });
     });
@@ -157,7 +158,6 @@
     }
     switch (data.status) {
       case "unknown":
-          alert(data.status)
           break;
       case "finished":
           bar.attr('aria-valuenow',100);
@@ -175,7 +175,7 @@
         bar.addClass('bg-info');
         setTimeout(function() {
           check_job_status(status_url, type);
-        }, 2);
+        }, 1500);
         break;
       case "queued":
           bar.attr('aria-valuenow',15);
@@ -183,14 +183,14 @@
           bar.addClass('bg-primary');
           setTimeout(function() {
             check_job_status(status_url, type);
-          }, 2);
+          }, 3000);
           break;
       default:
         alert(data.status)
         // queued/started/deferred
         setTimeout(function() {
           check_job_status(status_url, type);
-        }, 500);
+        }, 3000);
     }
   });
 }

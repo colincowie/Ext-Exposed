@@ -4,7 +4,6 @@ from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
 from sqlalchemy.ext.declarative import declarative_base
-from wtforms import StringField, PasswordField, SubmitField
 from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
@@ -99,7 +98,7 @@ def scan():
     else:
         if not es.ping():
             flash('Error: The elasticsearch database is not connected.')
-            return redirect(url_for('home'))
+            es_status = False
         else:
             es_status = True
         # Get search query
@@ -291,14 +290,19 @@ def status():
     else:
         if not es.ping():
             es_status = False
+            es_total = 0
+            scan_results = []
         else:
             es_status = True
-        search = {'query': {'match': {'name': '*'}}}
-        if es.indices.exists(index="crx"):
-            res = es.search(index="crx", body=search,size=0)
-            es_total=res['_shards']['total']
-        else:
-            es_total=0
+            search = {'query': {'match': {'name': '*'}}}
+            if es.indices.exists(index="crx"):
+                res = es.search(index="crx", body=search,size=0)
+                es_total=res['_shards']['total']
+            else:
+                es_total=0
+            scans = es.search(index="scan_log", q="*", size=10)
+            scan_results = scans['hits']['hits']
+
         disk_total = len(next(os.walk('static/output'))[1])
         job_results=[]
         jobs = q.jobs
@@ -308,8 +312,6 @@ def status():
         except:
             print("[*] No jobs")
 
-        scans = es.search(index="scan_log", q="*", size=10)
-        scan_results = scans['hits']['hits']
         return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results, ver=Build_Ver)
 
 @app.route('/update_all')

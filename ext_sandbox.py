@@ -79,7 +79,7 @@ class EXT_Sandbox():
             print("[*] Creating chrome driver")
             driver = webdriver.Chrome(executable_path="/bin/chromedriver",options=options)
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
-            driver.get("chrome://extensions/?id="+id)
+            driver.get("chrome://newtab")
             print("[*] Sleeping while extension is running")
             time.sleep(self.time)
             try:

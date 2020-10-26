@@ -208,8 +208,9 @@ def static_run(ext_scan, ext_id, name):
         es.index(index='crx',body=body)
         print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_id)
         return True
-    except:
-        print("Failed to import to ES")
+    except Exception as e:
+        print("[-] Failed to import to ES")
+        print(e)
         return False
 
 

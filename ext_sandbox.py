@@ -77,8 +77,8 @@ class EXT_Sandbox():
             #options.add_experimental_option("detach", True)
             print("[*] Creating chrome driver")
             driver = webdriver.Chrome(options=options)
+            time.sleep(3)
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
-
             driver.get("chrome://extensions/?id="+id)
             print("[*] Sleeping while extension is running")
             time.sleep(self.time)

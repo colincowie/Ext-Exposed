@@ -163,8 +163,6 @@ def sandbox_run(box, uuid):
     res = es.search(index='sandbox_data',body={'query':{'match':{'uuid':uuid}}})
     try:
         es_data = res['hits']['hits'][0]
-    try:
-        es_data = res['hits']['hits'][0]
     except:
         print("[*] no urls found ")
     sandbox_body = {"doc": {"urls":url_data}}

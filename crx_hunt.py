@@ -213,6 +213,8 @@ def search():
             search_fields.append("urls")
         if request.form.get("ext_names"):
             search_fields.append("name")
+        if request.form.get("ext_ids"):
+            search_fields.append("ext_id")
         if request.form.get("permissions"):
             search_fields.append("permissions")
         if request.form.get("sandbox_urls"):

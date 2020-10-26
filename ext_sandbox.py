@@ -80,10 +80,16 @@ class EXT_Sandbox():
             driver = webdriver.Chrome(executable_path="/bin/chromedriver",options=options)
             driver.set_page_load_timeout(self.time)
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
-            driver.get("chrome://newtab")
-            driver.get("google.com")
-            print("[*] Sleeping while extension is running")
-            time.sleep(self.time)
+            failed = False
+            try:
+                driver.get("chrome://newtab")
+                driver.get("google.com")
+            except:
+                failed = True
+                print("[-] Erorr: Likely timeout")
+            if not failed:
+                print("[*] Sleeping while extension is running")
+                time.sleep(self.time)
             try:
                 driver.close()
                 driver.quit()

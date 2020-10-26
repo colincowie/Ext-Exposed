@@ -75,8 +75,8 @@ class EXT_Sandbox():
             options.add_argument('--proxy-bypass-list=*')
             options.add_argument('--allow-running-insecure-content')
             options.add_argument('--ignore-certificate-errors')
-            options.add_argument('--headless')                                             │
-            options.add_argument('--no-sandbox')                                           │
+            options.add_argument('--headless')
+            options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
             #options.add_experimental_option("detach", True)
             print("[*] Creating chrome driver")
@@ -84,6 +84,7 @@ class EXT_Sandbox():
             time.sleep(3)
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
             driver.get("chrome://extensions/?id="+id)
+            driver.get("https://google.com")
             print("[*] Sleeping while extension is running")
             time.sleep(self.time)
             try:

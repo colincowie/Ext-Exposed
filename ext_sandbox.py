@@ -95,7 +95,7 @@ class EXT_Sandbox():
             mitm.shutdown()
             output = "reports/"+id+"/mitm_urls.txt"
             data = []
-            url_file = open(output, 'w')
+            url_file = open(output, 'r+')
             for line in url_file.readlines():
                 verb = line.split()[0]
                 url = line.split()[1]
@@ -161,9 +161,16 @@ def sandbox_run(box, uuid):
         pass
     ext_id = str(box.ext_id)
     res = es.search(index='sandbox_data',body={'query':{'match':{'uuid':uuid}}})
-    es_data = res['hits']['hits'][0]
-    #print("ES found "+str(es_data))
+    try:
+        es_data = res['hits']['hits'][0]
+    try:
+        es_data = res['hits']['hits'][0]
+    except:
+        print("[*] no urls found ")
     sandbox_body = {"doc": {"urls":url_data}}
+
+    #print("ES found "+str(es_data))
+
     try:
         es.update(index='sandbox_data', id=es_data['_id'], body=sandbox_body)
         return True

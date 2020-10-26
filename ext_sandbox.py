@@ -72,8 +72,12 @@ class EXT_Sandbox():
             # Load chrome extension
             options.add_argument('load-extension='+os.path.abspath("static/output")+'/'+str(id));
             options.add_argument('--proxy-server=127.0.0.1:8080')
+            options.add_argument('--proxy-bypass-list=*')
             options.add_argument('--allow-running-insecure-content')
             options.add_argument('--ignore-certificate-errors')
+            options.add_argument('--headless')                                             │
+            options.add_argument('--no-sandbox')                                           │
+            options.add_argument('--disable-dev-shm-usage')
             #options.add_experimental_option("detach", True)
             print("[*] Creating chrome driver")
             driver = webdriver.Chrome(options=options)
@@ -95,7 +99,7 @@ class EXT_Sandbox():
             mitm.shutdown()
             output = "reports/"+id+"/mitm_urls.txt"
             data = []
-            url_file = open(output, 'r')
+            url_file = open(output, 'rw')
             for line in url_file.readlines():
                 verb = line.split()[0]
                 url = line.split()[1]

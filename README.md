@@ -57,11 +57,14 @@
 
 ## Development Tracking
 ##### Priority
-3. [ ] Run chrome headless with virtual display (implemented but needs QA)
-4. [ ] Profile / settings
-5. [ ] Deploy alpha!
-6. [ ] Fix search bugs and add id support 
-7. [ ] Bulk import of extension
+1. [ ] Fix search bugs
+  - id search support 
+  - user count parsing 
+  - name parseing?
+2. [ ] working profile / settings
+3. [ ] Deploy alpha!
+4. [ ] Documentation 
+5. [ ] Bulk import of extension
 ##### Dynamic
 - [ ] Figure out how to proxy only extension network request
 - [ ] More details about request
@@ -87,6 +90,7 @@
 - [ ] Tags?
 
 ##### Completed
+- [x] Run chrome headless with virtual display
 - [x] Source file viewing
 - [x] Finish scan in progress / loading view
 - [x] Scan log history in elasticsearch

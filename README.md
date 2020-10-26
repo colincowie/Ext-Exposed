@@ -58,8 +58,8 @@
 ## Development Tracking
 ##### Priority
 1. [ ] Fix search bugs
-  - id search support 
   - user count parsing 
+  - Recent scan sort by time (status page, extension reports)
   - name parseing?
 2. [ ] working profile / settings
 3. [ ] Deploy alpha!

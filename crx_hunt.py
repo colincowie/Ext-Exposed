@@ -307,7 +307,7 @@ def status():
                 es_total=res['_shards']['total']
             else:
                 es_total=0
-            scans = es.search(index="scan_log", q="*", size=10)
+            scans = es.search(index="scan_log", q="*",size=100)
             scan_results = scans['hits']['hits']
 
         disk_total = len(next(os.walk('static/output'))[1])

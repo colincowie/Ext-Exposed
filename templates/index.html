@@ -86,11 +86,11 @@
             </button>
           </div>
           <div class="modal-body">
-            <span>Static Analysis:  <p style="display:inline;" id="static_output"> waiting</p></span>
+            <span>Static Analysis:  <p style="display:inline;" id="static_output"> Not running</p></span>
             <div class="progress">
               <div id="static_bar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:5%"></div>
             </div>
-            <span>Dynamic Analysis:  <p style="display:inline;" id="dynamic_output"> waiting</p></span>
+            <span>Dynamic Analysis:  <p style="display:inline;" id="dynamic_output"> Not running</p></span>
 
             <div class="progress">
               <div id="dynamic_bar", aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:5%"></div>
@@ -117,7 +117,7 @@
     output.innerHTML = this.value;
   }
 </script>
-<script type=text/javascript> $SCRIPT_ROOT={{ request.script_root|tojson|safe }}; </script> <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type=text/javascript> $SCRIPT_ROOT={{ request.script_root|tojson|safe }}; </script> 
 <script type="text/javascript">
     $("#submit").on('click', function() {
 

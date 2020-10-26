@@ -60,10 +60,11 @@ class EXT_Sandbox():
         mitm = self.start_mitm()
         ext_download = self.download_ext(id)
         if ext_download:
-            print("[*] Creating chrome webdriver")
+            print("[*] Creating virtual display")
             try:
                 display = Display(visible=0, size=(800, 600))
                 display.start()
+                print("[*] Display started")
             except:
                 print("[-] Error! You need to install xvfb (linux package)")
             # Create the webdriver with proxy and extension
@@ -74,6 +75,7 @@ class EXT_Sandbox():
             options.add_argument('--allow-running-insecure-content')
             options.add_argument('--ignore-certificate-errors')
             #options.add_experimental_option("detach", True)
+            print("[*] Creating chrome driver")
             driver = webdriver.Chrome(options=options)
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
 

@@ -134,10 +134,11 @@ class EXT_Analyze():
             download_tag = download_tag.get("content")
             download_tag = download_tag.rstrip()
             print(download_tag)
-            download_count = download_tag.rsplit(':',1)[1].replace(',','').strip('+').strip('.').rstrip('\xa0000')
+            download_count = download_tag.rsplit(':',1)[1]
+            print(download_count)
         else:
             download_count = 0
-        return int(download_count)
+        return download_count
 
     def run(self, id):
         self.download_ext(id)

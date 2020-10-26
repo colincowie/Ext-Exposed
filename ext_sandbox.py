@@ -60,10 +60,11 @@ class EXT_Sandbox():
         mitm = self.start_mitm()
         ext_download = self.download_ext(id)
         if ext_download:
-            print("[*] Creating chrome webdriver")
+            print("[*] Creating virtual display")
             try:
                 display = Display(visible=0, size=(800, 600))
                 display.start()
+                print("[*] Display started")
             except:
                 print("[-] Error! You need to install xvfb (linux package)")
             # Create the webdriver with proxy and extension
@@ -71,15 +72,24 @@ class EXT_Sandbox():
             # Load chrome extension
             options.add_argument('load-extension='+os.path.abspath("static/output")+'/'+str(id));
             options.add_argument('--proxy-server=127.0.0.1:8080')
-            options.add_argument('--allow-running-insecure-content')
             options.add_argument('--ignore-certificate-errors')
+            options.add_argument('--allow-running-insecure-content')
+            options.add_argument('--no-sandbox')
             #options.add_experimental_option("detach", True)
-            driver = webdriver.Chrome(options=options)
+            print("[*] Creating chrome driver")
+            driver = webdriver.Chrome(executable_path="/bin/chromedriver",options=options)
+            driver.set_page_load_timeout(self.time)
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
-
-            driver.get("chrome://extensions/?id="+id)
-            print("[*] Sleeping while extension is running")
-            time.sleep(self.time)
+            failed = False
+            try:
+                driver.get("chrome://newtab")
+                driver.get("google.com")
+            except:
+                failed = True
+                print("[-] Erorr: Likely timeout")
+            if not failed:
+                print("[*] Sleeping while extension is running")
+                time.sleep(self.time)
             try:
                 driver.close()
                 driver.quit()
@@ -93,7 +103,7 @@ class EXT_Sandbox():
             mitm.shutdown()
             output = "reports/"+id+"/mitm_urls.txt"
             data = []
-            url_file = open(output, 'r')
+            url_file = open(output, 'r+')
             for line in url_file.readlines():
                 verb = line.split()[0]
                 url = line.split()[1]
@@ -159,9 +169,14 @@ def sandbox_run(box, uuid):
         pass
     ext_id = str(box.ext_id)
     res = es.search(index='sandbox_data',body={'query':{'match':{'uuid':uuid}}})
-    es_data = res['hits']['hits'][0]
-    #print("ES found "+str(es_data))
+    try:
+        es_data = res['hits']['hits'][0]
+    except:
+        print("[*] no urls found ")
     sandbox_body = {"doc": {"urls":url_data}}
+
+    #print("ES found "+str(es_data))
+
     try:
         es.update(index='sandbox_data', id=es_data['_id'], body=sandbox_body)
         return True

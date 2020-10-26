@@ -131,7 +131,7 @@ def scan():
             #print(job.result)
             print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
             new_jobs['static'] = str(static_job.id)
-            new_jobs['enqueued_at'] = static_job.enqueued_at
+            new_jobs['enqueued_at'] = str(static_job.enqueued_at)
         if request.form.get("sandbox") != None:
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
@@ -166,10 +166,12 @@ def scan():
             'enqueued_at':new_jobs['enqueued_at'],
         }
         try:
+            print(scan_log_body)
             es.index(index='scan_log',body=scan_log_body)
             print("\x1b[32m[+] Extension scan log index created in ES: \033[1;0m")
-        except:
+        except Exception as e:
             print("Failed to create extension scan log index")
+            print(e)
         return new_jobs
         #return redirect('/report/'+ext_id)
 
@@ -417,4 +419,4 @@ if __name__ == '__main__':
         load_es()
     db.create_all()
     app.secret_key = "changethiskey1337"
-    app.run(host="127.0.0.1",port=5000,debug=True)
+    app.run(host="0.0.0.0",port=1337,debug=True)

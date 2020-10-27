@@ -75,8 +75,6 @@
 - [ ] Improve source view ui 
 - [ ] Display and record full extension name
 #### Deployment Prep
-- [ ] update requirements.txt
-- [ ] check for unused imports
 - [ ] Security bot deployments
 - [ ] CI Testing
 - [ ] Docker Image!

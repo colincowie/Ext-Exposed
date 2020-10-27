@@ -301,10 +301,9 @@ def status():
             scan_results = []
         else:
             es_status = True
-            search = {'query': {'match': {'name': '*'}}}
             if es.indices.exists(index="crx"):
-                res = es.search(index="crx", body=search,size=0)
-                es_total=res['_shards']['total']
+                res = es.search(index="crx", q="*", size=100)
+                es_total=res['hits']['total']['value']
             else:
                 es_total=0
             scans = es.search(index="scan_log", q="*",size=100)

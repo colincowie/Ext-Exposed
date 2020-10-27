@@ -417,10 +417,25 @@ def make_tree(path):
                 tree['children'].append(dict(name=name))
     return tree
 
+def create_es():
+    es = Elasticsearch()
+    try:
+        es.indices.create(index='crx')
+    except:
+        pass
+    try:
+        es.indices.create(index='scan_log')
+    except:
+        pass
+    try:
+        es.indices.create(index='sandbox_data')
+    except:
+        pass
 if __name__ == '__main__':
     args = parse_args()
     if args.es:
         load_es()
     db.create_all()
+    create_es()
     app.secret_key = "changethiskey1337"
     app.run(host="0.0.0.0",port=1337,debug=True)

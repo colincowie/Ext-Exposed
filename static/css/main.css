@@ -29,12 +29,17 @@
 .sandbox_detail td{
   border-width: 1px;
   border-style: solid;
+  table-layout: fixed;
+}
+.sandbox_table th, .sandbox_table td {
+  padding-top:1px;
+  padding-bottom:1px;
 }
 .sandbox_table td{
-
   padding-right:55px;
 }
-.sandbox_table th{  text-align: left;
+.sandbox_table th{
+  text-align: left;
 }
 #flat_bar {
   display: inline;

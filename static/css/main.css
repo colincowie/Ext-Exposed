@@ -29,6 +29,9 @@
 .sandbox_detail td{
   border-width: 1px;
   border-style: solid;
+
+}
+.sandbox_table {
   table-layout: fixed;
 }
 .sandbox_table th, .sandbox_table td {

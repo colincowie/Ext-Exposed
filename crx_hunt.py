@@ -449,14 +449,17 @@ def create_es():
     try:
         print("[*] Creating elasticsearch index's ")
         es.indices.create(index='crx',body=mapping)
+        print("[*] Created index crx")
     except:
         pass
     try:
         es.indices.create(index='scan_log')
+        print("[*] Created index scan_log")
     except:
         pass
     try:
         es.indices.create(index='sandbox_data')
+        print("[*] Created index sandbox_data")
     except:
         pass
 

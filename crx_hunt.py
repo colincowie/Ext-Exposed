@@ -274,16 +274,32 @@ def report(ext):
             es_status = False
         else:
             es_status = True
-        # build search for elasticsearch
-        ext_search = {'query': {'match': {'ext_id': ext}}}
+
+        ext_search = {'query':{
+            'match': {
+                'ext_id': ext
+                }
+            }
+        }
         ext_res = es.search(index="crx", body=ext_search)
         for hit in ext_res['hits']['hits']:
             if ext == hit['_source']['ext_id']:
                 # Get ext dynamic data
                 try:
+                    ext_search = {'query':{
+                        'match': {
+                            'ext_id': ext
+                            }
+                    },
+                    "sort" : [{"start_time":{
+                        "order": "desc"
+                        }
+                    }]
+                    }
                     ext_sandbox = es.search(index="sandbox_data", body=ext_search)
                     ext_sandbox = ext_sandbox['hits']['hits']
-                except:
+                except Exception as e:
+                    print(e)
                     ext_sandbox = []
                 ext_path=os.path.join('static/output', str(hit['_source']['ext_id']))
                 return render_template('report.html',icon=hit['_source']['logo'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tree=make_tree(ext_path))
@@ -419,8 +435,19 @@ def make_tree(path):
 
 def create_es():
     es = Elasticsearch()
+    mapping = {"mapping":{
+       "properties":{
+         "ext_id":{"type":"text"},
+         "ext_name":{"type":"text"},
+         "full_name":{"type":"text"},
+         "timestamp":{"type":"date"},
+         "logo":{"type":"text"},
+         "users":{"type":"text"},
+         "permissions":{"type":"json"}
+       }
+      }}
     try:
-        es.indices.create(index='crx')
+        es.indices.create(index='crx',body=mapping)
     except:
         pass
     try:
@@ -431,6 +458,7 @@ def create_es():
         es.indices.create(index='sandbox_data')
     except:
         pass
+
 if __name__ == '__main__':
     args = parse_args()
     if args.es:

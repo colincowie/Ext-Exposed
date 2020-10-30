@@ -35,8 +35,8 @@
   table-layout: fixed;
 }
 .sandbox_table th, .sandbox_table td {
-  padding-top:1px;
-  padding-bottom:1px;
+  padding-top:0.3px;
+  padding-bottom:0.3px;
 }
 .sandbox_table td{
   padding-right:55px;

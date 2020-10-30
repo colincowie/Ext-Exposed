@@ -447,6 +447,7 @@ def create_es():
        }
       }}
     try:
+        print("[*] Creating elasticsearch index's ")
         es.indices.create(index='crx',body=mapping)
     except:
         pass

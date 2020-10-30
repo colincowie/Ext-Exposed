@@ -290,12 +290,7 @@ def report(ext):
                         'match': {
                             'ext_id': ext
                             }
-                    },
-                    "sort" : [{"start_time":{
-                        "order": "desc"
-                        }
-                    }]
-                    }
+                    }}
                     ext_sandbox = es.search(index="sandbox_data", body=ext_search)
                     ext_sandbox = ext_sandbox['hits']['hits']
                 except Exception as e:

@@ -83,7 +83,13 @@ class EXT_Sandbox():
             failed = False
             try:
                 driver.get("chrome://newtab")
-                driver.get("google.com")
+                print("[*] Navigated to chrome://newtab")
+            except:
+                failed = True
+                print("[-] Erorr: Likely timeout")
+            try:
+                driver.get("https://google.com")
+                print("[*] Navigated to https://google.com")
             except:
                 failed = True
                 print("[-] Erorr: Likely timeout")

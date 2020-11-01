@@ -29,12 +29,23 @@
 .sandbox_detail td{
   border-width: 1px;
   border-style: solid;
+
+}
+.sandbox_table {
+  table-layout: fixed;
+}
+.sandbox_table  tr:nth-child(even) {
+    background-color: #333; 
+}
+.sandbox_table th, .sandbox_table td {
+  padding-top:0.3px;
+  padding-bottom:0.3px;
 }
 .sandbox_table td{
-
   padding-right:55px;
 }
-.sandbox_table th{  text-align: left;
+.sandbox_table th{
+  text-align: left;
 }
 #flat_bar {
   display: inline;

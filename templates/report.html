@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 <h1>Extension report</h1>
 <hr>
 <div class="container">
@@ -82,56 +83,60 @@
                   Sandbox Runs  <span class="badge badge-primary badge-pill bg-secondary">{{sandboxs|count}}</span>
                   </div>
                   <div style="overflow-y: scroll; height:400px;">
-                    <ul class="list-group" style="padding-bottom:5px;">
-                      <tbody>
-                      {% for sandbox in sandboxs %}
-                        <li  class="clickable list-group-item font-small" style="font-size: 12px; ">
-                          <table class="sandbox_table table-dark">
-                              <thead class="thead-dark">
-                                <tr>
-                                  <th>Start Time</th>
-                                  <th>Time Limit</th>
-                                  <th>URLs</th>
-                                  <th></th>
-                                </tr>
-                              </thead>
-                              <tbody>
+                   <table id="scan_table"  class="table table-striped table-bordered sandbox_table table-dark">
+                       <thead class="thead-dark">
+                         <tr>
+                           <th>Start Time</th>
+                           <th>Time Limit</th>
+                           <th>URLs</th>
+                           <th></th>
+                         </tr>
+                       </thead>
+                       {% for sandbox in sandboxs %}
+                         <tbody>
+                             <tr>
+                               <td >{{sandbox['_source']['start_time']}}</td>
+                               <td> {{sandbox['_source']['time_limit']}}</td>
+                               <td>{{sandbox['_source']['urls']|count}}</td>
+                               <td><button id="btn_toggle" class="btn-primary"  data-toggle="collapse" data-target="#accordion_{{loop.index}}">Show details</button></td>
+                             </tr>
+                             <tr>
+                               <td data-orderable="false" colspan="4" class="bg-secondary">
+                                 <div id="accordion_{{loop.index}}"  class="collapse">
+                                   {% if sandbox['_source']['urls'] %}
 
-                                <tr>
-                                  <td>{{sandbox['_source']['start_time']}}</td>
-                                  <td> {{sandbox['_source']['time_limit']}}</td>
-                                  <td>{{sandbox['_source']['urls']|count}}</td>
-                                  <td><button id="btn_toggle" class="btn-primary"  data-toggle="collapse" data-target="#accordion_{{loop.index}}">Show details</button><td>
-                                </tr>
-                              </tbody>
+                                  <table class="table-dark sandbox_detail">
+                                    <thead class="thead-active">
+                                    <tr>
+                                      <th>Method</th>
+                                      <th>URL</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for url in sandbox['_source']['urls']%}
+                                        <tr>
+                                          <td>{{url[0]}}</td>
+                                          <td>{{url[1]}}<td>
+                                        </tr>
+                                      {% endfor %}
+                                    </tbody>
+                                  </table>
+                                  {% else %}
+                                    <span> No information about this report to display</span>
+                                  {% endif %}
 
-                              </table>
-
-
-                          <div id="accordion_{{loop.index}}"  class="collapse">
-                            <hr>
-                            <table class="table-dark sandbox_detail">
-                              <thead class="thead-active">
-                              <tr>
-                                <th>Method</th>
-                                <th>URL</th>
-                              </tr>
-                              </thead>
-                              <tbody>
-                            {% for url in sandbox['_source']['urls']%}
-                            <tr>
-                              <td>{{url[0]}}</td>
-                              <td>{{url[1]}}<td>
+                                </div>
+                              </td>
+                            <td style="display:none;visbility: hidden;"></td><td style="display:none;visbility: hidden;"></td><td style="display:none;visbility: hidden;"></td>
                             </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
 
-                            </div>
-                        </li>
-                      {% endfor %}
-                      </tbody>
-                    </ul>
+
+                         </tbody>
+
+
+                   {% endfor %}
+                   </tbody>
+                </table>
                 </div>
 
 
@@ -238,6 +243,19 @@ for (i = 0; i < toggler.length; i++) {
     };
   });
 }
+</script>
+<script type="text/javascript">
+  $(document).ready(function () {
+    $('table#scan_table').DataTable( {
+         "ordering": false,
+        searching: false,
+        "language": {
+          "emptyTable": "No recent scans"
+        },
+         "sDom": 'Rfrtlip'
 
+    } );
+    $('.dataTables_length').addClass('bs-select');
+});
 </script>
 {% endblock %}

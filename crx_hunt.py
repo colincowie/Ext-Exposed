@@ -274,14 +274,28 @@ def report(ext):
             es_status = False
         else:
             es_status = True
-        # build search for elasticsearch
-        ext_search = {'query': {'match': {'ext_id': ext}}}
+
+        ext_search = {'query':{
+            'match': {
+                'ext_id': ext
+                }
+            }
+        }
         ext_res = es.search(index="crx", body=ext_search)
         for hit in ext_res['hits']['hits']:
             if ext == hit['_source']['ext_id']:
                 # Get ext dynamic data
-                ext_sandbox = es.search(index="sandbox_data", body=ext_search)
-                ext_sandbox = ext_sandbox['hits']['hits']
+                try:
+                    ext_search = {'query':{
+                        'match': {
+                            'ext_id': ext
+                            }
+                    }}
+                    ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+                    ext_sandbox = ext_sandbox['hits']['hits']
+                except Exception as e:
+                    print(e)
+                    ext_sandbox = []
                 ext_path=os.path.join('static/output', str(hit['_source']['ext_id']))
                 return render_template('report.html',icon=hit['_source']['logo'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tree=make_tree(ext_path))
         return("No report found...")
@@ -298,13 +312,12 @@ def status():
             scan_results = []
         else:
             es_status = True
-            search = {'query': {'match': {'name': '*'}}}
             if es.indices.exists(index="crx"):
-                res = es.search(index="crx", body=search,size=0)
-                es_total=res['_shards']['total']
+                res = es.search(index="crx", q="*", size=100)
+                es_total=res['hits']['total']['value']
             else:
                 es_total=0
-            scans = es.search(index="scan_log", q="*", size=10)
+            scans = es.search(index="scan_log", q="*",size=100)
             scan_results = scans['hits']['hits']
 
         disk_total = len(next(os.walk('static/output'))[1])
@@ -415,10 +428,41 @@ def make_tree(path):
                 tree['children'].append(dict(name=name))
     return tree
 
+def create_es():
+    es = Elasticsearch()
+    mapping = {"mapping":{
+       "properties":{
+         "ext_id":{"type":"text"},
+         "ext_name":{"type":"text"},
+         "full_name":{"type":"text"},
+         "timestamp":{"type":"date"},
+         "logo":{"type":"text"},
+         "users":{"type":"text"},
+         "permissions":{"type":"json"}
+       }
+      }}
+    try:
+        print("[*] Creating elasticsearch index's ")
+        es.indices.create(index='crx',body=mapping)
+        print("[*] Created index crx")
+    except:
+        pass
+    try:
+        es.indices.create(index='scan_log')
+        print("[*] Created index scan_log")
+    except:
+        pass
+    try:
+        es.indices.create(index='sandbox_data')
+        print("[*] Created index sandbox_data")
+    except:
+        pass
+
 if __name__ == '__main__':
     args = parse_args()
     if args.es:
         load_es()
     db.create_all()
+    create_es()
     app.secret_key = "changethiskey1337"
     app.run(host="0.0.0.0",port=1337,debug=True)

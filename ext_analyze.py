@@ -134,10 +134,11 @@ class EXT_Analyze():
             download_tag = download_tag.get("content")
             download_tag = download_tag.rstrip()
             print(download_tag)
-            download_count = download_tag.rsplit(':',1)[1].replace(',','').strip('+').strip('.').rstrip('\xa0000')
+            download_count = download_tag.rsplit(':',1)[1]
+            print(download_count)
         else:
             download_count = 0
-        return int(download_count)
+        return download_count
 
     def run(self, id):
         self.download_ext(id)
@@ -207,8 +208,9 @@ def static_run(ext_scan, ext_id, name):
         es.index(index='crx',body=body)
         print("\x1b[32m[+] Extension Imported to ES: \033[1;0m"+ext_id)
         return True
-    except:
-        print("Failed to import to ES")
+    except Exception as e:
+        print("[-] Failed to import to ES")
+        print(e)
         return False
 
 

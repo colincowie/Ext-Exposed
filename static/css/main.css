@@ -34,6 +34,9 @@
 .sandbox_table {
   table-layout: fixed;
 }
+.sandbox_table  tr:nth-child(even) {
+    background-color: #333; 
+}
 .sandbox_table th, .sandbox_table td {
   padding-top:0.3px;
   padding-bottom:0.3px;

@@ -57,27 +57,29 @@
 
 ## Development Tracking
 ##### Priority
-1. [ ] Fix search bugs
-  - Recent scan sort by time (status page, extension reports)
-  - name parseing?
-2. [ ] working profile / settings
-3. [ ] Deploy alpha!
-4. [ ] Documentation 
-5. [ ] Bulk import of extension
+1. [ ] Display and record extension full  name
+2. [ ] Export to csv feautre 
+3. [ ] Service side profile & settings feature
+4. [ ] Platform security review (HTTPs and improve hashing algo)
+5. [ ] Deploy alpha!
+6. [ ] Documentation 
+7. [ ] Bulk import of extension
+8. [ ] Commenting feautre
+9. [ ] Yara
+10. [ ] Related Extensions 
 ##### Dynamic
-- [ ] Figure out how to proxy only extension network request
+- [ ] Proxy only extension network request?
 - [ ] More details about request
-- [ ] whitelist filtering
+- [ ] Whitelist filtering
 ##### Static
-- [ ] source code file viewer
+- [ ] JS Beautify for file viewer 
 ##### Front End
-- [ ] Update frontend in "real-time"
 - [ ] Improve source view ui 
-- [ ] Display and record full extension name
+- [ ] Verbose frontend logging in real-time
 #### Deployment Prep
 - [ ] Security bot deployments
 - [ ] CI Testing
-- [ ] Docker Image!
+- [ ] Docker Image
 - [ ] Documentation
 ##### Yara
 - [ ] Yara scanning
@@ -85,6 +87,11 @@
 - [ ] Search output
 - [ ] Web UI
 - [ ] Tags?
+##### Backlog 
+- [ ] Improve scan sort 
+##### Feature Ideas
+- [ ] Graph explore view 
+- [ ] Reputation system
 
 ##### Completed
 - [x] Run chrome headless with virtual display

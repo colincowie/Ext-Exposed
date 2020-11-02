@@ -60,33 +60,7 @@
         </tbody>
     </table>
     </div>
-      <br>
-    <div class="row justify-content-center">
-    <table id="ext_table2" data-toggle="table" data-sort-name="date" data-sort-order="desc" class="table table-striped table-bordered table-sm scan_log_table" >
-        <thead class="table-primary">
-        <tr class="table-primary" style="text-align: center;">
-          <th>Extension Name</th>
-          <th>ID<br></th>
-          <th data-field="date">Start time</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody class="table-bordered">
-      {% if jobs|length %}
-        {% for job in jobs %}
-          <tr class="table-dark">
-            <td>{{job[1]}}</td>
-            <td style="font-size:10px;">{{job[0]['id']}}</td>
-            <td data-field="date" data-sortable="true">{{job[0]['enqueued_at']}}</td>
-            <td><span class="bg-info badge badge-primary badge-pill">{{job[2]}}<span></td>
-          </tr>
-        {% endfor %}
-      {% endif %}
-      </tbody>
-    </table>
-    </div>
 <br>
-
 
 <script type="text/javascript">
   $(document).ready(function () {
@@ -95,13 +69,6 @@
         "language": {
           "emptyTable": "No recently ran scans available"
         }
-    } );
-    $('#ext_table2').DataTable( {
-        "order": [[ 2, "desc" ]],
-        "language": {
-          "emptyTable": "No items currently in the queue"
-        }
-
     } );
     $('.dataTables_length').addClass('bs-select');
 });

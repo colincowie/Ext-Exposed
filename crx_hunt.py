@@ -126,8 +126,6 @@ def scan():
             new_jobs["name"] = ext_name
             new_jobs["ext_id"] = ext_id
             static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name)
-
-            time.sleep(2)
             #print(job.result)
             print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
             new_jobs['static'] = str(static_job.id)
@@ -141,7 +139,6 @@ def scan():
             id = uuid.uuid4()
             box = EXT_Sandbox(ext_id, time_limit)
             sandbox_job = q.enqueue(sandbox_run, box, id)
-            time.sleep(2)
             #print(job.result)
             print("[!] Dynamic enqueued at "+str(sandbox_job.enqueued_at)+" with job id: "+str(sandbox_job.id))
             new_jobs['dynamic'] = str(sandbox_job.id)

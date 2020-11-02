@@ -1,5 +1,4 @@
 /* <--->  */
-
 .scan_log_table td{
   padding-left: 10px;
   padding-right: 10px;
@@ -35,7 +34,7 @@
   table-layout: fixed;
 }
 .sandbox_table  tr:nth-child(even) {
-    background-color: #333; 
+    background-color: #333;
 }
 .sandbox_table th, .sandbox_table td {
   padding-top:0.3px;
@@ -58,6 +57,7 @@
 
  .slider:hover {
    opacity: 1;
+
  }
 .CodeMirror-sizer{
   margin-left: 0px!important;
@@ -113,6 +113,7 @@
     margin-left: -250px;
     background: #f1d74c;
 
+
 }
 #sidebar .sidebar-header {
     padding: 20px;
@@ -127,16 +128,6 @@
 #sidebar ul p {
     color: #fff;
     padding: 10px;
-}
-
-#sidebar ul li a {
-    padding: 10px;
-    font-size: 1.1em;
-    display: block;
-}
-#sidebar ul li a:hover {
-    color: #7386D5;
-    background: #fff;
 }
 
 #sidebar ul li.active > a, a[aria-expanded="true"] {

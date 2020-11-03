@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/github/last-commit/colincowie/Ext-Exposed"/> <img src="https://img.shields.io/github/repo-size/colincowie/Ext-Exposed"/>
 </p>
 
-<img max-height="500px;" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/github/demo.gif" />
+<img max-height="500px;" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/github/demo.png" />
 
 ## Features
 #### Chrome Extension Static Analysis

@@ -1,4 +1,19 @@
 /* <--->  */
+#ext_table tr:hover td{
+ cursor: pointer;
+ background-color:#171616!important;
+}
+#card{
+  max-height:20px!important;
+}
+#download_icon {
+  padding-right:5px;
+  border-radius: 25px;
+  border: 10px solid #171616;
+}
+.download_icon :hover{
+  cursor: pointer;
+}
 .h1_center{
   color: #00bc8c;
 }

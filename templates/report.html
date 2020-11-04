@@ -61,8 +61,15 @@
                 <div class="col-sm-6">
                 <div class="card">
                   <div class="card-header bg-primary d-flex justify-content-between align-items-center">
-                  Static URLs  <span class="badge badge-primary badge-pill bg-secondary">{{urls|count}}</span>
-                  </div>
+                      Static URLs
+                      <div class="align-right">
+                      <span onclick="download_csv('urls/{{id}}')" style="border-radius: 15px;border: 1px solid #171616;" class="download_icon btn-secondary"> &nbsp;<svg style="padding-bottom:5px;" width="1.3em" height="1.3em" viewBox="0 0 16 16" class="download_icon bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                      </svg>&nbsp;</span>
+                      <span class=" align-right badge badge-primary badge-pill bg-secondary">{{urls|count}}</span>
+                      </div>
+                    </div>
                   <div style="overflow-y: scroll; max-height:200px;">
                     <ul class="list-group" style="padding-bottom:5px;">
                       {% for url in urls %}
@@ -80,7 +87,8 @@
                 <div class="card d-flex">
                   <div class="card-header bg-primary d-flex justify-content-between align-items-center">
 
-                  Sandbox Runs  <span class="badge badge-primary badge-pill bg-secondary">{{sandboxs|count}}</span>
+                  Sandbox Runs
+                  <span class="badge badge-primary badge-pill bg-secondary">{{sandboxs|count}}</span>
                   </div>
                   <div style="overflow-y: scroll; height:400px;">
                    <table id="scan_table"  class="table table-striped table-bordered sandbox_table table-dark">
@@ -104,7 +112,11 @@
                                <td data-orderable="false" colspan="4" class="bg-secondary">
                                  <div id="accordion_{{loop.index}}"  class="collapse">
                                    {% if sandbox['_source']['urls'] %}
-
+                                   <div class="align-right">
+                                   <span onclick="download_csv('sandboxs/{{id}}/{{sandbox['_source']['start_time']}}')"style="border-radius: 15px;border: 1px solid #171616;" class="download_icon btn-secondary"> &nbsp;<svg style="padding-bottom:5px;" width="1.3em" height="1.3em" viewBox="0 0 16 16" class="download_icon bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                     <path fill-rule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                     <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                   </svg>&nbsp;</span>
                                   <table class="table-dark sandbox_detail">
                                     <thead class="thead-active">
                                     <tr>
@@ -196,6 +208,9 @@
      lineNumbers: true,
      readOnly: false
    });
+   function download_csv(path) {
+     alert(path)
+   }
 
    function localLoad(files) {
        if (files.length == 1) {

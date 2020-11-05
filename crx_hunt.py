@@ -412,33 +412,35 @@ def sandbox_download(ext_id, timestamp):
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
-        try:
-            ext_search = {
-                "query": {
-                    "bool": {
-                      "should": [
-                        {
-                          "match": {
-                            "ext_id": ext_id
-                          }
-                        },
-                        {
-                          "match": {
-                            "start_time": timestamp
-                          }
+        def get_sandbox():
+            try:
+                ext_search = {
+                    "query": {
+                        "bool": {
+                          "should": [
+                            {
+                              "match": {
+                                "ext_id": ext_id
+                              }
+                            },
+                            {
+                              "match": {
+                                "start_time": timestamp
+                              }
+                            }
+                          ]
                         }
-                      ]
-                    }
-                  }
-            }
-            ext_sandbox = es.search(index="sandbox_data", body=ext_search)
-            ext_sandbox = ext_sandbox['hits']['hits']
-            return(ext_sandbox)
-            return urls
-        except Exception as e:
-            print(e)
-            ext_sandbox = []
-            return "404"
+                      }
+                }
+                ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+                ext_sandbox = ext_sandbox['hits']['hits']
+                print(ext_sandbox)
+                return ext_sandbox
+            except Exception as e:
+                print(e)
+                ext_sandbox = []
+                return "404"
+        return Response(get_sandbox(), mimetype='text/csv')
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),

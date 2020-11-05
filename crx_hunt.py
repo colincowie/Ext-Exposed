@@ -432,6 +432,7 @@ def sandbox_download(ext_id, timestamp):
                   }
             }
             ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+            print(ext_sandbox)
             ext_sandbox = ext_sandbox['hits']['hits']
             print(str(ext_sandbox['_source']['urls']))
             urls = ext_sandbox['_source']['urls']

@@ -4,7 +4,7 @@ from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
 from sqlalchemy.ext.declarative import declarative_base
-from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory, send_file
+from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory, send_file, Response
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run

@@ -424,7 +424,7 @@ def sandbox_download(ext_id, uuid):
                         },
                         {
                           "match": {
-                            "start_time": timestamp
+                            "uuid": uuid
                           }
                         }
                       ]
@@ -438,7 +438,7 @@ def sandbox_download(ext_id, uuid):
                     print("MATCH!")
                     print(report['_source']['uuid'])
             return ext_sandbox
-            
+
         return Response(get_sandbox(), mimetype='text/csv')
 @app.route('/favicon.ico')
 def favicon():

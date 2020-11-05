@@ -55,7 +55,6 @@
 ## Development Tracking
 ##### Priority
 1. [ ] Display and record extension full  name
-2. [ ] Export to csv feautre 
 3. [ ] Service side profile & settings feature
 4. [ ] Platform security review (HTTPs and improve hashing algo)
 5. [ ] Deploy alpha!
@@ -91,6 +90,7 @@
 - [ ] Reputation system
 
 ##### Completed
+- [x] Export to csv feautre 
 - [x] Run chrome headless with virtual display
 - [x] Source file viewing
 - [x] Finish scan in progress / loading view

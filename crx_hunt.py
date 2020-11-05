@@ -4,7 +4,7 @@ from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
 from sqlalchemy.ext.declarative import declarative_base
-from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory
+from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory, send_file, Response
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run
@@ -170,7 +170,6 @@ def scan():
             print("Failed to create extension scan log index")
             print(e)
         return new_jobs
-        #return redirect('/report/'+ext_id)
 
 @app.route('/status/<job_id>')
 def job_status(job_id):
@@ -399,6 +398,49 @@ def file_read():
         file_source = fs.read()
         return file_source
 
+@app.route('/urls/<ext_id>')
+def urls_download(ext_id):
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        print("[*] static url report requested for "+ext_id)
+        dir = 'reports/'+ext_id
+        file = 'static_urls.csv'
+        return send_from_directory(directory=dir,filename=file)
+
+@app.route('/sandboxes/<ext_id>/<uuid>')
+def sandbox_download(ext_id, uuid):
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        def get_sandbox():
+            ext_search = {
+                "query": {
+                    "bool": {
+                      "should": [
+                        {
+                          "match": {
+                            "ext_id": ext_id
+                          }
+                        },
+                        {
+                          "match": {
+                            "uuid": uuid
+                          }
+                        }
+                      ]
+                    }
+                  }
+            }
+            ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+            ext_sandbox = ext_sandbox['hits']['hits']
+            for report in ext_sandbox:
+                if report['_source']['uuid'] == uuid:
+                    print("MATCH!")
+                    print(report['_source']['uuid'])
+                    for url in report['_source']['urls']:
+                        yield url[0]+","+url[1]+"\n"
+        return Response(get_sandbox(), mimetype='text/csv')
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),

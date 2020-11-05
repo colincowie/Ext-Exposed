@@ -50,7 +50,7 @@
         </thead>
         <tbody class="table-bordered">
         {% for scan in scans %}
-          <tr  class="table-dark">
+          <tr  class="table-dark " onclick="document.location = '/report/{{scan['_source']['ext_id']}}'">
             <td>{{scan['_source']['name']}}
             <td>{{scan['_source']['ext_id']}}</td>
             <td>{{scan['_source']['enqueued_at']}}</td>

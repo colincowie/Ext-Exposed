@@ -58,15 +58,14 @@
 
 ## Development Tracking
 ##### Priority
-1. [ ] Display and record extension full  name
-3. [ ] Service side profile & settings feature
-4. [ ] Platform security review (HTTPs and improve hashing algo)
-5. [ ] Deploy alpha!
-6. [ ] Documentation 
-7. [ ] Bulk import of extension
-8. [ ] Commenting feautre
-9. [ ] Yara
-10. [ ] Related Extensions 
+1. [ ] Service side profile & settings feature
+2. [ ] Platform security review (HTTPs and improve hashing algo)
+3. [ ] Deploy alpha!
+4. [ ] Documentation 
+5. [ ] Bulk import of extension
+6. [ ] Commenting feautre
+7. [ ] Yara
+8. [ ] Related Extensions 
 ##### Dynamic
 - [ ] Proxy only extension network request?
 - [ ] More details about request
@@ -94,6 +93,7 @@
 - [ ] Reputation system
 
 ##### Completed
+- [x] Display and record extension full  name
 - [x] Export to csv feautre 
 - [x] Run chrome headless with virtual display
 - [x] Source file viewing

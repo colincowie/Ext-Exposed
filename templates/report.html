@@ -2,15 +2,14 @@
 
 {% block content %}
 
-<h1>Extension report</h1>
+<h3>Extension Report: {{full_name}} </h3>
 <hr>
 <div class="container">
     <div class="row" style="align-items: center;">
-      <img style="width:64px;height:64px;" src="/static/output/{{id}}/{{icon}}"/>
-
+      <img style="width:64px;height:64px;" src="{{icon}}"/>
         <div class="col-xs-6 col-sm-6">
             <div id="ext_name">
-                <label>{{name}}</label>
+                  <label>{{name}}</label>
             </div>
             <div id="text2">
               <label>Users: {{users}}</label>

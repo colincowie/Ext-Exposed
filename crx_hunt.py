@@ -433,8 +433,9 @@ def sandbox_download(ext_id, timestamp):
             }
             ext_sandbox = es.search(index="sandbox_data", body=ext_search)
             ext_sandbox = ext_sandbox['hits']['hits']
-            print(ext_sandbox['_source']['urls'])
-            return ext_sandbox['_source']['urls']
+            print(str(ext_sandbox['_source']['urls']))
+            urls = ext_sandbox['_source']['urls']
+            return urls
         except Exception as e:
             print(e)
             ext_sandbox = []

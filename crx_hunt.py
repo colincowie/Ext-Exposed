@@ -437,7 +437,7 @@ def sandbox_download(ext_id, timestamp):
                 for report in ext_sandbox:
                     if report['_source'] == timestamp:
                         print("MATCH!")
-                        print(report['_source']['urls'])
+                    print(report['_source'])
                 return ext_sandbox
             except Exception as e:
                 print(e)

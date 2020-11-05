@@ -209,6 +209,7 @@ def search():
             search_fields.append("urls")
         if request.form.get("ext_names"):
             search_fields.append("name")
+            search_fields.append("full_name")
         if request.form.get("ext_ids"):
             search_fields.append("ext_id")
         if request.form.get("permissions"):

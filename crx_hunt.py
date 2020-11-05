@@ -437,8 +437,8 @@ def sandbox_download(ext_id, uuid):
                 if report['_source']['uuid'] == uuid:
                     print("MATCH!")
                     print(report['_source']['uuid'])
-                    urls = report['_source']['urls']
-            return urls
+                    for url in report['_source']['urls']:
+                        yield url[0]+","+url[1]+"\n"
         return Response(get_sandbox(), mimetype='text/csv')
 @app.route('/favicon.ico')
 def favicon():

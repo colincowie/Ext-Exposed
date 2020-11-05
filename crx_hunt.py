@@ -407,42 +407,38 @@ def urls_download(ext_id):
         file = 'static_urls.csv'
         return send_from_directory(directory=dir,filename=file)
 
-@app.route('/sandboxes/<ext_id>/<timestamp>')
-def sandbox_download(ext_id, timestamp):
+@app.route('/sandboxes/<ext_id>/<uuid>')
+def sandbox_download(ext_id, uuid):
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
         def get_sandbox():
-            try:
-                ext_search = {
-                    "query": {
-                        "bool": {
-                          "should": [
-                            {
-                              "match": {
-                                "ext_id": ext_id
-                              }
-                            },
-                            {
-                              "match": {
-                                "start_time": timestamp
-                              }
-                            }
-                          ]
+            ext_search = {
+                "query": {
+                    "bool": {
+                      "should": [
+                        {
+                          "match": {
+                            "ext_id": ext_id
+                          }
+                        },
+                        {
+                          "match": {
+                            "start_time": timestamp
+                          }
                         }
-                      }
-                }
-                ext_sandbox = es.search(index="sandbox_data", body=ext_search)
-                ext_sandbox = ext_sandbox['hits']['hits']
-                for report in ext_sandbox:
-                    if report['_source'] == timestamp:
-                        print("MATCH!")
-                    print(report['_source'])
-                return ext_sandbox
-            except Exception as e:
-                print(e)
-                ext_sandbox = []
-                return "404"
+                      ]
+                    }
+                  }
+            }
+            ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+            ext_sandbox = ext_sandbox['hits']['hits']
+            for report in ext_sandbox:
+                if report['_source']['uuid'] == uuid:
+                    print("MATCH!")
+                    print(report['_source']['uuid'])
+            return ext_sandbox
+            
         return Response(get_sandbox(), mimetype='text/csv')
 @app.route('/favicon.ico')
 def favicon():

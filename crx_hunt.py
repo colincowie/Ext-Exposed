@@ -404,7 +404,7 @@ def urls_download(ext_id):
         return render_template('login.html')
     else:
         print("[*] static url report requested for "+ext_id)
-        dir = 'reports'+ext_id
+        dir = 'reports/'+ext_id
         file = 'static_urls.csv'
         return send_from_directory(directory=dir,filename=file)
 

@@ -75,11 +75,10 @@
 ##### Front End
 - [ ] Improve source view ui 
 - [ ] Verbose frontend logging in real-time
-#### Deployment Prep
-- [ ] Security bot deployments
+#### Dev Ops 
+- [ ] Documentation
 - [ ] CI Testing
 - [ ] Docker Image
-- [ ] Documentation
 ##### Yara
 - [ ] Yara scanning
 - [ ] Rule storage
@@ -91,6 +90,7 @@
 ##### Feature Ideas
 - [ ] Graph explore view 
 - [ ] Reputation system
+- [ ] Browser capture gif 
 
 ##### Completed
 - [x] Display and record extension full  name

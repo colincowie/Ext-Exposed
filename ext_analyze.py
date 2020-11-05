@@ -11,6 +11,7 @@ class EXT_Analyze():
         ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
         self.name = ext_name
         self.full_name = ""
+        self.logo_path = "/static/output/chrome.png"
         if not os.path.exists('static/output'):
             os.makedirs('static/output')
         pass
@@ -130,7 +131,9 @@ class EXT_Analyze():
         # set up soup for some parsing
         soup = BeautifulSoup(ext_page.content,features="lxml")
         full_name = soup.find(itemprop="name").get("content")
+        image_path = soup.find(itemprop="image").get("content")
         self.full_name = full_name
+        self.logo_path = image_path
         # Parse the <meta> tag for the exact number, remove junk characters and round it.
         download_tag = soup.find(itemprop="interactionCount")
         if download_tag is not None:
@@ -157,18 +160,18 @@ def static_run(ext_scan, ext_id, name):
     ext_urls = ext_scan.run(ext_id)
     ext_perms = ext_scan.get_perms(ext_id)
     ext_name = name
-    logo_path = ext_scan.get_icon(ext_id)
-    if not isinstance(logo_path, str):
-        try:
-            logo_path=logo_path['32']
-        except:
-            try:
-                logo_path=logo_path['24']
-            except:
-                try:
-                    logo_path=logo_path['64']
-                except:
-                    logo_path=logo_path['128']
+    #logo_path = ext_scan.get_icon(ext_id)
+    #if not isinstance(logo_path, str):
+#        try:
+#            logo_path=logo_path['32']
+#        except:
+#            try:
+#                logo_path=logo_path['24']
+#            except:
+#                try:
+#                    logo_path=logo_path['64']
+#                except:
+#                    logo_path=logo_path['128']
     try:
         es.indices.create(index='crx')
     except:
@@ -186,7 +189,7 @@ def static_run(ext_scan, ext_id, name):
     'name':ext_name,
     'users':ext_downloads,
     'permissions':ext_perms,
-    'logo':logo_path,
+    'logo':self.logo_path,
     'full_name':self.full_name,
     'urls':ext_urls
     }

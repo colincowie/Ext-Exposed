@@ -105,7 +105,7 @@
                              <tr>
                                <td >{{sandbox['_source']['start_time']}}</td>
                                <td> {{sandbox['_source']['time_limit']}}</td>
-                               <td>{{sandbox['_source']['urls']|count}}&nbsp;&nbsp;&nbsp;&nbsp;{% if sandbox['_source']['urls'] %}<button onclick="download_csv('/sandboxes/{{id}}/{{sandbox['_source']['start_time']}}')" class="btn-primary">Download</button>{% endif %}&nbsp;</td>
+                               <td>{{sandbox['_source']['urls']|count}}&nbsp;&nbsp;&nbsp;&nbsp;{% if sandbox['_source']['urls'] %}<button onclick="download_csv('/sandboxes/{{id}}/{{sandbox['_source']['uuid']}}')" class="btn-primary">Download</button>{% endif %}&nbsp;</td>
                                <td>
                                  <button id="btn_toggle" class="btn-primary"  data-toggle="collapse" data-target="#accordion_{{loop.index}}">Show details</button>
                                </td>

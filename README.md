@@ -5,7 +5,11 @@
   <br>
   <i>A threat hunting platform for chrome extensions</i>
   <br>
-  <img src="https://img.shields.io/github/last-commit/colincowie/Ext-Exposed"/> <img src="https://img.shields.io/github/repo-size/colincowie/Ext-Exposed"/>
+    <img src="https://img.shields.io/badge/-Python%20Flask-orange"/>
+  <img src="https://img.shields.io/github/last-commit/colincowie/Ext-Exposed"/> 
+  <img src="https://img.shields.io/github/repo-size/colincowie/Ext-Exposed"/>
+
+  
 </p>
 
 ## Features

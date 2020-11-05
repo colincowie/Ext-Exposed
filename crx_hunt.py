@@ -413,12 +413,24 @@ def sandbox_download(ext_id, timestamp):
         return render_template('login.html')
     else:
         try:
-            ext_search = {'query':{
-                'match': {
-                    'ext_id': ext_id,
-                    'start_time': timestamp
+            ext_search = {
+                "query": {
+                    "bool": {
+                      "should": [
+                        {
+                          "match": {
+                            "ext_id": ext_id
+                          }
+                        },
+                        {
+                          "match": {
+                            "start_time": timestamp
+                          }
+                        }
+                      ]
                     }
-            }}
+                  }
+            }
             ext_sandbox = es.search(index="sandbox_data", body=ext_search)
             ext_sandbox = ext_sandbox['hits']['hits']
             print(ext_sandbox['_source']['urls'])

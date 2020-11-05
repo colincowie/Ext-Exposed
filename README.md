@@ -16,12 +16,12 @@
 #### Chrome Extension Static Analysis
 - Javascript URLs
 - Permissions
+- Extension Source Code
 - Extension Metadata
 #### Chrome Extension Dynamic Analysis
-- Run extension with proxy
-- Record extension network communications
+- Record extension network communications 
 #### Query Extension Information
-- Search by extension, domain or IP address
+- Search by extension, domain, permission and more 
 - Elasticsearch database
 #### Web UI
 - Python Flask web interface
@@ -42,10 +42,8 @@
 #### Elasticsearch setup
 1. Pull docker
   - `docker pull docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
-2. Start a single docker node
+2. Start a docker instance for elasticsearch
   - `docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
-3. Create a index for Ext Exposed
-  - `curl -X PUT "localhost:9200/crx?pretty"`
 
 #### Redis setup
 1. run redis server

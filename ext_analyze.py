@@ -10,6 +10,7 @@ class EXT_Analyze():
         self.id = id
         ext_name = str(requests.get("https://chrome.google.com/webstore/detail/z/"+id).url.rsplit('/',2)[1]) # use redirect to get ext name from id. todo: add if to check if its a url
         self.name = ext_name
+        self.full_name = ""
         if not os.path.exists('static/output'):
             os.makedirs('static/output')
         pass
@@ -98,7 +99,7 @@ class EXT_Analyze():
                     perms = data['permissions']
                 # Get default icon path
         return perms
-
+    # to do: user
     def get_icon(self,id):
         # get perms
         file_path = 'static/output/'+id+'/manifest.json'
@@ -128,6 +129,8 @@ class EXT_Analyze():
             return None
         # set up soup for some parsing
         soup = BeautifulSoup(ext_page.content,features="lxml")
+        full_name = soup.find(itemprop="name").get("content")
+        self.full_name = full_name
         # Parse the <meta> tag for the exact number, remove junk characters and round it.
         download_tag = soup.find(itemprop="interactionCount")
         if download_tag is not None:
@@ -184,6 +187,7 @@ def static_run(ext_scan, ext_id, name):
     'users':ext_downloads,
     'permissions':ext_perms,
     'logo':logo_path,
+    'full_name':self.full_name
     'urls':ext_urls
     }
     print("[+] Static analysis results:\n"+str(body))

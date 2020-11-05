@@ -293,7 +293,7 @@ def report(ext):
                     print(e)
                     ext_sandbox = []
                 ext_path=os.path.join('static/output', str(hit['_source']['ext_id']))
-                return render_template('report.html',icon=hit['_source']['logo'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tree=make_tree(ext_path))
+                return render_template('report.html',icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tree=make_tree(ext_path))
         return("No report found...")
 
 @app.route('/status')

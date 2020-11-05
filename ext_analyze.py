@@ -189,8 +189,8 @@ def static_run(ext_scan, ext_id, name):
     'name':ext_name,
     'users':ext_downloads,
     'permissions':ext_perms,
-    'logo':self.logo_path,
-    'full_name':self.full_name,
+    'logo':ext_scan.logo_path,
+    'full_name':ext_scan.full_name,
     'urls':ext_urls
     }
     print("[+] Static analysis results:\n"+str(body))

@@ -1,5 +1,6 @@
 import re, os, uuid, json, time,redis, hashlib, argparse
 from rq import Queue
+from rq.job import Job
 from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
@@ -25,11 +26,15 @@ class User(db.Model):
     """ Create user table"""
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True)
+    email = db.Column(db.String(), unique=True)
     password = db.Column(db.String())
+    optIn = db.Column(db.Integer)
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, email, optIn):
         self.username = username
         self.password = password
+        self.email = email
+        self.optIn = optIn
 
 @app.route('/hunt')
 def hunt():
@@ -59,6 +64,7 @@ def login():
             # Todo: Research how to improve access tokens
             session['logged_in'] = True
             session['username'] = name
+            session['email'] = user.email
             flash('Welcome to Ext Exposed, '+str(name)+'!')
 
             return redirect(url_for('home'))
@@ -70,9 +76,15 @@ def register():
     """Register Form"""
     if request.method == 'POST':
         # Create new user with sha256 hashed password
+        if request.form['optIn'] == True:
+            opt = 1
+        else:
+            opt = 2
         new_user = User(
             username=request.form['username'],
-            password=hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
+            password=hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest(),
+            email = request.form['email'],
+            optIn = opt
             )
         user = User.query.filter_by(username=request.form["username"]).first()
         if user:
@@ -102,7 +114,7 @@ def scan():
         else:
             es_status = True
         # Get search query
-        keyword = request.form['keyword']
+        keyword = request.form['extension']
         # get ext id
         ext_id = re.findall('[a-z]{32}',keyword)     # Parse the extension id from url
         ext_id = str(ext_id[0])
@@ -115,7 +127,9 @@ def scan():
         except:
             return "Critial Error: redis server not working, sandbox not ran. Please run `redis-server` and `rq worker`"
 
-
+        # array for scan log
+        static_status = ''
+        dynamic_status = ''
         if request.form.get("static") != None:
             # Static Analysis
             print("[!] Queuing static analysis for "+ext_id)
@@ -130,6 +144,8 @@ def scan():
             print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
             new_jobs['static'] = str(static_job.id)
             new_jobs['enqueued_at'] = str(static_job.enqueued_at)
+            stat_job = Job.fetch(static_job.id, connection=r)
+            static_status = stat_job.get_status()
         if request.form.get("sandbox") != None:
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
@@ -141,6 +157,8 @@ def scan():
             sandbox_job = q.enqueue(sandbox_run, box, id)
             #print(job.result)
             print("[!] Dynamic enqueued at "+str(sandbox_job.enqueued_at)+" with job id: "+str(sandbox_job.id))
+            dyn_job = Job.fetch(sandbox_job.id, connection=r)
+            dynamic_status = dyn_job.get_status()
             new_jobs['dynamic'] = str(sandbox_job.id)
             sandbox_body = {
                 'uuid':id,
@@ -161,13 +179,18 @@ def scan():
             'name':new_jobs["name"],
             'ext_id':new_jobs["ext_id"],
             'enqueued_at':new_jobs['enqueued_at'],
+            'dynamic_id':new_jobs['dynamic'],
+            'dynamic_status':dynamic_status,
+            'static_id':new_jobs['static'],
+            'static_status':static_status
+
         }
         try:
             print(scan_log_body)
             es.index(index='scan_log',body=scan_log_body)
             print("\x1b[32m[+] Extension scan log index created in ES: \033[1;0m")
         except Exception as e:
-            print("Failed to create extension scan log index")
+            print("[-] Failed to create extension scan log index")
             print(e)
         return new_jobs
 
@@ -199,7 +222,7 @@ def search():
         else:
             es_status = True
         # Get search query
-        keyword = request.form['keyword']
+        keyword = request.form['hunt_query']
         keyword = str(keyword)
         sandbox_search = False
         exts = []
@@ -316,6 +339,26 @@ def status():
                 es_total=0
             scans = es.search(index="scan_log", q="*",size=100)
             scan_results = scans['hits']['hits']
+        for scan_res in scan_results:
+            scan_job = scan_res['_source']
+            print(scan_job)
+            if scan_job['static_id']:
+                try:
+                    job = Job.fetch(scan_job['static_id'], connection=r)
+                    print('Status: %s' % job.get_status())
+                    status_update = {
+                        'doc':{
+                            'static_status':job.get_status()
+                            }
+                    }
+                    try:
+                        es.update(index="scan_log",id=scan_res['_id'],body=status_update)
+                    except Exception as e:
+                        print(e)
+                        print("did not update status")
+                except:
+                    print("[-] failed finding job")
+
 
         disk_total = len(next(os.walk('static/output'))[1])
         job_results=[]
@@ -375,8 +418,9 @@ def user_page():
             es_status = True
 
     username = session['username']
+    email = session['email']
 
-    return render_template('user.html',es_status=es_status, user=username)
+    return render_template('user.html',es_status=es_status, user=username, email=email)
 
 @app.route('/scanning')
 def scanning():

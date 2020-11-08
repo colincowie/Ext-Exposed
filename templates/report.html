@@ -204,7 +204,9 @@
     var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
      theme: "material",
      lineNumbers: true,
-     readOnly: false
+     matchBrackets: true,
+     readOnly: true
+
    });
    function download_csv(path) {
      window.location = $SCRIPT_ROOT + path;
@@ -239,14 +241,9 @@ for (i = 0; i < toggler.length; i++) {
         'file_path':file_path
 
       }, function(content) {
-        $('textarea#editor').val(content);
-        $('textarea#editor').hide();
-        $('textarea#editor').show();
-        var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
-         theme: 'material',
-         lineNumbers: true,
-         readOnly: false
-       });
+      editor.setValue(content);
+      $('textarea#editor').text = ' ';
+
 
        });
     }

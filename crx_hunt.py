@@ -1,4 +1,4 @@
-import re, os, uuid, json, time,redis, hashlib, argparse
+import re, os, uuid, json, time, redis, hashlib, argparse
 from rq import Queue
 from rq.job import Job
 from selenium import webdriver
@@ -16,6 +16,8 @@ r = redis.Redis()
 q = Queue(connection=r)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
+app.secret_key = "changethiskey1337"
+
 db = SQLAlchemy(app)
 Base = declarative_base()
 Base.query = db.session.query_property()
@@ -541,5 +543,4 @@ if __name__ == '__main__':
         load_es()
     db.create_all()
     create_es()
-    app.secret_key = "changethiskey1337"
-    app.run(host="0.0.0.0",port=1337,debug=True)
+    app.run(host="0.0.0.0",port=8080,debug=False)

@@ -28,13 +28,11 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True)
     email = db.Column(db.String(), unique=True)
     password = db.Column(db.String())
-    optIn = db.Column(db.Integer)
 
-    def __init__(self, username, password, email, optIn):
+    def __init__(self, username, password, email):
         self.username = username
         self.password = password
         self.email = email
-        self.optIn = optIn
 
 @app.route('/hunt')
 def hunt():
@@ -76,15 +74,10 @@ def register():
     """Register Form"""
     if request.method == 'POST':
         # Create new user with sha256 hashed password
-        if request.form['optIn'] == True:
-            opt = 1
-        else:
-            opt = 2
         new_user = User(
             username=request.form['username'],
             password=hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest(),
             email = request.form['email'],
-            optIn = opt
             )
         user = User.query.filter_by(username=request.form["username"]).first()
         if user:

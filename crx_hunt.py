@@ -354,7 +354,6 @@ def status():
                 except:
                     print("[-] failed finding job")
 
-
         disk_total = len(next(os.walk('static/output'))[1])
         job_results=[]
         jobs = q.jobs
@@ -364,7 +363,8 @@ def status():
         except:
             print("[*] No jobs")
 
-        return render_template('status.html', es_status=es_status,es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results, ver=Build_Ver)
+        user_count = db.session.execute('select count(id) as c from user').scalar()
+        return render_template('status.html', es_status=es_status,user_count=user_count, es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results, ver=Build_Ver)
 
 @app.route('/update_all')
 def update_all():

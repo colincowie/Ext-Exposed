@@ -1,7 +1,7 @@
 <p align="center">
   <img alt="Ext Exposed" src="https://github.com/colincowie/Ext-Exposed/raw/master/static/logo.png" height="140" />
   <br>
-  <b>Ext Exposed</b>
+  <b>Ext Exposed (in development)</b>
   <br>
   <i>A threat hunting platform for chrome extensions</i>
   <br>
@@ -56,41 +56,41 @@
 
 ## Development Tracking
 ##### Priority
-1. [ ] Service side profile & settings feature
-2. [ ] Platform security review (HTTPs and improve hashing algo)
-3. [ ] Deploy alpha!
-4. [ ] Documentation 
-5. [ ] Bulk import of extension
-6. [ ] Commenting feautre
-7. [ ] Yara
-8. [ ] Related Extensions 
-##### Dynamic
-- [ ] Proxy only extension network request?
-- [ ] More details about request
+1. [ ] Documentation 
+2. [ ] Bulk import of extension
+3. [ ] Commenting feautre
+4. [ ] Detection tagging and Yara
+5. [ ] Reputation system
+6. [ ] Related Extensions 
+7. [ ] Update User Info
+##### Dynamic analysis
 - [ ] Whitelist filtering
+- [ ] More details about request (size, ip, what else?)
+- [ ] Proxy only extension network request
 ##### Static
-- [ ] JS Beautify for file viewer 
+- [ ] Beautify for other file formats (html,css,json,xml) 
 ##### Front End
-- [ ] Improve source view ui 
-- [ ] Verbose frontend logging in real-time
+- [ ] Real-time verbose frontend logging for scans
 #### Dev Ops 
 - [ ] Documentation
 - [ ] CI Testing
 - [ ] Docker Image
-##### Yara
+##### Detection 
 - [ ] Yara scanning
-- [ ] Rule storage
-- [ ] Search output
-- [ ] Web UI
-- [ ] Tags?
+- [ ] Rule storage and editing 
+- [ ] Retrohunting   
+- [ ] Tags
 ##### Backlog 
-- [ ] Improve scan sort 
+- [ ] Dynamic scans sort by time in report view 
 ##### Feature Ideas
 - [ ] Graph explore view 
-- [ ] Reputation system
 - [ ] Browser capture gif 
 
 ##### Completed
+- [x] JS Beautify for file viewer 
+- [x] Improve source view ui 
+- [x] Deploy alpha
+- [x] Service side profile & settings feature
 - [x] Display and record extension full  name
 - [x] Export to csv feautre 
 - [x] Run chrome headless with virtual display

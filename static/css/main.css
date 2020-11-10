@@ -1,4 +1,27 @@
 /* <--->  */
+.CodeMirror-gutter-elt {
+  position: absolute;
+  left:0px!important;
+}
+.CodeMirror-line {
+  padding-left: 20px;
+}
+.CodeMirror-measure span {
+  visibility: hidden;
+}
+.CodeMirror-cursors {
+  visibility: hidden;
+}
+.CodeMirror-vscrollbar {
+  right: 0; top: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  height:0px;
+}
+.CodeMirror-measure .CodeMirror-linenumber{
+  visibility: hidden;
+
+}
 
 #ext_table tr:hover td{
  cursor: pointer;

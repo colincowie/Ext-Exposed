@@ -5,7 +5,7 @@ from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
 from sqlalchemy.ext.declarative import declarative_base
-from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory, send_file, Response
+from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory, send_file, Response, make_response
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run
@@ -436,7 +436,20 @@ def file_read():
         file_location = request.form['file_path']
         fs = open(file_location, 'r', encoding='utf8')
         file_source = fs.read()
-        return file_source
+        resp = make_response(file_source)
+        if file_location.endswith('.js'):
+            resp.headers['fileType'] = 'js'
+        elif file_location.endswith('.html'):
+            resp.headers['fileType'] = 'html'
+        elif file_location.endswith('.css'):
+            resp.headers['fileType'] = 'css'
+        elif file_location.endswith('.json'):
+            resp.headers['fileType'] = 'json'
+        elif file_location.endswith('.xml'):
+            resp.headers['fileType'] = 'xml'
+        else:
+            resp.headers['fileType'] = ''
+        return resp
 
 @app.route('/urls/<ext_id>')
 def urls_download(ext_id):
@@ -543,4 +556,4 @@ if __name__ == '__main__':
         load_es()
     db.create_all()
     create_es()
-    app.run(host="0.0.0.0",port=8080,debug=True)
+    app.run(host="127.0.0.1",port=8080,debug=True)

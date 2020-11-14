@@ -50,7 +50,7 @@
                     Permissions <span class="badge badge-primary badge-pill bg-secondary">{{perms|count}}</span>
                     </div>
                     <div style="overflow-y: scroll; max-height:200px;">
-                    <ul class="list-group" style="padding-bottom:5px;">
+                    <ul class="list-group">
                       {% for perm in perms%}
                       <li class="list-group-item" style="font-size: 12px;">{{perm}}</li>
                       {% endfor %}
@@ -60,9 +60,8 @@
                   Permissions <span class="badge badge-primary badge-pill bg-secondary">0</span>
                   </div>
                   <div>
-                    <ul class="list-group" style="padding-bottom:5px;">
-                      <li class="list-group-item" style="font-size: 12px;">No permissions found.
-                      </li>
+                    <ul class="list-group">
+                      <li class="list-group-item" style="font-size: 12px;">No permissions found.</li>
                     </ui>
                   </div>
                   {% endif %}

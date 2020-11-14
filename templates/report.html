@@ -46,15 +46,24 @@
                 <div class="col-sm-6">
                 <div class="card">
                   <div class="card-header bg-primary d-flex justify-content-between align-items-center">
-                  Permissions <span class="badge badge-primary badge-pill bg-secondary">{{perms|count}}</span>
+                  {% if perm %}
+                    Permissions <span class="badge badge-primary badge-pill bg-secondary">{{perms|count}}</span>
+                    </div>
+                    <div style="overflow-y: scroll; max-height:200px;">
+                    <ul class="list-group" style="padding-bottom:5px;">
+                      {% for perm in perms%}
+                      <li class="list-group-item" style="font-size: 12px;">{{perm}}</li>
+                      {% endfor %}
+                    </ul>
+                    </div>
+                  {% else %}
+                  Permissions <span class="badge badge-primary badge-pill bg-secondary">0</span>
                   </div>
-                  <div style="overflow-y: scroll; max-height:200px;">
-                  <ul class="list-group" style="padding-bottom:5px;">
-                    {% for perm in perms%}
-                    <li class="list-group-item" style="font-size: 12px;">{{perm}}</li>
-                    {% endfor %}
-                  </ul>
+                  <div>
+                    No permissions found.
                   </div>
+                  {% endif %}
+
                 </div>
                 </div>
                 <div class="col-sm-6">

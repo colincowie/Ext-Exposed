@@ -361,8 +361,8 @@ CodeMirror.defineMIME("text/x-yara", "yara");
   $('#color-picker').spectrum({
     type: "component"
   });
-  function update_color(color_id){
-    $(color_id).css("background-color", $(color_id).val());
-  }
+  $('#color-picker').on('change.spectrum move.spectrum', function() {
+    $('#color-picker').css("background-color", $('#color-picker').val());
+  })
   </script>
 {% endblock %}

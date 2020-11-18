@@ -13,11 +13,11 @@
             <div style="border-right: 1px solid;">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="community_ruleSwitch_{{rule.id}}" checked="">
-                <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;&nbsp;
+                <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
               </div>
             </div>
-            <div class="col" onclick="read_modal({{rule.id}})">
-            <div class="detection_desc">{{rule.description}}</div>
+            <div onclick="read_modal({{rule.id}})">
+            <div class="detection_desc">&nbsp;{{rule.description}}</div>
             </div>
             <div class="col align-right" style="text-align:right;" onclick="read_modal({{rule.id}})">
               <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -40,11 +40,11 @@
             <div style="border-right: 1px solid;">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="ruleSwitch_{{rule.id}}" checked="">
-                <label class="custom-control-label" for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;&nbsp;
+                <label class="custom-control-label" for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
               </div>
             </div>
-            <div class="col" onclick="show_modal({{rule.id}})">
-            <div class="detection_desc">{{rule.description}}</div>
+            <div  onclick="show_modal({{rule.id}})">
+            <div class="detection_desc">&nbsp;{{rule.description}}</div>
             </div>
             <div class="col align-right" style="text-align:right;" onclick="show_modal({{rule.id}})">
               <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

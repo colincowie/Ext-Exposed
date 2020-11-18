@@ -1,4 +1,5 @@
 import re, os, uuid, json, time, redis, hashlib, argparse
+import yara
 from rq import Queue
 from rq.job import Job
 from selenium import webdriver
@@ -35,6 +36,24 @@ class User(db.Model):
         self.username = username
         self.password = password
         self.email = email
+
+class DetectionRule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    """ Create detection rules table"""
+    yara = db.Column(db.Text)
+    global_rule = db.Column(db.Boolean)
+    owner = db.Column(db.String(80))
+    name = db.Column(db.String())
+    description = db.Column(db.String())
+    hits = []
+
+    def __init__(self, name, owner, global_rule, yara, description):
+        self.name = name
+        self.owner = owner
+        self.global_rule = global_rule
+        self.yara = yara
+        self.description = description
+
 
 @app.route('/hunt')
 def hunt():
@@ -393,7 +412,7 @@ def home():
         return render_template('index.html',es_status=es_status)
 
 @app.route('/yara')
-def yara():
+def detections():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
@@ -401,7 +420,11 @@ def yara():
             es_status = False
         else:
             es_status = True
-        return render_template('yara.html',es_status=es_status)
+        user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
+        print(user_rules)
+        return render_template('yara.html',es_status=es_status, user_rules=user_rules)
+
+
 @app.route('/user')
 def user_page():
     if not session.get('logged_in'):
@@ -427,6 +450,38 @@ def scanning():
         else:
             es_status = True
         return render_template('scanning.html',es_status=es_status)
+
+@app.route('/yara/edit', methods=['POST'])
+def yara_edit():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        new_rule = request.form['new_rule']
+        try:
+            yara.compile(source=new_rule)
+            flash('Rule compiled!')
+        except Exception as e:
+            print(e)
+            return redirect(url_for('detections'))
+        community_rule = False
+        try:
+            if request.form['communitySwitch'] == "on":
+                community_rule = True
+        except:
+            community_rule = False
+
+        new_rule = DetectionRule(
+            name = request.form['rule_name'],
+            owner= session['username'],
+            global_rule = community_rule,
+            yara = request.form['new_rule'],
+            description = request.form['rule_desc']
+            )
+        db.session.add(new_rule)
+        db.session.commit()
+        flash('New rule added, '+str(new_rule)+'!')
+
+        return redirect(url_for('detections'))
 
 @app.route('/ext_file', methods=['POST'])
 def file_read():

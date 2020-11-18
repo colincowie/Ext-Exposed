@@ -1,5 +1,5 @@
 # Contributing to Ext Exposed :tada: 
 
-If you are intrested in contributing to this project please reachout to me via Twitter @th3_protoCOL.
+If you are interested in contributing to this project please reach out to me via Twitter @th3_protoCOL.
 
 Thanks!

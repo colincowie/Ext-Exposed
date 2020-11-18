@@ -1,26 +1,76 @@
 /* <--->  */
-.CodeMirror-gutter-elt {
+.detection{
+  border: 1px solid;
+  height: 40px;
+  align-items: center;
+  padding: 5px;
+  display: flex;
+
+}
+
+.detection:hover {
+  cursor: pointer;
+ background-color:#171616!important;
+}
+.detection_desc{
+  color:#888;
+}
+.CodeMirror {
+  height: auto;
+  width: 300%;
+}
+
+.CodeMirror-cursor {
+  position: absolute;
+}
+.CodeMirror pre {
+    height:15px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    word-wrap: break-word;
+    padding: 0;
+    margin-bottom:0
+}
+
+.source_code .CodeMirror-gutter-elt {
   position: absolute;
   left:0px!important;
 }
-.CodeMirror-line {
+.source_code  .CodeMirror-line {
   padding-left: 20px;
 }
-.CodeMirror-measure span {
+
+.source_code .CodeMirror-measure span {
   visibility: hidden;
 }
-.CodeMirror-cursors {
+.detection_form .CodeMirror-cursors {
+  visibility: visible!important;
+}
+.source_code .CodeMirror-cursors {
   visibility: hidden;
 }
-.CodeMirror-vscrollbar {
+.source_code .CodeMirror-vscrollbar {
   right: 0; top: 0;
-  overflow-x: hidden;
-  overflow-y: scroll;
   height:0px;
 }
-.CodeMirror-measure .CodeMirror-linenumber{
+.source_code .CodeMirror-measure .CodeMirror-linenumber{
   visibility: hidden;
 
+}
+.source_code  .CodeMirror-sizer{
+  margin-left: 0px!important;
+}
+.source_code .CodeMirror-scroll {
+}
+.source_code {
+ width: auto;
+ overflow-x: auto;
+ max-height:500px;
+ overflow-y: scroll;
+ border: solid 2px #000;
+ padding:1px;
+ background-color:#000;
+ font-size: 13px;
 }
 
 #ext_table tr:hover td{
@@ -101,24 +151,7 @@
    opacity: 1;
 
  }
-.CodeMirror-sizer{
-  margin-left: 0px!important;
-}
-.CodeMirror-scroll {
-  overflow-y: scroll;
-  overflow-x: auto;
 
-}
-
-.source_code {
-  max-height:500px;
-  overflow-y: scroll;
-  overflow-x: auto;
-  border: solid 3px #000;
-  padding-left: 3px;
-  background-color:#263238;
-  font-size: 13px;
-}
 #stat_box {
     /* Within a circle, centered text looks prettier. */
   text-align : center;

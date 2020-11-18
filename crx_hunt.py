@@ -45,14 +45,16 @@ class DetectionRule(db.Model):
     owner = db.Column(db.String(80))
     name = db.Column(db.String())
     description = db.Column(db.String())
+    tag_color = db.Column(db.String())
     hits = []
 
-    def __init__(self, name, owner, global_rule, yara, description):
+    def __init__(self, name, owner, global_rule, yara, description, tag_color):
         self.name = name
         self.owner = owner
         self.global_rule = global_rule
         self.yara = yara
         self.description = description
+        self.tag_color = tag_color
 
 
 @app.route('/hunt')
@@ -84,7 +86,7 @@ def login():
             session['logged_in'] = True
             session['username'] = name
             session['email'] = user.email
-            flash('Welcome to Ext Exposed, '+str(name)+'!')
+            flash('Welcome to Ext Exposed, '+str(name)+'!', "info")
 
             return redirect(url_for('home'))
         else:
@@ -123,7 +125,7 @@ def scan():
         return "Elasticsearch database error"
     else:
         if not es.ping():
-            flash('Error: The elasticsearch database is not connected.')
+            flash('Error: The elasticsearch database is not connected.',"danger")
             es_status = False
         else:
             es_status = True
@@ -231,7 +233,7 @@ def search():
         return "Elasticsearch database error"
     else:
         if not es.ping():
-            flash('Error: The elasticsearch database is not connected.')
+            flash('Error: The elasticsearch database is not connected.',"danger")
             return redirect(url_for('home'))
         else:
             es_status = True
@@ -421,9 +423,8 @@ def detections():
         else:
             es_status = True
         user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
-        print(user_rules)
-        return render_template('yara.html',es_status=es_status, user_rules=user_rules)
-
+        community_rules = DetectionRule.query.filter_by(global_rule=True).all()
+        return render_template('yara.html',es_status=es_status, user_rules=user_rules, community_rules=community_rules)
 
 @app.route('/user')
 def user_page():
@@ -450,7 +451,35 @@ def scanning():
         else:
             es_status = True
         return render_template('scanning.html',es_status=es_status)
+@app.route('/yara/update', methods=['POST'])
+def yara_update():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        code_id = "code_"+request.form['rule_id']
+        updated_rule = request.form[code_id]
+        try:
+            yara.compile(source=updated_rule)
+        except Exception as e:
+            flash('Yara rule error: '+str(e),"danger")
+            print(e)
+            return redirect(url_for('detections'))
+        community_rule = False
+        try:
+            if request.form['communitySwitch'] == "on":
+                community_rule = True
+        except:
+            community_rule = False
+        rule_id = request.form['rule_id']
+        db_rule = DetectionRule.query.filter_by(id=rule_id).first()
+        if session["username"] == db_rule.owner:
+            db_rule.global_rule = community_rule
+            db_rule.yara = updated_rule
+            db_rule.tag_color = request.form['tag_color']
+            db.session.commit()
+        flash('Rule updated', "info")
 
+        return redirect(url_for('detections'))
 @app.route('/yara/edit', methods=['POST'])
 def yara_edit():
     if not session.get('logged_in'):
@@ -459,8 +488,8 @@ def yara_edit():
         new_rule = request.form['new_rule']
         try:
             yara.compile(source=new_rule)
-            flash('Rule compiled!')
         except Exception as e:
+            flash('Yara rule error: '+str(e),"danger")
             print(e)
             return redirect(url_for('detections'))
         community_rule = False
@@ -475,12 +504,28 @@ def yara_edit():
             owner= session['username'],
             global_rule = community_rule,
             yara = request.form['new_rule'],
-            description = request.form['rule_desc']
+            description = request.form['rule_desc'],
+            tag_color = request.form['tag_color']
             )
         db.session.add(new_rule)
         db.session.commit()
-        flash('New rule added, '+str(new_rule)+'!')
+        flash('New rule added, '+str(request.form['rule_name'])+'!', "info")
 
+        return redirect(url_for('detections'))
+
+@app.route('/yara/delete', methods=['POST'])
+def yara_delete():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        rule_id = request.form['rule_id']
+        rule = DetectionRule.query.filter_by(id=rule_id).first()
+        if session["username"] == rule.owner:
+            try:
+                db.session.delete(rule)
+                db.session.commit()
+            except Exception as e:
+                flash("yara delete error: "+str(e),"danger")
         return redirect(url_for('detections'))
 
 @app.route('/ext_file', methods=['POST'])
@@ -549,6 +594,7 @@ def sandbox_download(ext_id, uuid):
                     for url in report['_source']['urls']:
                         yield url[0]+","+url[1]+"\n"
         return Response(get_sandbox(), mimetype='text/csv')
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),

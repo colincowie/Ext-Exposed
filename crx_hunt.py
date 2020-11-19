@@ -181,7 +181,7 @@ def scan():
                                 scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)])
                     else:
                         if r.enabled:
-                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)])
 
             else:
                 community_rules = None

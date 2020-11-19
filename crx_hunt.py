@@ -191,7 +191,7 @@ def scan():
                     if scan_rules != []:
                         if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
                             if r.enabled:
-                                scan_rules.append([str(r.name),str(r.yara),str(r.id)])
+                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
                     else:
                         if r.enabled:
                             scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])

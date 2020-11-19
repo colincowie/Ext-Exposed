@@ -18,6 +18,12 @@
               <span>ID: <label id="ext_id">{{id}}</label></span>
             </div>
         </div>
+        <div class="col align-right">
+          Yara Detections:<br>
+          {% for tag in tags %}
+            <span class="badge" style="background-color:{{tag[1]}}">{{tag[0]}}</span>
+          {% endfor %}
+        </div>
     </div>
 </div>
 <div>
@@ -215,8 +221,8 @@
   $SCRIPT_ROOT={{ request.script_root|tojson|safe }};
     var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
       theme: "material",
-      lineNumbers: true,
-      readOnly: true
+      autoRefresh: true,
+      readOnly: true,
 
    });
    function download_csv(path) {

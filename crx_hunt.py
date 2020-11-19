@@ -10,6 +10,7 @@ from flask import Flask, flash, redirect, render_template, request, session ,url
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run
+from ext_yara import EXT_yara, yara_run
 
 app = Flask(__name__)
 es = Elasticsearch()
@@ -142,39 +143,78 @@ def scan():
             jobs = q.jobs
         except:
             return "Critial Error: redis server not working, sandbox not ran. Please run `redis-server` and `rq worker`"
-
+        # set extension name and id
+        ext_scan = EXT_Analyze(ext_id)
+        ext_name = ext_scan.name
+        print("name: "+ext_name)
+        new_jobs["name"] = ext_name
+        new_jobs["ext_id"] = ext_id
         # array for scan log
         static_status = ''
         dynamic_status = ''
+        yara_status = ''
+
         if request.form.get("static") != None:
             # Static Analysis
             print("[!] Queuing static analysis for "+ext_id)
-
-            ext_scan = EXT_Analyze(ext_id)
-            ext_name = ext_scan.name
-            print("name: "+ext_name)
-            new_jobs["name"] = ext_name
-            new_jobs["ext_id"] = ext_id
             static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name, result_ttl=6000)
             #print(job.result)
             print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
             new_jobs['static'] = str(static_job.id)
             new_jobs['enqueued_at'] = str(static_job.enqueued_at)
-            stat_job = Job.fetch(static_job.id, connection=r)
-            static_status = stat_job.get_status()
+            try:
+                stat_job = Job.fetch(static_job.id, connection=r)
+                static_status = stat_job.get_status()
+            except:
+                print("[-] Failed to get static job status")
+        # Yara scan
+        if request.form.get("global_rules") == "on" or request.form.get("my_rules") == "on":
+            print("[!] Queuing yara analysis for "+ext_id)
+            scan_rules = []
+            if request.form.get("global_rules") == "on":
+                community_rules = DetectionRule.query.filter_by(global_rule=True).all()
+                for r in community_rules:
+                    if scan_rules != []:
+                        if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
+                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+                    else:
+                        scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+
+            else:
+                community_rules = None
+            if request.form.get("my_rules") == "on":
+                user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
+                for r in user_rules:
+                    if scan_rules != []:
+                        if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
+                            scan_rules.append([str(r.name),str(r.yara),str(r.id)])
+                    else:
+                        scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+            else:
+                user_rules = None
+            yara_scan = EXT_yara(ext_id)
+            yara_job = q.enqueue(yara_run, ext_id, scan_rules, result_ttl=6000)
+            #print(job.result)
+            print("[!] Yara enqueued at "+str(yara_job.enqueued_at)+" with job id: "+str(yara_job.id))
+            new_jobs['yara'] = str(yara_job.id)
+            new_jobs['enqueued_at'] = str(yara_job.enqueued_at)
+
         if request.form.get("sandbox") != None:
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
             time_limit = int(request.form.get('time_limit'))
             print("Time limit:"+str(time_limit))
-
             id = uuid.uuid4()
             box = EXT_Sandbox(ext_id, time_limit)
             sandbox_job = q.enqueue(sandbox_run, box, id, result_ttl=6000)
             #print(job.result)
             print("[!] Dynamic enqueued at "+str(sandbox_job.enqueued_at)+" with job id: "+str(sandbox_job.id))
-            dyn_job = Job.fetch(sandbox_job.id, connection=r)
-            dynamic_status = dyn_job.get_status()
+            new_jobs['enqueued_at'] = sandbox_job.enqueued_at
+            try:
+                dyn_job = Job.fetch(sandbox_job.id, connection=r)
+                dynamic_status = dyn_job.get_status()
+            except:
+                print("[-] Failed to get static job status")
             new_jobs['dynamic'] = str(sandbox_job.id)
             sandbox_body = {
                 'uuid':id,
@@ -333,7 +373,18 @@ def report(ext):
                     print(e)
                     ext_sandbox = []
                 ext_path=os.path.join('static/output', str(hit['_source']['ext_id']))
-                return render_template('report.html',icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tree=make_tree(ext_path))
+
+                # Get detection tags
+                tag_res = es.search(index="yara_hits", body={'query': {'match': {'ext_id': hit['_source']['ext_id']}}})
+                tags = []
+                create_new = True
+                # check for duplicates
+                for tag in tag_res['hits']['hits']:
+                    #print(tag['_source']['rule_name'])
+                    #print(tag['_source']['tag_color'])
+                    tags.append([tag['_source']['rule_name'],tag['_source']['tag_color']])
+                print(tags)
+                return render_template('report.html',icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
         return("No report found...")
 
 @app.route('/status')
@@ -424,6 +475,22 @@ def detections():
             es_status = True
         user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
         community_rules = DetectionRule.query.filter_by(global_rule=True).all()
+        # Update detection hits
+        for rule in user_rules:
+            ext_matches = []
+            tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}})
+            for tag in tag_res['hits']['hits']:
+                ext_matches.append(tag['_source']['ext_id'])
+            rule.hits = ext_matches
+            db.session.commit()
+        for rule in community_rules:
+            ext_matches = []
+            tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}})
+            for tag in tag_res['hits']['hits']:
+                ext_matches.append(tag['_source']['ext_id'])
+            rule.hits = ext_matches
+            db.session.commit()
+
         return render_template('yara.html',es_status=es_status, user_rules=user_rules, community_rules=community_rules)
 
 @app.route('/user')
@@ -646,6 +713,11 @@ def create_es():
     except:
         pass
     try:
+        es.indices.create(index='yara_hits')
+        print("[*] Created index yara_hits")
+    except:
+        pass
+    try:
         es.indices.create(index='sandbox_data')
         print("[*] Created index sandbox_data")
     except:
@@ -657,4 +729,4 @@ if __name__ == '__main__':
         load_es()
     db.create_all()
     create_es()
-    app.run(host="127.0.0.1",port=8080,debug=True)
+    app.run(host="0.0.0.0",port=1337,debug=True)

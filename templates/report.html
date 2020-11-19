@@ -192,6 +192,24 @@
                 <button class="btn-primary" onclick="format_code()">Auto-Format code</button>
           		</div>
           	</div>
+            <div class="row">
+              <div class="col-md-4">
+                Yara Matches:
+                <br>
+                {% for tag in tags %}
+                <span class="badge" style="background-color:{{tag[1]}}">{{tag[0]}}</span>
+                <br>
+                <ul style="list-style-type: circle;">
+                  {% for match in tag[2] %}
+                  {% set match = match.split('/') %}
+                  <li>
+                  <span class="match_span">{% for dir in match[3:] %}{{dir}}/{% endfor %}</span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endfor %}
+              </div>
+            </div>
           </div>
           <div class="container">
           <div class="row">
@@ -290,6 +308,9 @@ function format_code(){
 </script>
 <script type="text/javascript">
   $(document).ready(function () {
+    $('.match_span').text(function(i,v){
+      return v.slice(0,-1);
+    });
     $('table#scan_table').DataTable( {
          "ordering": false,
         searching: false,

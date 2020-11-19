@@ -382,7 +382,7 @@ def report(ext):
                 for tag in tag_res['hits']['hits']:
                     #print(tag['_source']['rule_name'])
                     #print(tag['_source']['tag_color'])
-                    tags.append([tag['_source']['rule_name'],tag['_source']['tag_color']])
+                    tags.append([tag['_source']['rule_name'],tag['_source']['tag_color'],tag['_source']['hits']])
                 print(tags)
                 return render_template('report.html',icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
         return("No report found...")

@@ -17,12 +17,14 @@
   <!-- Custom styles for this template -->
   <link href="{{ url_for('static', filename='css/simple-sidebar.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/material.css') }}" rel="stylesheet" >
+  <link type="text/javascript" rel="{{ url_for('static',filename='css/codemirror.css')}}">
   <script type="text/javascript" src="{{ url_for('static',filename='js/codemirror.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static',filename='js/autorefresh.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static',filename='js/beautify.js')}}"></script>
   <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
 
   <script src="{{ url_for('static',filename='js/javascript.js') }}"></script>
 
-  <link type="text/javascript" rel="{{ url_for('static',filename='css/codemirror.css')}}">
   <!-- Bootstrap core JavaScript -->
   <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
 
@@ -30,15 +32,18 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
 
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/spectrum-colorpicker2/dist/spectrum.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/spectrum-colorpicker2/dist/spectrum.min.css">
+
 
 </head>
 
 <body class = "bg-dark">
-  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% with messages = get_flashed_messages(with_categories=True) %}
     <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
     {% if messages %}
-      {% for message in get_flashed_messages() %}
-        <div class="alert alert-primary">
+      {% for category, message in get_flashed_messages(with_categories=True) %}
+        <div class="alert alert-{{category}}">
           <button type="button" class="close" data-dismiss="alert">&times;</button>
           {{ message }}
         </div>

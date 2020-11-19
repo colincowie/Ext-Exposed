@@ -3,9 +3,20 @@
 {% block body %}
 <h2>Register</h2>
 <form action="/nobotsplz/register/" method="POST">
-  <input type="username" name="username" placeholder="Username">
-  <input type="password" name="password" placeholder="Password">
-  <input type="submit" value="Log in">
+  <div class="form-group row ">
+    <label for="username">Username</label>
+    <input type="text" class="form-control"  name="username" id="username" placeholder="Set username">
+  </div>
+  <div class="form-group row ">
+    <label for="exampleInputEmail1">Email address</label>
+    <input type="email" class="form-control" name="email" id="email" aria-describedby="emailHelp" placeholder="Set email">
+    <small id="emailHelp" class="form-text text-muted">We won't share your email with anyone else.</small>
+  </div>
+  <div class="form-group row">
+    <label for="exampleInputPassword1">Password</label>
+    <input type="password" class="form-control" name="password" id="password" placeholder="Set Password">
+  </div>
+  <input type="submit" value="Register">
 </form>
 {% endblock %}
 {% endblock %}

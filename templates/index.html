@@ -8,7 +8,7 @@
     <form action="/scan" id="scanForm" method="POST">
       <div class="form-group text-center">
         <label for="search">Submit a chrome extension to scan</label>
-        <input type="text" class="form-control" id="scan" name="keyword" placeholder="Chrome extension url or ID">
+        <input type="text" class="form-control" id="scan" name="extension" placeholder="Chrome extension url or ID">
       </div>
 
       <div class="form-group text-center text-dark">
@@ -23,48 +23,57 @@
             <!-- add options here -->
             <li class="list-group-item">
               <div class="form-group">
-
-
+                  <div class="form-group">
                 <div class="col-xs-8">
                   <div class="row">
                     <fieldset class="col-xs-12 col-sm-6">
-                      <input type="checkbox" name="static" autocomplete="off" checked>
-                      Static Analysis
+                      <div class="custom-control custom-checkbox">
+                        <input type="checkbox" name="static"  class="custom-control-input" id="customCheck1" checked="">
+                        <label class="custom-control-label" for="customCheck1">Static Analysis</label>
+                      </div>
                     </fieldset>
                     <fieldset class="col-xs-12 col-sm-6">
-                      <input type="checkbox" name="sandbox" autocomplete="off" checked>
-                      Dynamic Analysis (sandbox)
+                      <div class="custom-control custom-checkbox">
+                        <input type="checkbox" name="sandbox"  class="custom-control-input" id="customCheck2" checked="">
+                        <label class="custom-control-label" for="customCheck2">Dynamic Analysis (sandbox)</label>
+                      </div>
                     </fieldset>
                     <fieldset class="col-xs-12 col-sm-6">
-                      <input type="checkbox" name="domains" autocomplete="off" disabled>
-                      Yara Rules (comming soon)
+
                     </fieldset>
                     <fieldset class="col-xs-12 col-sm-6">
                       <input id="sandbox_range" name="time_limit" class="slider form-control" type="range" min="5" max="600" value="20">
-                      <br>
                       Duration (seconds): <span id="range_text" />
                     </fieldset>
                   </div>
                 </div>
               </div>
-
               <div class="clearfix"></div>
             </li>
 
             <li class="list-group-item">
               <div class="form-group">
                 <div class="col-xs-4">
-                  <label for="search-location">Yara Signatures</label>
-                </div>
-
-                <div class="col-xs-8">
                   <div class="row">
-                    <fieldset class="col-xs-12 col-sm-6">
-                      <input type="checkbox" name="lnkr value=" enabled" autocomplete="off" checked>
-                      Lnkr
-                    </fieldset>
-
+                  <fieldset class="col-xs-12 col-sm-6">
+                    <div class="custom-control custom-checkbox">
+                      <input type="checkbox" name="yara_toggle"  class="custom-control-input" id="yara_toggle" onclick="toggle_yara()" checked="">
+                      <label class="custom-control-label" for="yara_toggle">Yara Signatures</label>
+                    </div>
+                  </fieldset>
+                </div>
+                <fieldset class="col-xs-12 col-sm-6">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="global_rules"  class="custom-control-input" id="global_rules" checked="">
+                    <label class="custom-control-label" for="global_rules">Community Rules</label>
                   </div>
+                </fieldset>
+                <fieldset class="col-xs-12 col-sm-6">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="my_rules"  class="custom-control-input" id="my_rules" checked="">
+                    <label class="custom-control-label" for="my_rules">My Rules</label>
+                  </div>
+                </fieldset>
                 </div>
               </div>
 
@@ -143,7 +152,17 @@
         }
       });
     });
-
+    function toggle_yara() {
+      if($('#yara_toggle')[0].checked == true){
+        console.log("checked?");
+        $('#global_rules')[0].checked = true;
+        $('#my_rules')[0].checked = true;
+      }
+      else{
+        $('#global_rules')[0].checked = false;
+        $('#my_rules')[0].checked = false;
+      }
+    }
     function check_job_status(status_url, type) {
     $.getJSON(status_url, function(data) {
 

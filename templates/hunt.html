@@ -8,7 +8,7 @@
         <form action="/search"  method="POST">
         <div class="form-group text-center">
           <label for="search">Search for chrome extension data</label>
-          <input type="text"  class="form-control" id="search" name="keyword" placeholder="Type your query">
+          <input type="text"  class="form-control" id="search" name="hunt_query" placeholder="Type your query">
         </div>
 
         <div class="form-group text-center text-dark">
@@ -27,24 +27,35 @@
                   <div class="col-xs-8">
                     <div class="row">
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="static_urls"  autocomplete="off" checked>
-                        Static URLs
+                        <div class="custom-control custom-checkbox">
+                          <input type="checkbox" name="static_urls"   class="custom-control-input" id="static_urlsCheck1" checked="">
+                          <label class="custom-control-label" for="static_urlsCheck1">Static URLs</label>
+                        </div>
                       </fieldset>
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="ext_ids" autocomplete="off" checked>
-                          Extension IDs
+                        <div class="custom-control custom-checkbox">
+                          <input type="checkbox" name="ext_ids"  class="custom-control-input" id="ext_idsCheck1" checked="">
+                          <label class="custom-control-label" for="ext_idsCheck1">  Extension IDs</label>
+                        </div>
                       </fieldset>
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="ext_names" autocomplete="off" checked>
-                          Extension Names
+                        <div class="custom-control custom-checkbox">
+                          <input type="checkbox" name="ext_names"  class="custom-control-input" id="ext_namesCheck1" checked="">
+                          <label class="custom-control-label" for="ext_namesCheck1">Extension Names</label>
+                        </div>
+
                       </fieldset>
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="sandbox_urls" autocomplete="off">
-                        Sandbox URLs
+                        <div class="custom-control custom-checkbox">
+                          <input type="checkbox" name="sandbox_urls"  class="custom-control-input" id="sandbox_urlsCheck1" checked="">
+                          <label class="custom-control-label" for="sandbox_urlsCheck1">Sandbox URLs</label>
+                        </div>
                       </fieldset>
                       <fieldset class="col-xs-12 col-sm-6">
-                        <input type="checkbox" name="permissions" autocomplete="off">
-                        Permissions
+                        <div class="custom-control custom-checkbox">
+                          <input type="checkbox" name="permissions"  class="custom-control-input" id="permissionsCheck1" checked="">
+                          <label class="custom-control-label" for="permissionsCheck1">Permissions</label>
+                        </div>
                       </fieldset>
                     </div>
                   </div>

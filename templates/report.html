@@ -18,6 +18,12 @@
               <span>ID: <label id="ext_id">{{id}}</label></span>
             </div>
         </div>
+        <div class="col align-right">
+          Yara Detections:<br>
+          {% for tag in tags %}
+            <span class="badge" style="background-color:{{tag[1]}}">{{tag[0]}}</span>
+          {% endfor %}
+        </div>
     </div>
 </div>
 <div>
@@ -46,15 +52,26 @@
                 <div class="col-sm-6">
                 <div class="card">
                   <div class="card-header bg-primary d-flex justify-content-between align-items-center">
-                  Permissions <span class="badge badge-primary badge-pill bg-secondary">{{perms|count}}</span>
+                  {% if perms %}
+                    Permissions <span class="badge badge-primary badge-pill bg-secondary">{{perms|count}}</span>
+                    </div>
+                    <div style="overflow-y: scroll; max-height:200px;">
+                    <ul class="list-group">
+                      {% for perm in perms %}
+                      <li class="list-group-item" style="font-size: 12px;">{{perm}}</li>
+                      {% endfor %}
+                    </ul>
+                    </div>
+                  {% else %}
+                  Permissions <span class="badge badge-primary badge-pill bg-secondary">0</span>
                   </div>
-                  <div style="overflow-y: scroll; max-height:200px;">
-                  <ul class="list-group" style="padding-bottom:5px;">
-                    {% for perm in perms%}
-                    <li class="list-group-item" style="font-size: 12px;">{{perm}}</li>
-                    {% endfor %}
-                  </ul>
+                  <div>
+                    <ul class="list-group">
+                      <li class="list-group-item" style="font-size: 12px;">No permissions found.</li>
+                    </ui>
                   </div>
+                  {% endif %}
+
                 </div>
                 </div>
                 <div class="col-sm-6">
@@ -70,7 +87,7 @@
                       </div>
                     </div>
                   <div style="overflow-y: scroll; max-height:200px;">
-                    <ul class="list-group" style="padding-bottom:5px;">
+                    <ul class="list-group">
                       {% for url in urls %}
                         <li class="list-group-item font-small" style="font-size: 12px;">{{url}}</li>
                       {% endfor %}
@@ -169,11 +186,30 @@
           		</div>
           		<div class="col-md-8">
                 <div class="source_code">
-                <textarea  id="editor">
-                </textarea>
+                <textarea  id="editor">  </textarea>
                 </div>
+                <br>
+                <button class="btn-primary" onclick="format_code()">Auto-Format code</button>
           		</div>
           	</div>
+            <div class="row">
+              <div class="col-md-4">
+                Yara Matches:
+                <br>
+                {% for tag in tags %}
+                <span class="badge" style="background-color:{{tag[1]}}">{{tag[0]}}</span>
+                <br>
+                <ul style="list-style-type: circle;">
+                  {% for match in tag[2] %}
+                  {% set match = match.split('/') %}
+                  <li>
+                  <span class="match_span">{% for dir in match[3:] %}{{dir}}/{% endfor %}</span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endfor %}
+              </div>
+            </div>
           </div>
           <div class="container">
           <div class="row">
@@ -202,13 +238,15 @@
 <script type="text/javascript">
   $SCRIPT_ROOT={{ request.script_root|tojson|safe }};
     var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
-     theme: "material",
-     lineNumbers: true,
-     readOnly: false
+      theme: "material",
+      autoRefresh: true,
+      readOnly: true,
+
    });
    function download_csv(path) {
      window.location = $SCRIPT_ROOT + path;
    }
+
 
    function localLoad(files) {
        if (files.length == 1) {
@@ -220,6 +258,8 @@
             reader.readAsText(files[0]);
          }
     }
+
+var file_type = ""
 var toggler = document.getElementsByClassName("caret");
 var i;
 
@@ -234,21 +274,15 @@ for (i = 0; i < toggler.length; i++) {
       file_path = file_path.reverse();
       file_path = file_path.join("/");
       file_path = "static/output/"+$('#ext_id').text()+"/"+file_path;
-      $.post('/ext_file',
-      {
-        'file_path':file_path
+      $.ajax({
+        type: 'POST',
+        url:'/ext_file',
+        data: {'file_path':file_path},
+        success: function(content, textStatus, request){
+          file_type = request.getResponseHeader('fileType');
+            editor.setValue(content);
+        }});
 
-      }, function(content) {
-        $('textarea#editor').val(content);
-        $('textarea#editor').hide();
-        $('textarea#editor').show();
-        var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
-         theme: 'material',
-         lineNumbers: true,
-         readOnly: false
-       });
-
-       });
     }
     else{
       this.parentElement.querySelector(".nested").classList.toggle("active");
@@ -256,9 +290,27 @@ for (i = 0; i < toggler.length; i++) {
     };
   });
 }
+
+function format_code(){
+  console.log(file_type)
+  if (file_type=="js"){
+    var currentCode = editor.getValue();
+    var newCode = js_beautify(currentCode);
+    editor.setValue(newCode);
+    lineCount = editor.lineCount();
+  //editor.autoFormatRange({line:0, ch:0}, {line:lineCount});
+  }
+  else{
+    alert("At this time only formating JavaScript code is supported")
+  }
+
+};
 </script>
 <script type="text/javascript">
   $(document).ready(function () {
+    $('.match_span').text(function(i,v){
+      return v.slice(0,-1);
+    });
     $('table#scan_table').DataTable( {
          "ordering": false,
         searching: false,

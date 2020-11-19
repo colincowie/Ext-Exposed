@@ -12,8 +12,13 @@
           <div class="row detection dflex">
             <div style="border-right: 1px solid;">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="community_ruleSwitch_{{rule.id}}" checked="">
+                {% if rule.enabled %}
+                <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled checked="">
                 <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                {% else %}
+                <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled>
+                <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                {% endif %}
               </div>
             </div>
             <div onclick="read_modal({{rule.id}})">
@@ -69,8 +74,14 @@
           <div class="row detection dflex">
             <div style="border-right: 1px solid;">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="ruleSwitch_{{rule.id}}" checked="">
-                <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+
+                {% if rule.enabled %}
+                    <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});" id="ruleSwitch_{{rule.id}}" checked="">
+                    <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                 {% else %}
+                     <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});" id="ruleSwitch_{{rule.id}}">
+                     <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                {% endif %}
               </div>
             </div>
             <div  onclick="show_modal({{rule.id}})">
@@ -221,6 +232,23 @@ rule example_rule
 
 
 <script type="text/javascript">
+  function enable_rule(rule_id){
+    switch_id = '#ruleSwitch_'+rule_id
+    if($(switch_id)[0].checked == true){
+      console.log("checked");
+      state = "on"
+    }
+    else{
+      state = "off"
+    }
+    $.ajax({
+      url: "/yara/toggle",
+      data: {'state':state,'rule_id':rule_id},
+      method: "POST",
+      dataType: "json"
+  });
+
+}
   function delete_rule(rule_id){
     var answer = window.confirm("Are you sure you want to delete this?");
     if (answer) {

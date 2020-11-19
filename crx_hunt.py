@@ -47,6 +47,8 @@ class DetectionRule(db.Model):
     name = db.Column(db.String())
     description = db.Column(db.String())
     tag_color = db.Column(db.String())
+    enabled = db.Column(db.Boolean)
+
     hits = []
 
     def __init__(self, name, owner, global_rule, yara, description, tag_color):
@@ -146,7 +148,6 @@ def scan():
         # set extension name and id
         ext_scan = EXT_Analyze(ext_id)
         ext_name = ext_scan.name
-        print("name: "+ext_name)
         new_jobs["name"] = ext_name
         new_jobs["ext_id"] = ext_id
         # array for scan log
@@ -176,9 +177,11 @@ def scan():
                 for r in community_rules:
                     if scan_rules != []:
                         if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
-                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+                            if r.enabled:
+                                scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)])
                     else:
-                        scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+                        if r.enabled:
+                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
 
             else:
                 community_rules = None
@@ -187,9 +190,11 @@ def scan():
                 for r in user_rules:
                     if scan_rules != []:
                         if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
-                            scan_rules.append([str(r.name),str(r.yara),str(r.id)])
+                            if r.enabled:
+                                scan_rules.append([str(r.name),str(r.yara),str(r.id)])
                     else:
-                        scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+                        if r.enabled:
+                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
             else:
                 user_rules = None
             yara_scan = EXT_yara(ext_id)
@@ -242,9 +247,9 @@ def scan():
 
         }
         try:
-            print(scan_log_body)
+            #print(scan_log_body)
             es.index(index='scan_log',body=scan_log_body)
-            print("\x1b[32m[+] Extension scan log index created in ES: \033[1;0m")
+            print("\x1b[32m[+] Extension scan log index created in ES: "+new_jobs["name"]+"\033[1;0m")
         except Exception as e:
             print("[-] Failed to create extension scan log index")
             print(e)
@@ -382,7 +387,7 @@ def report(ext):
                 for tag in tag_res['hits']['hits']:
                     #print(tag['_source']['rule_name'])
                     #print(tag['_source']['tag_color'])
-                    tags.append([tag['_source']['rule_name'],tag['_source']['tag_color'],tag['_source']['hits']])
+                    tags.append([tag['_source']['rule_name'],tag['_source']['tag_color'],tag['_source']['tag_color']])
                 print(tags)
                 return render_template('report.html',icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
         return("No report found...")
@@ -455,6 +460,7 @@ def update_urls():
 
 @app.route('/')
 def home():
+    #DetectionRule.__table__.drop(db.engine)
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
@@ -492,6 +498,24 @@ def detections():
             db.session.commit()
 
         return render_template('yara.html',es_status=es_status, user_rules=user_rules, community_rules=community_rules)
+
+@app.route('/yara/toggle', methods=['POST'])
+def update_enabled():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        state = request.form['state']
+        rule_id = request.form['rule_id']
+        db_rule = DetectionRule.query.filter_by(id=rule_id).first()
+        if session["username"] == db_rule.owner:
+            if state == "on":
+                db_rule.enabled = True
+            else:
+                db_rule.enabled = False
+            print("rule status: "+str(db_rule.enabled))
+            db.session.commit()
+        return "done"
+
 
 @app.route('/user')
 def user_page():

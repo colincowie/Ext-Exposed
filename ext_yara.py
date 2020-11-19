@@ -29,6 +29,7 @@ class EXT_yara():
 
         return matched_files
 
+
     def run(self, rule):
         return self.scan_ext(rule)
 
@@ -48,7 +49,8 @@ def yara_run(ext_id, rules):
             'rule_name':rule[0],
             'rule_id':rule[2],
             'tag_color':rule[3],
-            'hits':file_hits
+            'owner':rule[4],
+            'hits':file_hits,
         }
 
         dup_search = {'query': {'match': {'ext_id': ext_id}}}

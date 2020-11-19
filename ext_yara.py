@@ -80,14 +80,15 @@ def yara_run(ext_id, rules):
                         print("[-] Error could not update yara entry in es")
                         print(e)
         if create_new:
-            try:
-                es.index(index='yara_hits',body=body)
-                print("\x1b[32m[+] Extension Imported to yara_hits: \033[1;0m"+ext_id)
-                return True
-            except Exception as e:
-                print("[-] Failed to import to ES")
-                print(e)
-                return False
+            if len(file_hits) > 0:
+                try:
+                    es.index(index='yara_hits',body=body)
+                    print("\x1b[32m[+] Extension Imported to yara_hits: \033[1;0m"+ext_id)
+                    return True
+                except Exception as e:
+                    print("[-] Failed to import to ES")
+                    print(e)
+                    return False
     else:
         print("[*] No new files tagged")
 

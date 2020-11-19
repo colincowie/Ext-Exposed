@@ -26,11 +26,38 @@
               </svg>
             </div>
             <div >
-              <span style="font-size:12;">Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
+              <span onclick="show_yara({{rule.id}})" style="font-size:12;">Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
             </div>
           </div>
         </div>
     </div>
+    {% if rule.hits|length > 0 %}
+    <div class="modal fade" id="yara_{{rule.id}}">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Detection Rule: <span style="color:{{rule.tag_color}}">{{rule.name}}</span></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+              <ul style="list-style-type: circle;">
+                {% for match in rule.hits %}
+                  <li><a href="/report/{{match}}">{{match}}</a></li>
+                {% endfor %}
+              </ul>
+
+
+          </div>
+          <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel </button>
+          </div>
+          </div>
+          </div>
+          </div>
+      {% endif %}
   {% endfor %}
 {% endif %}
 <hr>
@@ -43,7 +70,7 @@
             <div style="border-right: 1px solid;">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="ruleSwitch_{{rule.id}}" checked="">
-                <label class="custom-control-label" for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
               </div>
             </div>
             <div  onclick="show_modal({{rule.id}})">
@@ -62,7 +89,7 @@
               </svg>
             </div>
             <div >
-              <span style="font-size:12;"> Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
+              <span onclick="show_yara({{rule.id}})" style="font-size:12;"> Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
             </div>
           </div>
         </div>
@@ -81,7 +108,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Detection Rule: <span style="color:#00bc8c;">{{rule.name}}</span></h5>
+        <h5 class="modal-title">Detection Rule: <span style="color:{{rule.tag_color}}">{{rule.name}}</span></h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -120,7 +147,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Detection Rule: <span style="color:#00bc8c;">{{rule.name}}</span></h5>
+        <h5 class="modal-title">Detection Rule: <span style="color:{{rule.tag_color}}">{{rule.name}}</span></h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -216,6 +243,10 @@ rule example_rule
 }
   function show_modal(rule_id) {
     modal_id = '#rule_'+rule_id
+    $(modal_id).modal('show');
+  }
+  function show_yara (rule_id) {
+    modal_id = '#yara_'+rule_id
     $(modal_id).modal('show');
   }
   function read_modal(rule_id) {

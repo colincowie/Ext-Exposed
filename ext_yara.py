@@ -44,6 +44,7 @@ def yara_run(ext_id, rules):
 
     for rule in rules:
         file_hits = scan.run(rule)
+        #print(rule)
         body = {
             'ext_id':ext_id,
             'rule_name':rule[0],

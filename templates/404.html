@@ -1,0 +1,17 @@
+{% extends 'external.html' %}
+
+{% block content %}
+{% block body %}
+Page not found or does not exist yet
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    if (window.location.href.indexOf("report") > -1) {
+      setTimeout(function() {
+        location.reload();
+      }, 3000);
+    }
+  });
+</script>
+{% endblock %}
+{% endblock %}

@@ -13,31 +13,42 @@
 </p>
 
 ## Features
-#### Chrome Extension Static Analysis
+#### Static Analysis
 - Javascript URLs
 - Permissions
-- Extension Source Code
-- Extension Metadata
-#### Chrome Extension Dynamic Analysis
-- Record extension network communications 
+- Extension source code viewer 
+- Yara rule scanning   
+#### Dynamic Analysis
+- Runs chrome extensions with a proxy 
+- Records browser network request
+- Runtime playbooks (coming soon)
 #### Query Extension Information
-- Search by extension, domain, permission and more 
-- Elasticsearch database
+- Search by extension name, id, permissions static or dynamic analysis urls
 #### Web UI
-- Python Flask web interface
+- Web interface built in python flask
+- Export data in csv format
+- Share yara rules with other users  
 
 ## Requirements
-- Elasticsearch
 - Python 3
+- Elasticsearch
 - Webdriver
+- Redis Server (used for queuing analysis task)
 
 ## Usage
-`python3 crx_hunt.py`
+1. `python3 crx_hunt.py`
+2. `vist 127.0.0.1:8080`
 
-#### Install
+#### Install Dependencies 
 
 1. Install python requirements
   - `python3 -m pip install -r requirements.txt`
+  
+#### Redis setup
+1. run redis server
+  - `redis-server`
+2. run rq working in project directory
+  - `rq worker`
 
 #### Elasticsearch setup
 1. Pull docker
@@ -45,11 +56,6 @@
 2. Start a docker instance for elasticsearch
   - `docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.0`
 
-#### Redis setup
-1. run redis server
-  - `redis-server`
-2. run rq working in project directory
-  - `rq worker`
 
 ## Design
 <img src="https://github.com/colincowie/CRX-Hunt/raw/master/diagram.png" height="500"/>

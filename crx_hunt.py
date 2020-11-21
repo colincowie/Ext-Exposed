@@ -690,7 +690,9 @@ def sandbox_download(ext_id, uuid):
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                           'favicon.ico',mimetype='image/vnd.microsoft.icon')
-
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'),444
 # Parse script arguments
 def parse_args():
     parser = argparse.ArgumentParser(description="Ext Exposed platform ")

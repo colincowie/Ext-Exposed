@@ -122,7 +122,7 @@
                                <td >{{sandbox['_source']['start_time']}}</td>
                                <td> {{sandbox['_source']['time_limit']}}</td>
                                {% if sandbox['_source']['urls'] %}
-                               <td>{{sandbox['_source']['urls']['traffic']|count}}&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="download_csv('/sandboxes/{{id}}/{{sandbox['_source']['uuid']}}')" class="btn-primary">Download</button>&nbsp;</td>
+                               <td>{{sandbox['_source']['urls']['traffic']|count}}&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="download_csv('/sandboxes/{{id}}/{{sandbox['_source']['uuid']}}')" class="btn-primary">Download</button>&nbsp;&nbsp;</td></td>
                                {% else %}
                                <td></td>
                                {% endif %}
@@ -134,6 +134,10 @@
                                <td data-orderable="false" colspan="4" class="bg-secondary">
                                  <div id="accordion_{{loop.index}}"  class="collapse">
                                    {% if sandbox['_source']['urls'] %}
+                                   <div class="custom-control custom-switch" style="padding-bottom:10px;">
+                                    <input type="checkbox" class="custom-control-input" id="filterSwitch1" onclick="toggle_filter()" checked="">
+                                    <label class="custom-control-label" for="filterSwitch1">Toggle whitelist filter</label>
+                                  </div>
                                    <div class="align-right">
                                   <table class="table-dark sandbox_detail">
                                     <thead class="thead-active">
@@ -148,13 +152,24 @@
                                     <tbody>
                                         {% for req in sandbox['_source']['urls']['traffic']%}
                                         <tr>
+
                                           {% if req['type'] == 'request'%}
-                                          <td style="font-size:12px;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-</svg></td>
-                                          <td>{{req['method']}}</td>
-                                          <td>{{req['content size']}}</td>
-                                          <td>{{req['url']}}</td>
+                                            <td style="font-size:12px;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+  </svg></td>
+                                            <td>{{req['method']}}</td>
+                                            <td>{{req['content size']}}</td>
+                                            {% for domain in whitelist %}
+                                              {%if domain in req['url']%}
+                                                {% if not whitelisted %}
+                                                <td class="filter_match" style="color:green;">{{req['url']}}</td>
+                                                {% set whitelisted = 'true'%}
+                                                {% endif %}
+                                              {% endif %}
+                                            {% endfor %}
+                                              {% if not whitelisted %}
+                                                <td>{{req['url']}}</td>
+                                                {% endif %}
                                           <td></td>
                                           {% else %}
                                           <td style="font-size:12px;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-left" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -162,7 +177,17 @@
 </svg></td>
                                           <td>{{req['status_code']}}</td>
                                           <td>{{req['headers']}}</td>
-                                          <td>{{req['server_ip']}} - {%if req['server_domain']%}{{req['server_domain']}}{%endif%}</td>
+                                          {% for domain in whitelist %}
+                                            {%if domain in req['server_domain']%}
+                                              {% if not whitelisted %}
+                                              <td class="filter_match" style="color:green;">{{req['server_ip']}} - {%if req['server_domain']%}{{req['server_domain']}}{%endif%}</td>
+                                              {% set whitelisted = 'true'%}
+                                              {% endif %}
+                                            {% endif %}
+                                          {% endfor %}
+                                          {% if not whitelisted %}
+                                              <td>{{req['server_ip']}} - {%if req['server_domain']%}{{req['server_domain']}}{%endif%}</td>
+                                          {% endif %}
                                           <td>{{req['server_port']}}</td>
                                           {% endif %}
                                         </tr>
@@ -312,7 +337,9 @@ for (i = 0; i < toggler.length; i++) {
     };
   });
 }
-
+function toggle_filter(){
+  $('.filter_match').parent("tr").toggle();
+}
 function format_code(){
   console.log(file_type)
   if (file_type=="js"){

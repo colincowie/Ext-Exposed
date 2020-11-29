@@ -1,4 +1,4 @@
-# @th3_protoCOL
+11# @th3_protoCOL
 import os, sys, time, asyncio, threading, requests, zipfile, json
 from selenium import webdriver
 from multiprocessing import Process
@@ -6,6 +6,7 @@ from mitmproxy.options import Options
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy.tools.dump import DumpMaster
+from mitmproxy.utils import human
 from elasticsearch import Elasticsearch
 
 from flask import current_app
@@ -75,9 +76,10 @@ class EXT_Sandbox():
             options.add_argument('--ignore-certificate-errors')
             options.add_argument('--allow-running-insecure-content')
             options.add_argument('--no-sandbox')
-            #options.add_experimental_option("detach", True)
+            options.add_experimental_option("detach", True)
             print("[*] Creating chrome driver")
-            driver = webdriver.Chrome(executable_path="/bin/chromedriver",options=options)
+            #driver = webdriver.Chrome(executable_path="/bin/chromedriver",options=options)
+            driver = webdriver.Chrome(options=options)
             driver.set_page_load_timeout(self.time)
             print("\u001b[40m\u001b[32m[↓]\u001b[0m\u001b[40m Sandbox Network Request \u001b[32m[↓]\u001b[0m\u001b[0m")
             failed = False
@@ -107,13 +109,14 @@ class EXT_Sandbox():
                 pass
             print('[*] Shutting down mitmproxy...')
             mitm.shutdown()
-            output = "reports/"+id+"/mitm_urls.txt"
+            print('[*] Uploading results to elasticsearch....')
             data = []
-            url_file = open(output, 'r+')
-            for line in url_file.readlines():
-                verb = line.split()[0]
-                url = line.split()[1]
-                data.append([verb,url])
+            output = "reports/"+id+"/mitm_urls.json"
+            with open(output, 'r') as f:
+                data = json.load(f)
+                #csv_reader = csv.reader(f, delimiter=',')
+                #for row in csv_reader:
+                #    data.append(row)
             return data
 
     def start_mitm(self):
@@ -135,30 +138,61 @@ class EXT_Sandbox():
 class MitmAddon(object):
     def __init__(self,ext_id):
         self.ext_id = ext_id
-        self.num = 1
+        self.output = "reports/"+self.ext_id+"/mitm_urls.json"
+        if os.path.exists("reports/"+self.ext_id+"/mitm_urls.json"):
+            try:
+                os.remove("reports/"+self.ext_id+"/mitm_urls.json")
+            except Exception as e:
+                print(e)
+        with open(self.output, 'a') as json_file:
+            json.dump({'traffic':[]},json_file)
 
+    # convert to json and save new file for every sandbox
     def request(self, flow):
-        output = "reports/"+self.ext_id+"/mitm_urls.txt"
-        flow.request.headers["count"] = str(self.num)
-        print("\033[0;35m[request] \033[0m"+flow.request.url)
-        # Save reques to data (format [VERB, url])
-        with open(output, 'a') as f:
-            f.write(str(flow.request.method) + ' ' + str(flow.request.url) + ' ' + '\n')
+        print("\033[0;35m[request] \033[0m"+str(flow.request.method),str(flow.request.url),str(len(flow.request.content)) )
+        request_data = {
+            'type':'request',
+            'method':str(flow.request.method),
+            'url':str(flow.request.url),
+            'content size':str(len(flow.request.content))
+        }
+        with open(self.output, 'r+') as json_file:
+            data = json.load(json_file)
+            temp = data["traffic"]
+            temp.append(request_data)
+        with open(self.output, 'r+') as json_file:
+            json.dump(data, json_file, indent=4)
 
     def response(self, flow):
-        self.num = self.num + 1
-        flow.response.headers["count"] = str(self.num)
+        if flow.response.raw_content:
+            response_body_size = len(flow.response.raw_content)
+        else:
+            response_body_size = 0
+        print(flow.server_conn.address)
+        print("\033[0;34m[response] \033[0m"+str(flow.response.status_code)+', '+str(flow.server_conn.ip_address[0])+', '+str(flow.server_conn.ip_address[1])+', '+str(flow.response.headers.get('Content-Type', ''))+', '+str(response_body_size))
+        response_data = {
+            'type':'response',
+            'status_code':flow.response.status_code,
+            'server_domain':str(flow.server_conn.address[0]),
+            'server_ip':str(flow.server_conn.ip_address[0]),
+            'server_port':str(flow.server_conn.ip_address[1]),
+            'headers':str(flow.response.headers.get('Content-Type', '')),
+            'response_body_size':str(response_body_size)
+        }
+        if 'application/json' in response_data['headers']:
+            response_data['content'] = str(flow.response.content.decode('utf-8'))
 
-        url = flow.request.url
-
-        output = "reports/"+self.ext_id+"/mitm_content.txt"
-        with open(output, 'a') as f:
-            f.write(str(flow.request.method) + ' ' + str(flow.request.url) +  '\n')
-            f.write("--------")
-            for k, v in flow.request.headers.items():
-                f.write('\n' + str(flow.request.content.decode('utf-8')) + '\n')
-                for k, v in flow.response.headers.items():
-                    f.write('\n' + str(flow.response.content.decode('utf-8')) + '\n')
+        with open(self.output, 'r+') as json_file:
+            data = json.load(json_file)
+            temp = data["traffic"]
+            temp.append(response_data)
+        with open(self.output, 'r+') as json_file:
+            json.dump(data, json_file, indent=4)
+            #f.write("--------")
+            #for k, v in flow.request.headers.items():
+            #    f.write('\n' + str(flow.request.content.decode('utf-8')) + '\n')
+            #    for k, v in flow.response.headers.items():
+            #        f.write('\n' + str(flow.response.content.decode('utf-8')) + '\n')
 
 # function used for proxy async - source: https://gist.github.com/BigSully/3da478792ee331cb2e5ece748393f8c4
 def loop_in_thread(loop, m):

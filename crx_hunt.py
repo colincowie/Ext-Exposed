@@ -191,10 +191,10 @@ def scan():
                     if scan_rules != []:
                         if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
                             if r.enabled:
-                                scan_rules.append([str(r.name),str(r.yara),str(r.id)])
+                                scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)])
                     else:
                         if r.enabled:
-                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color)])
+                            scan_rules.append([str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)])
             else:
                 user_rules = None
             yara_scan = EXT_yara(ext_id)
@@ -355,7 +355,13 @@ def report(ext):
             es_status = False
         else:
             es_status = True
+        whitelist_domains = [
+            'fonts.googleapis.com',
+            'accounts.google.com',
+            '.gstatic.com',
+            'www.googleapis.com/chromewebstore'
 
+        ]
         ext_search = {'query':{
             'match': {
                 'ext_id': ext
@@ -389,8 +395,8 @@ def report(ext):
                     #print(tag['_source']['tag_color'])
                     tags.append([tag['_source']['rule_name'],tag['_source']['tag_color'],tag['_source']['hits']])
                 print(tags)
-                return render_template('report.html',icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
-        return("No report found...")
+                return render_template('report.html',whitelist=whitelist_domains,icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
+        return render_template('404.html')
 
 @app.route('/status')
 def status():
@@ -516,7 +522,6 @@ def update_enabled():
             db.session.commit()
         return "done"
 
-
 @app.route('/user')
 def user_page():
     if not session.get('logged_in'):
@@ -543,6 +548,7 @@ def scanning():
             es_status = True
         return render_template('scanning.html',es_status=es_status)
 @app.route('/yara/update', methods=['POST'])
+
 def yara_update():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -657,39 +663,44 @@ def sandbox_download(ext_id, uuid):
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
-        def get_sandbox():
-            ext_search = {
-                "query": {
-                    "bool": {
-                      "should": [
-                        {
-                          "match": {
-                            "ext_id": ext_id
-                          }
-                        },
-                        {
-                          "match": {
-                            "uuid": uuid
-                          }
-                        }
-                      ]
+        ext_search = {
+            "query": {
+                "bool": {
+                  "should": [
+                    {
+                      "match": {
+                        "ext_id": ext_id
+                      }
+                    },
+                    {
+                      "match": {
+                        "uuid": uuid
+                      }
                     }
-                  }
-            }
-            ext_sandbox = es.search(index="sandbox_data", body=ext_search)
-            ext_sandbox = ext_sandbox['hits']['hits']
-            for report in ext_sandbox:
-                if report['_source']['uuid'] == uuid:
-                    print("MATCH!")
-                    print(report['_source']['uuid'])
-                    for url in report['_source']['urls']:
-                        yield url[0]+","+url[1]+"\n"
-        return Response(get_sandbox(), mimetype='text/csv')
+                  ]
+                }
+              }
+        }
+        ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+        ext_sandbox = ext_sandbox['hits']['hits']
+        for report in ext_sandbox:
+            if report['_source']['uuid'] == uuid:
+                print("MATCH!")
+                print(report['_source']['urls'])
+
+                #for url in report['_source']['urls']['traffic']:
+                #    yield url[0]+","+url[1]+","+url[2]+","+url[3]+"\n"+url[4]+"\n"
+            filename=uuid+'.json'
+            return Response(json.dumps(report['_source']), mimetype='text/json')
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                           'favicon.ico',mimetype='image/vnd.microsoft.icon')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'),444
 
 # Parse script arguments
 def parse_args():

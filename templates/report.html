@@ -162,7 +162,7 @@
 </svg></td>
                                           <td>{{req['status_code']}}</td>
                                           <td>{{req['headers']}}</td>
-                                          <td>{{req['server_ip']}} - {{req['server_domain']}}</td>
+                                          <td>{{req['server_ip']}} - {%if req['server_domain']%}{{req['server_domain']}}{%endif%}}</td>
                                           <td>{{req['server_port']}}</td>
                                           {% endif %}
                                         </tr>

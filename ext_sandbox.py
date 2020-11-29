@@ -165,8 +165,6 @@ class MitmAddon(object):
         else:
             response_body_size = 0
 
-        print(str(flow.server_conn))
-
         print("\033[0;34m[response] \033[0m"+str(flow.response.status_code)+', '+str(flow.server_conn.ip_address[0])+', '+str(flow.server_conn.ip_address[1])+', '+str(flow.response.headers.get('Content-Type', ''))+', '+str(response_body_size))
         response_data = {
             'type':'response',

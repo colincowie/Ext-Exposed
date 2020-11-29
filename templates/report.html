@@ -140,8 +140,8 @@
                                     <tr>
                                       <th></th>
                                       <th>Status</th>
-                                      <th> Size / IP</th>
-                                      <th>URL / Headers</th>
+                                      <th> Size / Headers</th>
+                                      <th>URL / IP & Domain</th>
                                       <th></th>
                                     </tr>
                                     </thead>
@@ -161,8 +161,8 @@
   <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
 </svg></td>
                                           <td>{{req['status_code']}}</td>
-                                          <td>{{req['server_ip']}}</td>
                                           <td>{{req['headers']}}</td>
+                                          <td>{{req['server_ip']}} - {{req['server_domain']}}</td>
                                           <td>{{req['server_port']}}</td>
                                           {% endif %}
                                         </tr>

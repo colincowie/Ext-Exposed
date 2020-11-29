@@ -139,9 +139,13 @@ class MitmAddon(object):
     def __init__(self,ext_id):
         self.ext_id = ext_id
         self.output = "reports/"+self.ext_id+"/mitm_urls.json"
-        if not os.path.exists("reports/"+self.ext_id+"/mitm_urls.json"):
-            with open(self.output, 'a') as json_file:
-                json.dump({'traffic':[]},json_file)
+        if os.path.exists("reports/"+self.ext_id+"/mitm_urls.json"):
+            try:
+                os.remove("reports/"+self.ext_id+"/mitm_urls.json")
+            except Exception as e:
+                print(e)
+        with open(self.output, 'a') as json_file:
+            json.dump({'traffic':[]},json_file)
 
     # convert to json and save new file for every sandbox
     def request(self, flow):
@@ -164,11 +168,12 @@ class MitmAddon(object):
             response_body_size = len(flow.response.raw_content)
         else:
             response_body_size = 0
-
+        print(flow.server_conn.address)
         print("\033[0;34m[response] \033[0m"+str(flow.response.status_code)+', '+str(flow.server_conn.ip_address[0])+', '+str(flow.server_conn.ip_address[1])+', '+str(flow.response.headers.get('Content-Type', ''))+', '+str(response_body_size))
         response_data = {
             'type':'response',
             'status_code':flow.response.status_code,
+            'server_domain':str(flow.server_conn.address[0]),
             'server_ip':str(flow.server_conn.ip_address[0]),
             'server_port':str(flow.server_conn.ip_address[1]),
             'headers':str(flow.response.headers.get('Content-Type', '')),

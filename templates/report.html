@@ -112,7 +112,7 @@
                          <tr>
                            <th>Start Time</th>
                            <th>Time Limit</th>
-                           <th>URLs</th>
+                           <th>Request & Responses </th>
                            <th></th>
                          </tr>
                        </thead>
@@ -122,7 +122,7 @@
                                <td >{{sandbox['_source']['start_time']}}</td>
                                <td> {{sandbox['_source']['time_limit']}}</td>
                                {% if sandbox['_source']['urls'] %}
-                               <td>{{sandbox['_source']['urls']|count}}&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="download_csv('/sandboxes/{{id}}/{{sandbox['_source']['uuid']}}')" class="btn-primary">Download</button>&nbsp;</td>
+                               <td>{{sandbox['_source']['urls']['traffic']|count}}&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="download_csv('/sandboxes/{{id}}/{{sandbox['_source']['uuid']}}')" class="btn-primary">Download</button>&nbsp;</td>
                                {% else %}
                                <td></td>
                                {% endif %}
@@ -138,15 +138,33 @@
                                   <table class="table-dark sandbox_detail">
                                     <thead class="thead-active">
                                     <tr>
-                                      <th>Method</th>
-                                      <th>URL</th>
+                                      <th></th>
+                                      <th>Status</th>
+                                      <th>URL / Headers</th>
+                                      <th> Size / Server IP</th>
+                                      <th></th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        {% for url in sandbox['_source']['urls']%}
+                                        {% for req in sandbox['_source']['urls']['traffic']%}
                                         <tr>
-                                          <td>{{url[0]}}</td>
-                                          <td>{{url[1]}}<td>
+                                          {% if req['type'] == 'request'%}
+                                          <td style="font-size:12px;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+</svg></td>
+                                          <td>{{req['method']}}</td>
+                                          <td>{{req['url']}}</td>
+                                          <td>{{req['content size']}}</td>
+                                          <td></td>
+                                          {% else %}
+                                          <td style="font-size:12px;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-left" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+</svg></td>
+                                          <td>{{req['status_code']}}</td>
+                                          <td>{{req['headers']}}</td>
+                                          <td>{{req['server_ip']}}</td>
+                                          <td>{{req['server_port']}}</td>
+                                          {% endif %}
                                         </tr>
                                       {% endfor %}
                                     </tbody>

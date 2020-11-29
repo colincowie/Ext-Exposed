@@ -135,7 +135,7 @@
                                  <div id="accordion_{{loop.index}}"  class="collapse">
                                    {% if sandbox['_source']['urls'] %}
                                    <div class="custom-control custom-switch" style="padding-bottom:10px;">
-                                    <input type="checkbox" class="custom-control-input" id="filterSwitch1" onclick="toggle_filter()" checked="">
+                                    <input type="checkbox" class="custom-control-input" id="filterSwitch1"  checked="">
                                     <label class="custom-control-label" for="filterSwitch1">Toggle whitelist filter</label>
                                   </div>
                                    <div class="align-right">
@@ -337,6 +337,7 @@ for (i = 0; i < toggler.length; i++) {
     };
   });
 }
+
 function toggle_filter(){
   $('.filter_match').parent("tr").toggle();
 }
@@ -357,6 +358,9 @@ function format_code(){
 </script>
 <script type="text/javascript">
   $(document).ready(function () {
+    $('#filterSwitch1').on('change.bootstrapSwitch', function(e) {
+        toggle_filter();
+    });
     $('.match_span').text(function(i,v){
       return v.slice(0,-1);
     });

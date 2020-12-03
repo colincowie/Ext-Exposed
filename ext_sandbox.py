@@ -199,23 +199,56 @@ def loop_in_thread(loop, m):
     asyncio.set_event_loop(loop)
     m.run_loop(loop.run_forever)
 
-def sandbox_run(box, uuid):
-    url_data = box.run()
-    print("[!] Updating ES record")
+def sandbox_run(box, uuid, scanlog_id):
     es = Elasticsearch()
     try:
         es.indices.create(index='sandbox_data')
     except:
         pass
+    # Pull scan_log es record:
+    update_body = {'query': {'match': {'scanlog_id': scanlog_id}}}
+    ext_res = es.search(index="scan_log", body=update_body)
+    # Update es scan log
+    scan_log_body = {'doc':{'dynamic_status':'Started'}}
+    for hit in ext_res['hits']['hits']:
+        if len(hit) > 0:
+            try:
+                es.update(index='scan_log',body=scan_log_body,id=hit['_id'])
+            except Exception as e:
+                print("[-] scan update err")
+                print(e)
+
+    url_data = box.run()
+    print("[!] Updating ES record")
+
     ext_id = str(box.ext_id)
     res = es.search(index='sandbox_data',body={'query':{'match':{'uuid':uuid}}})
     try:
         es_data = res['hits']['hits'][0]
     except:
         print("[*] no urls found ")
+        result_status = "No Results"
+
     sandbox_body = {"doc": {"urls":url_data}}
 
-    #print("ES found "+str(es_data))
+    # Update scan log again
+    if len(url_data) > 0:
+        result_status = "Finished"
+    if url_data == None:
+        result_status = "Error"
+
+    scan_log_body = {'doc':{'dynamic_status':result_status}}
+
+    for hit in ext_res['hits']['hits']:
+        print(hit)
+        if len(hit) > 0:
+            print("[*] Updating scan "+str(scanlog_id))
+            try:
+                es.update(index='scan_log',body=scan_log_body,id=hit['_id'])
+            except Exception as e:
+                print("[-] scan update err")
+                print(e)
+
 
     try:
         es.update(index='sandbox_data', id=es_data['_id'], body=sandbox_body)

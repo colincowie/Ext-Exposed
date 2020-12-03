@@ -153,21 +153,20 @@ def scan():
         # array for scan log
         static_status = ''
         dynamic_status = ''
+        scanlog_id = uuid.uuid4()
+
         yara_status = ''
 
         if request.form.get("static") != None:
+            static_status = 'Queued'
             # Static Analysis
             print("[!] Queuing static analysis for "+ext_id)
-            static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name, result_ttl=6000)
+            static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name, scanlog_id, result_ttl=6000)
             #print(job.result)
             print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
             new_jobs['static'] = str(static_job.id)
-            new_jobs['enqueued_at'] = str(static_job.enqueued_at)
-            try:
-                stat_job = Job.fetch(static_job.id, connection=r)
-                static_status = stat_job.get_status()
-            except:
-                print("[-] Failed to get static job status")
+            new_jobs['enqueued_at'] = static_job.enqueued_at
+
         # Yara scan
         if request.form.get("global_rules") == "on" or request.form.get("my_rules") == "on":
             print("[!] Queuing yara analysis for "+ext_id)
@@ -202,24 +201,21 @@ def scan():
             #print(job.result)
             print("[!] Yara enqueued at "+str(yara_job.enqueued_at)+" with job id: "+str(yara_job.id))
             new_jobs['yara'] = str(yara_job.id)
-            new_jobs['enqueued_at'] = str(yara_job.enqueued_at)
+            new_jobs['enqueued_at'] = yara_job.enqueued_at
 
         if request.form.get("sandbox") != None:
+            dynamic_status = 'Queued'
+
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
             time_limit = int(request.form.get('time_limit'))
             print("Time limit:"+str(time_limit))
             id = uuid.uuid4()
             box = EXT_Sandbox(ext_id, time_limit)
-            sandbox_job = q.enqueue(sandbox_run, box, id, result_ttl=6000)
+            sandbox_job = q.enqueue(sandbox_run, box, id, scanlog_id, result_ttl=6000)
             #print(job.result)
             print("[!] Dynamic enqueued at "+str(sandbox_job.enqueued_at)+" with job id: "+str(sandbox_job.id))
             new_jobs['enqueued_at'] = sandbox_job.enqueued_at
-            try:
-                dyn_job = Job.fetch(sandbox_job.id, connection=r)
-                dynamic_status = dyn_job.get_status()
-            except:
-                print("[-] Failed to get static job status")
             new_jobs['dynamic'] = str(sandbox_job.id)
             sandbox_body = {
                 'uuid':id,
@@ -237,6 +233,7 @@ def scan():
                 print("Failed to create extension mitm data index")
 
         scan_log_body = {
+            'scanlog_id':scanlog_id,
             'name':new_jobs["name"],
             'ext_id':new_jobs["ext_id"],
             'enqueued_at':new_jobs['enqueued_at'],
@@ -417,25 +414,6 @@ def status():
                 es_total=0
             scans = es.search(index="scan_log", q="*",size=100)
             scan_results = scans['hits']['hits']
-        for scan_res in scan_results:
-            scan_job = scan_res['_source']
-            print(scan_job)
-            if scan_job['static_id']:
-                try:
-                    job = Job.fetch(scan_job['static_id'], connection=r)
-                    print('Status: %s' % job.get_status())
-                    status_update = {
-                        'doc':{
-                            'static_status':job.get_status()
-                            }
-                    }
-                    try:
-                        es.update(index="scan_log",id=scan_res['_id'],body=status_update)
-                    except Exception as e:
-                        print(e)
-                        print("did not update status")
-                except:
-                    print("[-] failed finding job")
 
         disk_total = len(next(os.walk('static/output'))[1])
         job_results=[]

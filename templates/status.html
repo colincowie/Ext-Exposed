@@ -60,10 +60,26 @@
             <td>{{scan['_source']['enqueued_at']}}</td>
             <td>
               {% if scan['_source']['static_status'] %}
-              <span class="bg-primary badge badge-primary badge-pill">{{scan['_source']['static_status']}}</span>
+                {% if scan['_source']['static_status'] == 'Queued' %}
+                  <span class=" badge badge-warning badge-pill">Static: {{scan['_source']['static_status']}}</span>
+                {% endif %}
+                {% if scan['_source']['static_status'] == 'Started'%}
+                  <span class="badge badge-primary badge-pill">Static: {{scan['_source']['static_status']}}</span>
+                {% endif %}
+                {% if scan['_source']['static_status'] == 'Finished' %}
+                  <span class=" badge badge-success badge-pill">Static: {{scan['_source']['static_status']}}</span>
+                {% endif %}
               {% endif %}
               {% if scan['_source']['dynamic_status'] %}
-              <span class="bg-primary badge badge-primary badge-pill">{{scan['_source']['dynamic_status']}}</span>
+                {% if scan['_source']['dynamic_status'] == 'Queued' %}
+                  <span class=" badge badge-warning badge-pill">Dynamic: {{scan['_source']['dynamic_status']}}</span>
+                {% endif %}
+                {% if scan['_source']['dynamic_status'] == 'Started'%}
+                  <span class="badge badge-primary badge-pill">Dynamic: {{scan['_source']['dynamic_status']}}</span>
+                {% endif %}
+                {% if scan['_source']['dynamic_status'] == 'Finished' %}
+                  <span class=" badge badge-success badge-pill">Dynamic: {{scan['_source']['dynamic_status']}}</span>
+                {% endif %}
               {% endif %}
             </td>
           </tr>

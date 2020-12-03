@@ -1,4 +1,7 @@
 /* <--->  */
+.filter_match{
+  color:green;
+}
 .detection{
   border: 1px solid;
   height: 40px;

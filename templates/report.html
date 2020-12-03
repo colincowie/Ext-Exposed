@@ -139,7 +139,7 @@
                                     <label class="custom-control-label"  for="filterSwitch{{loop.index}}">Toggle whitelist filter</label>
                                   </div>
                                    <div class="align-right">
-                                  <table class="table-dark sandbox_detail">
+                                  <table id="sandbox_detail" class="table-dark sandbox_detail">
                                     <thead class="thead-active">
                                     <tr>
                                       <th></th>
@@ -151,46 +151,28 @@
                                     </thead>
                                     <tbody>
                                         {% for req in sandbox['_source']['urls']['traffic']%}
+                                        {% if req['type'] == 'request'%}
                                         <tr>
-
-                                          {% if req['type'] == 'request'%}
                                             <td style="font-size:12px;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
   </svg></td>
                                             <td>{{req['method']}}</td>
                                             <td>{{req['content size']}}</td>
-                                            {% for domain in whitelist %}
-                                              {%if domain in req['url']%}
-                                                {% if not whitelisted %}
-                                                <td class="filter_match" style="color:green;">{{req['url']}}</td>
-                                                {% set whitelisted = 'true'%}
-                                                {% endif %}
-                                              {% endif %}
-                                            {% endfor %}
-                                              {% if not whitelisted %}
-                                                <td>{{req['url']}}</td>
-                                                {% endif %}
-                                          <td></td>
+                                            <td>{{req['url']}}</td>
+                                            <td></td>
+                                            </tr>
                                           {% else %}
                                           <td style="font-size:12px;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-left" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
 </svg></td>
                                           <td>{{req['status_code']}}</td>
                                           <td>{{req['headers']}}</td>
-                                          {% for domain in whitelist %}
-                                            {%if domain in req['server_domain']%}
-                                              {% if not whitelisted %}
-                                              <td class="filter_match" style="color:green;">{{req['server_ip']}} - {%if req['server_domain']%}{{req['server_domain']}}{%endif%}</td>
-                                              {% set whitelisted = 'true'%}
-                                              {% endif %}
-                                            {% endif %}
-                                          {% endfor %}
-                                          {% if not whitelisted %}
-                                              <td>{{req['server_ip']}} - {%if req['server_domain']%}{{req['server_domain']}}{%endif%}</td>
-                                          {% endif %}
+                                          <td >{{req['server_ip']}} - {%if req['server_domain']%}{{req['server_domain']}}{%endif%}</td>
                                           <td>{{req['server_port']}}</td>
+                                          </tr>
+
                                           {% endif %}
-                                        </tr>
+
                                       {% endfor %}
                                     </tbody>
                                   </table>
@@ -357,7 +339,22 @@ function format_code(){
 };
 </script>
 <script type="text/javascript">
+
   $(document).ready(function () {
+    $('#sandbox_detail').find("td:nth-child(4)").each(function () {
+      var isClean = false;
+      {% for clean_url in whitelist %}
+      if (this.innerText.includes('{{clean_url}}')){
+        isClean = true;
+      }
+      {% endfor %}
+      if(isClean == true){
+        console.log(this.innerText);
+        this.classList.add('filter_match');
+      };
+    });
+
+
     $('.filterSwitch').on('change.bootstrapSwitch', function(e) {
         toggle_filter();
     });

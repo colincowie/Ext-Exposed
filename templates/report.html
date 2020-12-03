@@ -136,10 +136,10 @@
                                    {% if sandbox['_source']['urls'] %}
                                    <div class="custom-control custom-switch" style="padding-bottom:10px;">
                                     <input type="checkbox" class="custom-control-input filterSwitch" id="filterSwitch{{loop.index}}"  checked="">
-                                    <label class="custom-control-label"  for="filterSwitch{{loop.index}}">Toggle whitelist filter</label>
+                                    <label class="custom-control-label"  for="filterSwitch{{loop.index}}">Show whitelisted urls</label>
                                   </div>
                                    <div class="align-right">
-                                  <table id="sandbox_detail" class="table-dark sandbox_detail">
+                                  <table class="table-dark sandbox_detail">
                                     <thead class="thead-active">
                                     <tr>
                                       <th></th>
@@ -341,7 +341,7 @@ function format_code(){
 <script type="text/javascript">
 
   $(document).ready(function () {
-    $('#sandbox_detail').find("td:nth-child(4)").each(function () {
+    $('.sandbox_detail').find("td:nth-child(4)").each(function () {
       var isClean = false;
       {% for clean_url in whitelist %}
       if (this.innerText.includes('{{clean_url}}')){

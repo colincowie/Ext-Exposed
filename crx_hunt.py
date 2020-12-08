@@ -469,7 +469,8 @@ def bounty():
             es_status = True
         if session['username'] == 'admin2':
             return render_template('bounty.html',es_status=es_status,hunter="yes")
-
+        else:
+            return render_template('404.html')
 
 @app.route('/yara')
 def detections():

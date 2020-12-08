@@ -467,7 +467,7 @@ def bounty():
             es_status = False
         else:
             es_status = True
-        if session['username'] == 'admin2':
+        if session['username'] == 'admin':
             return render_template('bounty.html',es_status=es_status,hunter="yes")
         else:
             return render_template('404.html')

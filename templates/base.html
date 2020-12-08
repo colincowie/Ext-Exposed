@@ -95,6 +95,11 @@
             <path d="M8 9c0 .552.224 1 .5 1s.5-.448.5-1-.224-1-.5-1-.5.448-.5 1z"/>
           </svg>&nbsp;
           Logout</a>
+        {% if hunter %}
+        <a href="/bounty" class="list-group-item list-group-item-action bg-dark  border-light">
+          <img style="max-height:20px;"  src="{{ url_for('static',filename='mando.png')}}"/>&nbsp;
+          Bounty Hunting</a>
+        {% endif %}
       </div>
       <div class="es_status">
       {% if es_status == True %}

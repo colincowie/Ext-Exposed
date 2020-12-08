@@ -232,10 +232,11 @@ def sandbox_run(box, uuid, scanlog_id):
     sandbox_body = {"doc": {"urls":url_data}}
 
     # Update scan log again
-    if len(url_data) > 0:
-        result_status = "Finished"
     if url_data == None:
         result_status = "Error"
+    elif len(url_data) > 0:
+        result_status = "Finished"
+
 
     scan_log_body = {'doc':{'dynamic_status':result_status}}
 

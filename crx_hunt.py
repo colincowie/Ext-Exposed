@@ -1,4 +1,4 @@
-import re, os, uuid, json, time, redis, hashlib, argparse
+import re, os, uuid, json, time, redis, hashlib, argparse, requests
 import yara
 from rq import Queue
 from rq.job import Job
@@ -452,7 +452,24 @@ def home():
             es_status = False
         else:
             es_status = True
-        return render_template('index.html',es_status=es_status)
+        if session['username'] == 'admin':
+            return render_template('index.html',es_status=es_status,hunter="yes")
+        else:
+            return render_template('index.html',es_status=es_status)
+
+@app.route('/bounty')
+def bounty():
+    #DetectionRule.__table__.drop(db.engine)
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+        if session['username'] == 'admin2':
+            return render_template('bounty.html',es_status=es_status,hunter="yes")
+
 
 @app.route('/yara')
 def detections():
@@ -670,6 +687,40 @@ def sandbox_download(ext_id, uuid):
                 #    yield url[0]+","+url[1]+","+url[2]+","+url[3]+"\n"+url[4]+"\n"
             filename=uuid+'.json'
             return Response(json.dumps(report['_source']), mimetype='text/json')
+
+@app.route('/check/ext', methods=['POST'])
+def check_ext():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        line = request.form['line']
+        # get ext id
+        ext_id = re.findall('[a-z]{32}',line)
+        # Parse the extension id from url
+        try:
+            ext_id = str(ext_id[0])
+            if len(ext_id) > 0:
+                print("upload match ext "+ext_id)
+                return ext_id
+            else:
+                return "False"
+        except:
+            return "False"
+@app.route('/check/ext/status', methods=['POST'])
+def check_ext_webstore():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        ext_id = request.form['ext_id']
+        # Parse the extension id from url
+        id_check = requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id)
+        if id_check.status_code == 404:
+            print("[-] ext id is 404")
+            return "False"
+        elif id_check.ok:
+            return "True"
+        else:
+            return "False"
 
 @app.route('/favicon.ico')
 def favicon():

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Bounty Hunting Center</h1>
+<hr>
+<div class="bs-example">
+    <ul  class="nav nav-tabs">
+        <li class="nav-item">
+            <a href="#bulk" class="nav-link active" data-toggle="tab">Bulk Importer</a>
+        </li>
+        <li class="nav-item">
+            <a href="#domains" class="nav-link" data-toggle="tab">Top Domains</a>
+        </li>
+        <li class="nav-item">
+            <a href="#ips" class="nav-link" data-toggle="tab">Top IPs</a>
+        </li>
+        <li class="nav-item">
+            <a href="#scope" class="nav-link" data-toggle="tab">Scope Watch</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="bulk">
+          <br>
+          <div class="row">
+            <div class="col">
+              <form>
+                <input type="file" id="bulkFile" name="bulkFile">
+              </form>
+            </div>
+            <div class="col">
+              Checked: <span id="total_checked">0</span>, Scaned: <span id="total_scanned">0</span>
+            </div>
+          </div>
+          <br>
+          <table id="bulk_importer" class="table">
+            <thead>
+              <th>Extension ID</th>
+              <th>Webstore Status</th>
+              <th>Static Scan</th>
+              <th>Yara Scan</th>
+              <th>Dynamic Scan</th>
+              <th>Extension Name</th>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane fade show active" id="domains">
+        </div>
+        <div class="tab-pane fade show active" id="ips">
+        </div>
+        <div class="tab-pane fade show active" id="scope">
+        </div>
+    </div>
+<hr>
+<script type="text/javascript">
+  $SCRIPT_ROOT={{ request.script_root|tojson|safe }};
+  var counter = 0;
+  var scanned = 0
+  document.getElementById('bulkFile').onchange =  function(){
+    var file = this.files[0];
+    var reader = new FileReader();
+    reader.onload = async function(progressEvent){
+      // Entire file
+      //console.log(this.result);
+
+      // By lines
+      var lines = this.result.split('\n');
+      for(var line = 0; line < lines.length; line++){
+        await check_line(lines[line])
+
+      }
+
+    };
+    reader.readAsText(file);
+  }
+
+  function check_line(line){
+      return new Promise(resolve => {
+          setTimeout(function() {
+          resolve("\t\t This is first promise");
+          var response = $.ajax({
+           url: "/check/ext",
+           data: {'line':line},
+           method: "POST",
+           dataType: "json",
+           error: function(data) {
+            // if extension id is in upload line
+            if(data.responseText !='False'){
+              // check if extension id is in store
+              var webstore_scan = $.ajax({
+                url: "/check/ext/status",
+                data: {'ext_id':data.responseText},
+                method: "POST",
+                dataType: "json",
+               error: function(webstore_data) {
+                 counter += 1;
+                 document.getElementById('total_checked').innerHTML = counter;
+                 // online status
+                 if(webstore_data.responseText == 'True'){
+                    // start scan here
+                      var full_scan = $.ajax({
+                      url: "/scan",
+                      data: { 'extension':data.responseText,
+                              'static':'on',
+                              'sandbox':'on',
+                              'time_limit':'15',
+                              'global_rules':'on',
+                              'my_rules':'on'},
+                      method: "POST",
+                     success: function(scan_response){
+                       var table = document.getElementById("bulk_importer");
+                        var row = table.insertRow();
+                        row.classList.add('table-online')
+                        var cell1 = row.insertCell(0);
+                        cell1.innerHTML = data.responseText;
+                        var cell2 = row.insertCell(1);
+                        cell2.innerHTML = "Online";
+                        var cell3 = row.insertCell(2);
+                        cell3.innerHTML = "";
+                        var cell4 =row.insertCell(3);
+                        cell4.innerHTML = "";
+                        var cell5 = row.insertCell(4);
+                        cell5.innerHTML = ""
+                        var cell6 = row.insertCell(5);
+                        cell6.innerHTML = scan_response['name'];
+                        // Check status of scans
+                        var static_result = check_job_status($SCRIPT_ROOT+"/status/"+scan_response['static'],cell3);
+                        var yara_result = check_job_status($SCRIPT_ROOT+"/status/"+scan_response['yara'],cell4);
+                        var dyn_result = check_job_status($SCRIPT_ROOT+"/status/"+scan_response['dynamic'],cell5);
+                        scanned += 1;
+                        document.getElementById('total_scanned').innerHTML = scanned;
+
+                     }
+                   });
+                 }
+                 // offline status
+                 else {
+                   var table = document.getElementById("bulk_importer");
+                    var row = table.insertRow();
+                    row.classList.add('table-offline')
+                    var cell1 = row.insertCell(0);
+                    cell1.innerHTML = data.responseText;
+                    var cell2 = row.insertCell(1);
+                    cell2.innerHTML = "Offline";
+                    var cell3 = row.insertCell(2);
+                    cell3.innerHTML = "----";
+                    var cell4 =row.insertCell(3);
+                    cell4.innerHTML = "----";
+                    var cell5 = row.insertCell(4);
+                    cell5.innerHTML = "----";
+
+                 }
+               }
+              });
+
+            }
+          }
+         });
+       }, 25000);
+      });
+  }
+  function check_job_status(status_url, cell_id) {
+    $.getJSON(status_url, function(data) {
+      cell_id.innerHTML = data.status;
+      switch (data.status) {
+        case "unknown":
+          break;
+        case "finished":
+          return "finished"
+          break;
+        case "failed":
+          return "failed"
+        break;
+  case "started":
+      setTimeout(function() {
+        check_job_status(status_url, cell_id);
+      }, 1500);
+      break;
+    case "queued":
+        setTimeout(function() {
+          check_job_status(status_url, cell_id);
+        }, 3000);
+        break;
+    default:
+      // queued/started/deferred
+      setTimeout(function() {
+        check_job_status(status_url, cell_id);
+      }, 3000);
+  }
+});
+}
+</script>
+{% endblock %}

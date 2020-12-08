@@ -10,7 +10,9 @@
   display: flex;
 
 }
-
+.table-offline{
+  color:grey;
+}
 .detection:hover {
   cursor: pointer;
  background-color:#171616!important;

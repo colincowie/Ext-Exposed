@@ -154,7 +154,8 @@ class MitmAddon(object):
             'type':'request',
             'method':str(flow.request.method),
             'url':str(flow.request.url),
-            'content size':str(len(flow.request.content))
+            'content size':str(len(flow.request.content)),
+            'content':str(flow.request.content.decode('utf-8'))
         }
         with open(self.output, 'r+') as json_file:
             data = json.load(json_file)
@@ -168,7 +169,6 @@ class MitmAddon(object):
             response_body_size = len(flow.response.raw_content)
         else:
             response_body_size = 0
-        print(flow.server_conn.address)
         print("\033[0;34m[response] \033[0m"+str(flow.response.status_code)+', '+str(flow.server_conn.ip_address[0])+', '+str(flow.server_conn.ip_address[1])+', '+str(flow.response.headers.get('Content-Type', ''))+', '+str(response_body_size))
         response_data = {
             'type':'response',
@@ -179,7 +179,7 @@ class MitmAddon(object):
             'headers':str(flow.response.headers.get('Content-Type', '')),
             'response_body_size':str(response_body_size)
         }
-        if 'application/json' in response_data['headers']:
+        if 'application/json' in response_data['headers'] or 'application/javascript' in response_data['headers']:
             response_data['content'] = str(flow.response.content.decode('utf-8'))
 
         with open(self.output, 'r+') as json_file:

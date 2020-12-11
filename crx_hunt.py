@@ -672,8 +672,8 @@ def sandbox_download(ext_id, uuid):
             return Response(json.dumps(report['_source'],indent=4), mimetype='text/json')
 
 # Get extID from request.form['line']
-@app.route('/check/ext', methods=['POST'])
-def check_ext():
+@app.route('/check/extid', methods=['POST'])
+def check_extid():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
@@ -689,6 +689,18 @@ def check_ext():
                 return "False"
         except:
             return "False"
+
+# ! WARNING ! NO AUTH NEEDED
+@app.route('/check/ext', methods=['POST'])
+def check_ext():
+    ext_id = request.form['ext_id']
+    search_obj = {'query': {'match': {'ext_id': ext_id}}}
+    ext_res = es.search(index="crx", body=search_obj)
+    for hit in ext_res['hits']['hits']:
+        if ext_id == hit['_source']['ext_id']:
+            return "True"
+    return "False"
+
 # Get webstore status
 @app.route('/check/ext/status', methods=['POST'])
 def check_ext_webstore():

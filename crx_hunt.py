@@ -303,26 +303,34 @@ def search():
                 "query": {
                     "query_string" : {
                         "query" : keyword,
-                         "default_field": "urls"
                     }
                 }
 
             }
             ext_sandbox = es.search(index="sandbox_data", body=ext_search)
             ext_sandboxs = ext_sandbox['hits']['hits']
+            #print(ext_sandboxs)
+            matched_urls = []
             for sandbox in ext_sandboxs:
-                if sandbox['_source']['ext_id'] not in exts:
-                    exts.append(sandbox['_source']['ext_id'])
-                    print("Found sandbox url matches")
-            # Filter dups
-            exts = sorted(set(exts))
-            for ext in exts:
-                search_obj = {'query': {'match': {'ext_id': ext}}}
-                ext_res = es.search(index="crx", body=search_obj)
-                for hit in ext_res['hits']['hits']:
-                    if ext == hit['_source']['ext_id']:
-                        results = hit['_source']
-                        url_data.append(results)
+                ext_id = sandbox['_source']['ext_id']
+                if ext_id not in exts:
+                    for url_line in sandbox['_source']['urls']['traffic']:
+                        try:
+                            if keyword in url_line['url']:
+                                 matched_urls.append(url_line['url'])
+                        except:
+                            pass
+                if ext_id not in exts:
+                    search_obj = {'query': {'match': {'ext_id': ext_id}}}
+                    ext_res = es.search(index="crx", body=search_obj)
+                    for hit in ext_res['hits']['hits']:
+                        if ext_id == hit['_source']['ext_id']:
+
+                            results = hit['_source']
+                            results['urls'] = matched_urls
+                            url_data.append(results)
+                            exts.append(ext_id)
+
 
         if search_fields != [] or not sandbox_search:
             # build search for elasticsearch
@@ -331,15 +339,10 @@ def search():
             res = es.search(index="crx", body=search_object,size=1000)
             for hit in res['hits']['hits']:
                 row = []
-                exts.append(hit['_source']['ext_id'])
-            # Filter dups
-            exts = sorted(set(exts))
-            for ext in exts:
-                for hit in res['hits']['hits']:
-                    if ext == hit['_source']['ext_id']:
-                        results = hit['_source']
-                        #print("match: "+str(hit['_source']['ext_id']))
-                        url_data.append(results)
+                if hit['_source']['ext_id'] not in exts:
+                    results = hit['_source']
+                    url_data.append(results)
+                    exts.append(hit['_source']['ext_id'])
 
         return render_template('results.html', url_data=url_data,keyword=keyword,es_status=es_status)
 
@@ -427,21 +430,6 @@ def status():
         user_count = db.session.execute('select count(id) as c from user').scalar()
         return render_template('status.html', es_status=es_status,user_count=user_count, es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results, ver=Build_Ver)
 
-@app.route('/update_all')
-def update_all():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        update_all_exts(es)
-        return render_template('status.html')
-
-@app.route('/update_urls')
-def update_urls():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        print("first: update urls list via webstore.py")
-
 @app.route('/')
 def home():
     #DetectionRule.__table__.drop(db.engine)
@@ -457,9 +445,8 @@ def home():
         else:
             return render_template('index.html',es_status=es_status)
 
-@app.route('/bounty')
-def bounty():
-    #DetectionRule.__table__.drop(db.engine)
+@app.route('/user')
+def user_page():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
@@ -467,10 +454,11 @@ def bounty():
             es_status = False
         else:
             es_status = True
-        if session['username'] == 'admin':
-            return render_template('bounty.html',es_status=es_status,hunter="yes")
-        else:
-            return render_template('404.html')
+
+    username = session['username']
+    email = session['email']
+
+    return render_template('user.html',es_status=es_status, user=username, email=email)
 
 @app.route('/yara')
 def detections():
@@ -518,31 +506,6 @@ def update_enabled():
             db.session.commit()
         return "done"
 
-@app.route('/user')
-def user_page():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        if not es.ping():
-            es_status = False
-        else:
-            es_status = True
-
-    username = session['username']
-    email = session['email']
-
-    return render_template('user.html',es_status=es_status, user=username, email=email)
-
-@app.route('/scanning')
-def scanning():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        if not es.ping():
-            es_status = False
-        else:
-            es_status = True
-        return render_template('scanning.html',es_status=es_status)
 @app.route('/yara/update', methods=['POST'])
 
 def yara_update():
@@ -573,6 +536,7 @@ def yara_update():
         flash('Rule updated', "info")
 
         return redirect(url_for('detections'))
+
 @app.route('/yara/edit', methods=['POST'])
 def yara_edit():
     if not session.get('logged_in'):
@@ -621,6 +585,22 @@ def yara_delete():
                 flash("yara delete error: "+str(e),"danger")
         return redirect(url_for('detections'))
 
+@app.route('/bounty')
+def bounty():
+    #DetectionRule.__table__.drop(db.engine)
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+        if session['username'] == 'admin':
+            return render_template('bounty.html',es_status=es_status,hunter="yes")
+        else:
+            return render_template('404.html')
+
+
 @app.route('/ext_file', methods=['POST'])
 def file_read():
     if not session.get('logged_in'):
@@ -644,6 +624,7 @@ def file_read():
             resp.headers['fileType'] = ''
         return resp
 
+# Get static urls from extension
 @app.route('/urls/<ext_id>')
 def urls_download(ext_id):
     if not session.get('logged_in'):
@@ -654,6 +635,7 @@ def urls_download(ext_id):
         file = 'static_urls.csv'
         return send_from_directory(directory=dir,filename=file)
 
+# Get json of dynamic analysis
 @app.route('/sandboxes/<ext_id>/<uuid>')
 def sandbox_download(ext_id, uuid):
     if not session.get('logged_in'):
@@ -689,6 +671,7 @@ def sandbox_download(ext_id, uuid):
             filename=uuid+'.json'
             return Response(json.dumps(report['_source'],indent=4), mimetype='text/json')
 
+# Get extID from request.form['line']
 @app.route('/check/ext', methods=['POST'])
 def check_ext():
     if not session.get('logged_in'):
@@ -701,12 +684,12 @@ def check_ext():
         try:
             ext_id = str(ext_id[0])
             if len(ext_id) > 0:
-                print("upload match ext "+ext_id)
                 return ext_id
             else:
                 return "False"
         except:
             return "False"
+# Get webstore status
 @app.route('/check/ext/status', methods=['POST'])
 def check_ext_webstore():
     if not session.get('logged_in'):

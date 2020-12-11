@@ -687,7 +687,7 @@ def sandbox_download(ext_id, uuid):
                 #for url in report['_source']['urls']['traffic']:
                 #    yield url[0]+","+url[1]+","+url[2]+","+url[3]+"\n"+url[4]+"\n"
             filename=uuid+'.json'
-            return Response(json.dumps(report['_source']), mimetype='text/json')
+            return Response(json.dumps(report['_source'],indent=4), mimetype='text/json')
 
 @app.route('/check/ext', methods=['POST'])
 def check_ext():

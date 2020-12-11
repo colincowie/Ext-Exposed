@@ -122,17 +122,13 @@ def logout():
 
 @app.route('/scan', methods=['POST'])
 def scan():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    elif not es:
-        return "Elasticsearch database error"
-    else:
         if not es.ping():
             flash('Error: The elasticsearch database is not connected.',"danger")
             es_status = False
         else:
             es_status = True
         # Get search query
+        print(str(request.form))
         keyword = request.form['extension']
         # get ext id
         ext_id = re.findall('[a-z]{32}',keyword)     # Parse the extension id from url
@@ -185,7 +181,7 @@ def scan():
             else:
                 community_rules = None
             if request.form.get("my_rules") == "on":
-                user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
+                user_rules = DetectionRule.query.filter_by(owner="admin").all()
                 for r in user_rules:
                     if scan_rules != []:
                         if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
@@ -701,12 +697,10 @@ def check_ext():
             return "True"
     return "False"
 
+# ! WARNING ! NO AUTH NEEDED
 # Get webstore status
 @app.route('/check/ext/status', methods=['POST'])
 def check_ext_webstore():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
         ext_id = request.form['ext_id']
         # Parse the extension id from url
         id_check = requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id)

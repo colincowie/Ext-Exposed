@@ -707,6 +707,8 @@ def check_ext_webstore():
         if id_check.status_code == 404:
             print("[-] ext id is 404")
             return "False"
+        if id_check.status_code == 204:
+            return "False"
         elif id_check.ok:
             return "True"
         else:

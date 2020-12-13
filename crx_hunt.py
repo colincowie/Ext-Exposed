@@ -703,7 +703,7 @@ def check_ext():
 def check_ext_webstore():
         ext_id = request.form['ext_id']
         # Parse the extension id from url
-        id_check = requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id)
+        id_check = requests.get("https://clients2.google.com/service/update2/crx?response=redirect&os=win&arch=x86-64&os_arch=x86-64&nacl_arch=x86-64&prod=chromecrx&prodchannel=unknown&prodversion=81.0.4044.138&acceptformat=crx2,crx3&x=id%3D" + ext_id + "%26uc", allow_redirects=True)
         if id_check.status_code == 404:
             print("[-] ext id is 404")
             return "False"

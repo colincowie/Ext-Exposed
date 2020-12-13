@@ -117,18 +117,18 @@ Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
 <table class="table table-hover">
   <thead>
   <th scope="col">Extension ID</th>
-  <th scope="col">name</th>
-  <th scope="col">users</th>
-  <th scope="col"></th>
+  <th scope="col">Name</th>
+  <th scope="col">Users</th>
+  <th scope="col">Matched Files</th>
   </thead>
 <tbody>
 </tr>
 {% for r in rule.hits %}
 <tr class="table-active">
-  <td id="row_ext_id" scope="row">{{r}}</td>
+  <td id="row_ext_id" scope="row">{{r.ext_id}}</td>
   <td scope="row"></td>
   <td scope="row"></td>
-  <td scope="row"></td>
+  <td scope="row">{{r.hits|length}}</td>
 </tr>
 {% endfor %}
 
@@ -141,7 +141,7 @@ Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
   {% for rule in user_rules%}
 <div class="yara_matches" style="display: none;" id="yara_{{rule.id}}">
 <br>
-Rule: <span id="yara_rule_name">{{rule.name}}</span>
+Rule: <span style="color:{{rule.tag_color}};"id="yara_rule_name">{{rule.name}}</span>
 <br>
 Author: <span>{{rule.owner}}</span>
 <br>
@@ -149,18 +149,18 @@ Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
 <table class="table table-hover">
   <thead>
   <th scope="col">Extension ID</th>
-  <th scope="col">name</th>
-  <th scope="col">users</th>
-  <th scope="col"></th>
+  <th scope="col">Name</th>
+  <th scope="col">Users</th>
+  <th scope="col">Matched Files</th>
   </thead>
 <tbody>
 </tr>
 {% for r in rule.hits %}
 <tr class="table-active">
-  <td id="row_ext_id" scope="row">{{r}}</td>
+  <td id="row_ext_id" scope="row">{{r.ext_id}}</td>
   <td scope="row"></td>
   <td scope="row"></td>
-  <td scope="row"></td>
+  <td scope="row">{{r.hits|length}}</td>
 </tr>
 {% endfor %}
 

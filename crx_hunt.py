@@ -472,8 +472,8 @@ def detections():
             ext_matches = []
             tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}})
             for tag in tag_res['hits']['hits']:
-                if tag['_source']['ext_id'] not in ext_matches:
-                    ext_matches.append(tag['_source']['ext_id'])
+                if tag['_source'] not in ext_matches:
+                    ext_matches.append(tag['_source'])
                     rule.owner = tag['_source']['owner']
 
             rule.hits = ext_matches

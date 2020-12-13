@@ -407,7 +407,7 @@ def status():
         else:
             es_status = True
             if es.indices.exists(index="crx"):
-                res = es.search(index="crx", q="*", size=100)
+                res = es.search(index="crx", q="*", size=100,sort="'timestamp':{'order':'desc'}")
                 es_total=res['hits']['total']['value']
             else:
                 es_total=0

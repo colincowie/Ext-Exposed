@@ -154,24 +154,47 @@ class EXT_Analyze():
     def name(self):
         return str(self.name)
 
-def static_run(ext_scan, ext_id, name):
+def static_run(ext_scan, ext_id, name, scanlog_id):
     es = Elasticsearch()
+    # Pull scan_log es record:
+    update_body = {'query': {'match': {'scanlog_id': scanlog_id}}}
+    ext_res = es.search(index="scan_log", body=update_body)
+    # Update es scan log
+    scan_log_body = {'doc':{'static_status':'Started'}}
+    for hit in ext_res['hits']['hits']:
+        if len(hit) > 0:
+            try:
+                es.update(index='scan_log',body=scan_log_body,id=hit['_id'])
+            except Exception as e:
+                print("[-] scan update err")
+                print(e)
+
+
     ext_downloads = ext_scan.get_downloads(ext_id)
     ext_urls = ext_scan.run(ext_id)
     ext_perms = ext_scan.get_perms(ext_id)
     ext_name = name
-    #logo_path = ext_scan.get_icon(ext_id)
-    #if not isinstance(logo_path, str):
-#        try:
-#            logo_path=logo_path['32']
-#        except:
-#            try:
-#                logo_path=logo_path['24']
-#            except:
-#                try:
-#                    logo_path=logo_path['64']
-#                except:
-#                    logo_path=logo_path['128']
+
+    # Update scan log again
+    if len(ext_urls) > 0:
+        result_status = "Finished"
+    elif len(ext_urls) == 0:
+        result_status = "No Results"
+    if ext_urls == None:
+        result_status = "Error"
+
+    scan_log_body = {'doc':{'static_status':result_status}}
+
+    for hit in ext_res['hits']['hits']:
+        print(hit)
+        if len(hit) > 0:
+            print("[*] Updating scan "+str(scanlog_id))
+            try:
+                es.update(index='scan_log',body=scan_log_body,id=hit['_id'])
+            except Exception as e:
+                print("[-] scan update err")
+                print(e)
+
     try:
         es.indices.create(index='crx')
     except:
@@ -182,18 +205,18 @@ def static_run(ext_scan, ext_id, name):
     if ext_res['hits']['hits']:
         for hit in ext_res['hits']['hits']:
             if ext_id == hit['_source']['ext_id']:
-                print("Deleting: "+str(hit['_source']))
+                print("Deleting old crx entry")
                 es.delete(index="crx",id=hit['_id'])
     body = {
-    'ext_id':ext_id,
-    'name':ext_name,
-    'users':ext_downloads,
-    'permissions':ext_perms,
-    'logo':ext_scan.logo_path,
-    'full_name':ext_scan.full_name,
-    'urls':ext_urls
+        'ext_id':ext_id,
+        'name':ext_name,
+        'users':ext_downloads,
+        'permissions':ext_perms,
+        'logo':ext_scan.logo_path,
+        'full_name':ext_scan.full_name,
+        'urls':ext_urls
     }
-    print("[+] Static analysis results:\n"+str(body))
+#    print("[+] Static analysis results:\n"+str(body))
 
     # check if ext is in database:
     dup_search = {'query': {'match': {'ext_id': ext_id}}}

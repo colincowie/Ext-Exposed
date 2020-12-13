@@ -1,4 +1,4 @@
-import re, os, uuid, json, time, redis, hashlib, argparse
+import re, os, uuid, json, time, redis, hashlib, argparse, requests
 import yara
 from rq import Queue
 from rq.job import Job
@@ -122,17 +122,13 @@ def logout():
 
 @app.route('/scan', methods=['POST'])
 def scan():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    elif not es:
-        return "Elasticsearch database error"
-    else:
         if not es.ping():
             flash('Error: The elasticsearch database is not connected.',"danger")
             es_status = False
         else:
             es_status = True
         # Get search query
+        print(str(request.form))
         keyword = request.form['extension']
         # get ext id
         ext_id = re.findall('[a-z]{32}',keyword)     # Parse the extension id from url
@@ -153,21 +149,20 @@ def scan():
         # array for scan log
         static_status = ''
         dynamic_status = ''
+        scanlog_id = uuid.uuid4()
+
         yara_status = ''
 
         if request.form.get("static") != None:
+            static_status = 'Queued'
             # Static Analysis
             print("[!] Queuing static analysis for "+ext_id)
-            static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name, result_ttl=6000)
+            static_job = q.enqueue(static_run, ext_scan, ext_id, ext_name, scanlog_id, result_ttl=6000)
             #print(job.result)
             print("[!] Static enqueued at "+str(static_job.enqueued_at)+" with job id: "+str(static_job.id))
             new_jobs['static'] = str(static_job.id)
-            new_jobs['enqueued_at'] = str(static_job.enqueued_at)
-            try:
-                stat_job = Job.fetch(static_job.id, connection=r)
-                static_status = stat_job.get_status()
-            except:
-                print("[-] Failed to get static job status")
+            new_jobs['enqueued_at'] = static_job.enqueued_at
+
         # Yara scan
         if request.form.get("global_rules") == "on" or request.form.get("my_rules") == "on":
             print("[!] Queuing yara analysis for "+ext_id)
@@ -186,7 +181,7 @@ def scan():
             else:
                 community_rules = None
             if request.form.get("my_rules") == "on":
-                user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
+                user_rules = DetectionRule.query.filter_by(owner="admin").all()
                 for r in user_rules:
                     if scan_rules != []:
                         if r.name != scan_rules[0][0] and r.id != scan_rules[0][2]:
@@ -202,24 +197,21 @@ def scan():
             #print(job.result)
             print("[!] Yara enqueued at "+str(yara_job.enqueued_at)+" with job id: "+str(yara_job.id))
             new_jobs['yara'] = str(yara_job.id)
-            new_jobs['enqueued_at'] = str(yara_job.enqueued_at)
+            new_jobs['enqueued_at'] = yara_job.enqueued_at
 
         if request.form.get("sandbox") != None:
+            dynamic_status = 'Queued'
+
             print("[!] Queuing sandbox for "+ext_id)
             # Sandbox
             time_limit = int(request.form.get('time_limit'))
             print("Time limit:"+str(time_limit))
             id = uuid.uuid4()
             box = EXT_Sandbox(ext_id, time_limit)
-            sandbox_job = q.enqueue(sandbox_run, box, id, result_ttl=6000)
+            sandbox_job = q.enqueue(sandbox_run, box, id, scanlog_id, result_ttl=6000)
             #print(job.result)
             print("[!] Dynamic enqueued at "+str(sandbox_job.enqueued_at)+" with job id: "+str(sandbox_job.id))
             new_jobs['enqueued_at'] = sandbox_job.enqueued_at
-            try:
-                dyn_job = Job.fetch(sandbox_job.id, connection=r)
-                dynamic_status = dyn_job.get_status()
-            except:
-                print("[-] Failed to get static job status")
             new_jobs['dynamic'] = str(sandbox_job.id)
             sandbox_body = {
                 'uuid':id,
@@ -237,6 +229,7 @@ def scan():
                 print("Failed to create extension mitm data index")
 
         scan_log_body = {
+            'scanlog_id':scanlog_id,
             'name':new_jobs["name"],
             'ext_id':new_jobs["ext_id"],
             'enqueued_at':new_jobs['enqueued_at'],
@@ -306,26 +299,34 @@ def search():
                 "query": {
                     "query_string" : {
                         "query" : keyword,
-                         "default_field": "urls"
                     }
                 }
 
             }
             ext_sandbox = es.search(index="sandbox_data", body=ext_search)
             ext_sandboxs = ext_sandbox['hits']['hits']
+            #print(ext_sandboxs)
+            matched_urls = []
             for sandbox in ext_sandboxs:
-                if sandbox['_source']['ext_id'] not in exts:
-                    exts.append(sandbox['_source']['ext_id'])
-                    print("Found sandbox url matches")
-            # Filter dups
-            exts = sorted(set(exts))
-            for ext in exts:
-                search_obj = {'query': {'match': {'ext_id': ext}}}
-                ext_res = es.search(index="crx", body=search_obj)
-                for hit in ext_res['hits']['hits']:
-                    if ext == hit['_source']['ext_id']:
-                        results = hit['_source']
-                        url_data.append(results)
+                ext_id = sandbox['_source']['ext_id']
+                if ext_id not in exts:
+                    for url_line in sandbox['_source']['urls']['traffic']:
+                        try:
+                            if keyword in url_line['url']:
+                                 matched_urls.append(url_line['url'])
+                        except:
+                            pass
+                if ext_id not in exts:
+                    search_obj = {'query': {'match': {'ext_id': ext_id}}}
+                    ext_res = es.search(index="crx", body=search_obj)
+                    for hit in ext_res['hits']['hits']:
+                        if ext_id == hit['_source']['ext_id']:
+
+                            results = hit['_source']
+                            results['urls'] = matched_urls
+                            url_data.append(results)
+                            exts.append(ext_id)
+
 
         if search_fields != [] or not sandbox_search:
             # build search for elasticsearch
@@ -334,15 +335,10 @@ def search():
             res = es.search(index="crx", body=search_object,size=1000)
             for hit in res['hits']['hits']:
                 row = []
-                exts.append(hit['_source']['ext_id'])
-            # Filter dups
-            exts = sorted(set(exts))
-            for ext in exts:
-                for hit in res['hits']['hits']:
-                    if ext == hit['_source']['ext_id']:
-                        results = hit['_source']
-                        #print("match: "+str(hit['_source']['ext_id']))
-                        url_data.append(results)
+                if hit['_source']['ext_id'] not in exts:
+                    results = hit['_source']
+                    url_data.append(results)
+                    exts.append(hit['_source']['ext_id'])
 
         return render_template('results.html', url_data=url_data,keyword=keyword,es_status=es_status)
 
@@ -417,25 +413,6 @@ def status():
                 es_total=0
             scans = es.search(index="scan_log", q="*",size=100)
             scan_results = scans['hits']['hits']
-        for scan_res in scan_results:
-            scan_job = scan_res['_source']
-            print(scan_job)
-            if scan_job['static_id']:
-                try:
-                    job = Job.fetch(scan_job['static_id'], connection=r)
-                    print('Status: %s' % job.get_status())
-                    status_update = {
-                        'doc':{
-                            'static_status':job.get_status()
-                            }
-                    }
-                    try:
-                        es.update(index="scan_log",id=scan_res['_id'],body=status_update)
-                    except Exception as e:
-                        print(e)
-                        print("did not update status")
-                except:
-                    print("[-] failed finding job")
 
         disk_total = len(next(os.walk('static/output'))[1])
         job_results=[]
@@ -449,21 +426,6 @@ def status():
         user_count = db.session.execute('select count(id) as c from user').scalar()
         return render_template('status.html', es_status=es_status,user_count=user_count, es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results, ver=Build_Ver)
 
-@app.route('/update_all')
-def update_all():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        update_all_exts(es)
-        return render_template('status.html')
-
-@app.route('/update_urls')
-def update_urls():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        print("first: update urls list via webstore.py")
-
 @app.route('/')
 def home():
     #DetectionRule.__table__.drop(db.engine)
@@ -474,7 +436,25 @@ def home():
             es_status = False
         else:
             es_status = True
-        return render_template('index.html',es_status=es_status)
+        if session['username'] == 'admin':
+            return render_template('index.html',es_status=es_status,hunter="yes")
+        else:
+            return render_template('index.html',es_status=es_status)
+
+@app.route('/user')
+def user_page():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+
+    username = session['username']
+    email = session['email']
+
+    return render_template('user.html',es_status=es_status, user=username, email=email)
 
 @app.route('/yara')
 def detections():
@@ -522,31 +502,6 @@ def update_enabled():
             db.session.commit()
         return "done"
 
-@app.route('/user')
-def user_page():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        if not es.ping():
-            es_status = False
-        else:
-            es_status = True
-
-    username = session['username']
-    email = session['email']
-
-    return render_template('user.html',es_status=es_status, user=username, email=email)
-
-@app.route('/scanning')
-def scanning():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        if not es.ping():
-            es_status = False
-        else:
-            es_status = True
-        return render_template('scanning.html',es_status=es_status)
 @app.route('/yara/update', methods=['POST'])
 
 def yara_update():
@@ -577,6 +532,7 @@ def yara_update():
         flash('Rule updated', "info")
 
         return redirect(url_for('detections'))
+
 @app.route('/yara/edit', methods=['POST'])
 def yara_edit():
     if not session.get('logged_in'):
@@ -625,6 +581,22 @@ def yara_delete():
                 flash("yara delete error: "+str(e),"danger")
         return redirect(url_for('detections'))
 
+@app.route('/bounty')
+def bounty():
+    #DetectionRule.__table__.drop(db.engine)
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+        if session['username'] == 'admin':
+            return render_template('bounty.html',es_status=es_status,hunter="yes")
+        else:
+            return render_template('404.html')
+
+
 @app.route('/ext_file', methods=['POST'])
 def file_read():
     if not session.get('logged_in'):
@@ -648,6 +620,7 @@ def file_read():
             resp.headers['fileType'] = ''
         return resp
 
+# Get static urls from extension
 @app.route('/urls/<ext_id>')
 def urls_download(ext_id):
     if not session.get('logged_in'):
@@ -658,6 +631,7 @@ def urls_download(ext_id):
         file = 'static_urls.csv'
         return send_from_directory(directory=dir,filename=file)
 
+# Get json of dynamic analysis
 @app.route('/sandboxes/<ext_id>/<uuid>')
 def sandbox_download(ext_id, uuid):
     if not session.get('logged_in'):
@@ -691,7 +665,54 @@ def sandbox_download(ext_id, uuid):
                 #for url in report['_source']['urls']['traffic']:
                 #    yield url[0]+","+url[1]+","+url[2]+","+url[3]+"\n"+url[4]+"\n"
             filename=uuid+'.json'
-            return Response(json.dumps(report['_source']), mimetype='text/json')
+            return Response(json.dumps(report['_source'],indent=4), mimetype='text/json')
+
+# Get extID from request.form['line']
+@app.route('/check/extid', methods=['POST'])
+def check_extid():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        line = request.form['line']
+        # get ext id
+        ext_id = re.findall('[a-z]{32}',line)
+        # Parse the extension id from url
+        try:
+            ext_id = str(ext_id[0])
+            if len(ext_id) > 0:
+                return ext_id
+            else:
+                return "False"
+        except:
+            return "False"
+
+# ! WARNING ! NO AUTH NEEDED
+@app.route('/check/ext', methods=['POST'])
+def check_ext():
+    ext_id = request.form['ext_id']
+    search_obj = {'query': {'match': {'ext_id': ext_id}}}
+    ext_res = es.search(index="crx", body=search_obj)
+    for hit in ext_res['hits']['hits']:
+        if ext_id == hit['_source']['ext_id']:
+            return "True"
+    return "False"
+
+# ! WARNING ! NO AUTH NEEDED
+# Get webstore status
+@app.route('/check/ext/status', methods=['POST'])
+def check_ext_webstore():
+        ext_id = request.form['ext_id']
+        # Parse the extension id from url
+        id_check = requests.get("https://clients2.google.com/service/update2/crx?response=redirect&os=win&arch=x86-64&os_arch=x86-64&nacl_arch=x86-64&prod=chromecrx&prodchannel=unknown&prodversion=81.0.4044.138&acceptformat=crx2,crx3&x=id%3D" + ext_id + "%26uc", allow_redirects=True)
+        if id_check.status_code == 404:
+            print("[-] ext id is 404")
+            return "False"
+        if id_check.status_code == 204:
+            return "False"
+        elif id_check.ok:
+            return "True"
+        else:
+            return "False"
 
 @app.route('/favicon.ico')
 def favicon():

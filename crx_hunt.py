@@ -407,11 +407,11 @@ def status():
         else:
             es_status = True
             if es.indices.exists(index="crx"):
-                res = es.search(index="crx", q="*",)
+                res = es.search(index="crx", q="*", size=1000,sort="'timestamp':{'order':'desc'}")
                 es_total=res['hits']['total']['value']
             else:
                 es_total=0
-            scans = es.search(index="scan_log", q="*",sort="'timestamp':{'order':'desc'}")
+            scans = es.search(index="scan_log", q="*", size=1000,sort="'timestamp':{'order':'desc'}")
             scan_results = scans['hits']['hits']
 
         disk_total = len(next(os.walk('static/output'))[1])

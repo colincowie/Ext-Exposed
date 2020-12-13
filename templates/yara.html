@@ -109,11 +109,11 @@
   {% for rule in community_rules%}
 <div class="yara_matches" style="display: none;" id="yara_{{rule.id}}">
 <br>
-Rule: <span id="yara_rule_name">{{rule.name}}</span>
+Rule: <span style="color:{{rule.tag_color}};">{{rule.name}}</span>
 <br>
 Author: <span>{{rule.owner}}</span>
 <br>
-Matches: <span style="color:{{rule.tag_color}};">{{rule.hits|length}}</span>
+Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
 <table class="table table-hover">
   <thead>
   <th scope="col">Extension ID</th>

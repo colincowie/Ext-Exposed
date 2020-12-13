@@ -472,16 +472,24 @@ def detections():
             ext_matches = []
             tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}})
             for tag in tag_res['hits']['hits']:
-                ext_matches.append(tag['_source']['ext_id'])
+                if tag['_source']['ext_id'] not in ext_matches:
+                    ext_matches.append(tag['_source']['ext_id'])
+                    rule.owner = tag['_source']['owner']
+
             rule.hits = ext_matches
             db.session.commit()
         for rule in community_rules:
             ext_matches = []
             tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}})
             for tag in tag_res['hits']['hits']:
-                ext_matches.append(tag['_source']['ext_id'])
+                if tag['_source']['ext_id'] not in ext_matches:
+                    ext_matches.append(tag['_source'])
+            print(ext_matches)
+
             rule.hits = ext_matches
             db.session.commit()
+        user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
+        community_rules = DetectionRule.query.filter_by(global_rule=True).all()
 
         return render_template('yara.html',es_status=es_status, user_rules=user_rules, community_rules=community_rules)
 

@@ -4,114 +4,172 @@
 
 <h1>Detection Rules</h1>
 <hr>
-<p>Community Detections:</p>
-{% if community_rules %}
-  {% for rule in community_rules %}
-    <div class="row" >
-        <div class="container">
-          <div class="row detection dflex">
-            <div style="border-right: 1px solid;">
-              <div class="custom-control custom-switch">
-                {% if rule.enabled %}
-                <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled checked="">
-                <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
-                {% else %}
-                <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled>
-                <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
-                {% endif %}
+<div class="bs-example">
+    <ul  class="nav nav-tabs">
+        <li class="nav-item">
+            <a href="#mine" class="nav-link active" data-toggle="tab">My Detection Rules </a>
+        </li>
+        <li class="nav-item">
+            <a href="#community" class="nav-link" data-toggle="tab">Community Detections</a>
+        </li>
+
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="mine">
+        <br>
+        <p>My Detections: </p>
+        {% if user_rules %}
+          {% for rule in user_rules%}
+            <div class="row" >
+                <div class="container">
+                  <div class="row detection dflex">
+                    <div style="border-right: 1px solid;">
+                      <div class="custom-control custom-switch">
+
+                        {% if rule.enabled %}
+                            <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});" id="ruleSwitch_{{rule.id}}" checked="">
+                            <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                         {% else %}
+                             <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});" id="ruleSwitch_{{rule.id}}">
+                             <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                        {% endif %}
+                      </div>
+                    </div>
+                    <div  onclick="show_modal({{rule.id}})">
+                    <div class="detection_desc">&nbsp;{{rule.description}}</div>
+                    </div>
+                    <div class="col align-right" style="text-align:right;" onclick="show_modal({{rule.id}})">
+                      <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                      </svg>
+                    </div>
+                    <div class="col align-right" style="text-align:right; max-width:10px;" onclick="delete_rule({{rule.id}})">
+                      <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                      </svg>
+                    </div>
+                    <div >
+                      <span onclick="show_yara({{rule.id}})" style="font-size:12;"> Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
+                    </div>
+                  </div>
+                </div>
+            </div>
+          {% endfor %}
+        {% else %}
+        <span> You haven't created any yara rules yet!</span>
+        {% endif %}
+        <hr>
+        <button id="btn_toggle" class="btn-primary" onclick="new_rule()">Add New Rule</button>&nbsp;&nbsp;
+        <button id="btn_toggle" class="btn-primary">Run Retrohunt</button>&nbsp;&nbsp;
+
+        </div>
+        <div class="tab-pane fade show" id="community">
+          <br>
+          <p>Community Detections:</p>
+          {% if community_rules %}
+            {% for rule in community_rules %}
+              <div class="row" >
+                  <div class="container">
+                    <div class="row detection dflex">
+                      <div style="border-right: 1px solid;">
+                        <div class="custom-control custom-switch">
+                          {% if rule.enabled %}
+                          <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled checked="">
+                          <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                          {% else %}
+                          <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled>
+                          <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div onclick="read_modal({{rule.id}})">
+                      <div class="detection_desc">&nbsp;{{rule.description}}</div>
+                      </div>
+                      <div class="col align-right" style="text-align:right;" onclick="read_modal({{rule.id}})">
+                        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z"/>
+                          <path fill-rule="evenodd" d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                        </svg>
+                      </div>
+                      <div >
+                        <span onclick="show_yara({{rule.id}})" style="font-size:12;">Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
+                      </div>
+                    </div>
+                  </div>
               </div>
-            </div>
-            <div onclick="read_modal({{rule.id}})">
-            <div class="detection_desc">&nbsp;{{rule.description}}</div>
-            </div>
-            <div class="col align-right" style="text-align:right;" onclick="read_modal({{rule.id}})">
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z"/>
-                <path fill-rule="evenodd" d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-              </svg>
-            </div>
-            <div >
-              <span onclick="show_yara({{rule.id}})" style="font-size:12;">Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
-            </div>
-          </div>
+
+            {% endfor %}
+          {% endif %}
         </div>
     </div>
-    {% if rule.hits|length > 0 %}
-    <div class="modal fade" id="yara_{{rule.id}}">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Detection Rule: <span style="color:{{rule.tag_color}}">{{rule.name}}</span></h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-
-          <div class="modal-body">
-              <ul style="list-style-type: circle;">
-                {% for match in rule.hits %}
-                  <li><a href="/report/{{match}}">{{match}}</a></li>
-                {% endfor %}
-              </ul>
-
-
-          </div>
-          <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel </button>
-          </div>
-          </div>
-          </div>
-          </div>
-      {% endif %}
-  {% endfor %}
-{% endif %}
 <hr>
-<p>My Detections: </p>
+{% if community_rules %}
+  {% for rule in community_rules%}
+<div class="yara_matches" style="display: none;" id="yara_{{rule.id}}">
+<br>
+Rule: <span id="yara_rule_name">{{rule.name}}</span>
+<br>
+Author: <span>{{rule.owner}}</span>
+<br>
+Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
+<table class="table table-hover">
+  <thead>
+  <th scope="col">Extension ID</th>
+  <th scope="col">name</th>
+  <th scope="col">users</th>
+  <th scope="col"></th>
+  </thead>
+<tbody>
+</tr>
+{% for r in rule.hits %}
+<tr class="table-active">
+  <td id="row_ext_id" scope="row">{{r}}</td>
+  <td scope="row"></td>
+  <td scope="row"></td>
+  <td scope="row"></td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+</div>
+{% endfor %}
+{% endif %}
 {% if user_rules %}
   {% for rule in user_rules%}
-    <div class="row" >
-        <div class="container">
-          <div class="row detection dflex">
-            <div style="border-right: 1px solid;">
-              <div class="custom-control custom-switch">
+<div class="yara_matches" style="display: none;" id="yara_{{rule.id}}">
+<br>
+Rule: <span id="yara_rule_name">{{rule.name}}</span>
+<br>
+Author: <span>{{rule.owner}}</span>
+<br>
+Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
+<table class="table table-hover">
+  <thead>
+  <th scope="col">Extension ID</th>
+  <th scope="col">name</th>
+  <th scope="col">users</th>
+  <th scope="col"></th>
+  </thead>
+<tbody>
+</tr>
+{% for r in rule.hits %}
+<tr class="table-active">
+  <td id="row_ext_id" scope="row">{{r}}</td>
+  <td scope="row"></td>
+  <td scope="row"></td>
+  <td scope="row"></td>
+</tr>
+{% endfor %}
 
-                {% if rule.enabled %}
-                    <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});" id="ruleSwitch_{{rule.id}}" checked="">
-                    <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
-                 {% else %}
-                     <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});" id="ruleSwitch_{{rule.id}}">
-                     <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
-                {% endif %}
-              </div>
-            </div>
-            <div  onclick="show_modal({{rule.id}})">
-            <div class="detection_desc">&nbsp;{{rule.description}}</div>
-            </div>
-            <div class="col align-right" style="text-align:right;" onclick="show_modal({{rule.id}})">
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-              </svg>
-            </div>
-            <div class="col align-right" style="text-align:right; max-width:10px;" onclick="delete_rule({{rule.id}})">
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-              </svg>
-            </div>
-            <div >
-              <span onclick="show_yara({{rule.id}})" style="font-size:12;"> Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
-            </div>
-          </div>
-        </div>
-    </div>
-  {% endfor %}
-{% else %}
-<span> You haven't created any yara rules yet!</span>
+</tbody>
+</table>
+</div>
+{% endfor %}
 {% endif %}
-<hr>
-<button id="btn_toggle" class="btn-primary" onclick="new_rule()">Add New Rule</button>&nbsp;&nbsp;
-<button id="btn_toggle" class="btn-primary">Run Retrohunt</button>&nbsp;&nbsp;
+
 
 {% if user_rules %}
   {% for rule in user_rules%}
@@ -275,8 +333,19 @@ rule example_rule
     $(modal_id).modal('show');
   }
   function show_yara (rule_id) {
-    modal_id = '#yara_'+rule_id
-    $(modal_id).modal('show');
+    var all = document.getElementsByClassName('yara_matches');
+      for (var i = 0; i < all.length; i++) {
+        all[i].style.display = "none";
+      }
+    div = 'yara_'+rule_id
+    console.log(div)
+    var x = document.getElementById(div);
+      if (x.style.display === "none") {
+        x.style.display = "inline";
+        console.log(x)
+      } else {
+        x.style.display = "none";
+      }
   }
   function read_modal(rule_id) {
     modal_id = '#readrule_'+rule_id

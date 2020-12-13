@@ -8,7 +8,10 @@
   align-items: center;
   padding: 5px;
   display: flex;
-
+}
+.content-row:hover{
+  cursor: pointer;
+  background-color:red!important;
 }
 .table-offline{
   color:grey;

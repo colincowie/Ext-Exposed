@@ -511,7 +511,6 @@ def update_enabled():
         return "done"
 
 @app.route('/yara/update', methods=['POST'])
-
 def yara_update():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -604,7 +603,6 @@ def bounty():
         else:
             return render_template('404.html')
 
-
 @app.route('/ext_file', methods=['POST'])
 def file_read():
     if not session.get('logged_in'):
@@ -675,7 +673,7 @@ def sandbox_download(ext_id, uuid):
             filename=uuid+'.json'
             return Response(json.dumps(report['_source'],indent=4), mimetype='text/json')
 
-# Get extID from request.form['line']
+# Use regex to get extID from request form pram 'line'
 @app.route('/check/extid', methods=['POST'])
 def check_extid():
     if not session.get('logged_in'):
@@ -694,19 +692,21 @@ def check_extid():
         except:
             return "False"
 
+# Get ext information from crx index
+# Check if ext is in platform
 # ! WARNING ! NO AUTH NEEDED
-@app.route('/check/ext', methods=['POST'])
-def check_ext():
-    ext_id = request.form['ext_id']
+@app.route('/api/<ext_id>', methods=['GET'])
+def check_ext(ext_id):
+    print("checking: "+ext_id)
     search_obj = {'query': {'match': {'ext_id': ext_id}}}
     ext_res = es.search(index="crx", body=search_obj)
     for hit in ext_res['hits']['hits']:
         if ext_id == hit['_source']['ext_id']:
-            return "True"
+            return hit['_source']
     return "False"
 
-# ! WARNING ! NO AUTH NEEDED
 # Get webstore status
+# ! WARNING ! NO AUTH NEEDED
 @app.route('/check/ext/status', methods=['POST'])
 def check_ext_webstore():
         ext_id = request.form['ext_id']

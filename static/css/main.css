@@ -13,6 +13,10 @@
   cursor: pointer;
   background-color:red!important;
 }
+.row_extid:hover{
+  cursor: pointer;
+}
+
 .table-offline{
   color:grey;
 }

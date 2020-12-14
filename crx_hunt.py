@@ -704,7 +704,17 @@ def check_ext(ext_id):
         if ext_id == hit['_source']['ext_id']:
             return hit['_source']
     return "False"
-
+# ! WARNING ! NO AUTH NEEDED
+@app.route('/check/ext', methods=['POST'])
+def check_ext():
+    ext_id = request.form['ext_id']
+    search_obj = {'query': {'match': {'ext_id': ext_id}}}
+    ext_res = es.search(index="crx", body=search_obj)
+    for hit in ext_res['hits']['hits']:
+        if ext_id == hit['_source']['ext_id']:
+            return "True"
+    return "False"
+    
 # Get webstore status
 # ! WARNING ! NO AUTH NEEDED
 @app.route('/check/ext/status', methods=['POST'])

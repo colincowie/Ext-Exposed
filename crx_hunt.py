@@ -696,7 +696,7 @@ def check_extid():
 # Check if ext is in platform
 # ! WARNING ! NO AUTH NEEDED
 @app.route('/api/<ext_id>', methods=['GET'])
-def check_ext(ext_id):
+def check_ext_api(ext_id):
     print("checking: "+ext_id)
     search_obj = {'query': {'match': {'ext_id': ext_id}}}
     ext_res = es.search(index="crx", body=search_obj)
@@ -714,7 +714,7 @@ def check_ext():
         if ext_id == hit['_source']['ext_id']:
             return "True"
     return "False"
-    
+
 # Get webstore status
 # ! WARNING ! NO AUTH NEEDED
 @app.route('/check/ext/status', methods=['POST'])

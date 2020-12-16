@@ -83,7 +83,7 @@
                     <div class="custom-control custom-switch">
                           {% if rule.enabled %}
                           <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled checked="">
-                          <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
+                          <label class="custom-control-label" style="color:white;" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
                           {% else %}
                           <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled>
                           <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;

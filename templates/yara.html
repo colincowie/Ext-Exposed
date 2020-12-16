@@ -125,12 +125,11 @@ Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
 </tr>
 {% for r in rule.hits %}
 <tr onclick="window.open('/report/{{r.ext_id}}', '_blank');"class="row_extid table">
-  <td scope="row">{{r.ext_id}}</td>
-  <td scope="row"></td>
-  <td scope="row"></td>
-  <td scope="row">{{r.hits|length}}</td>
+  <td scope="row">{{r[0].ext_id}}</td>
+  <td scope="row">{{r[1].full_name}}</td>
+  <td scope="row">{{r[1].users}}</td>
+  <td scope="row">{{r[0].hits|length}}</td>
 </tr>
-
 {% endfor %}
 
 </tbody>
@@ -158,10 +157,10 @@ Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
 </tr>
 {% for r in rule.hits %}
 <tr onclick="window.open('/report/{{r.ext_id}}', '_blank');"class="row_extid table">
-  <td scope="row">{{r.ext_id}}</td>
-  <td scope="row"></td>
-  <td scope="row"></td>
-  <td scope="row">{{r.hits|length}}</td>
+  <td scope="row">{{r[0].ext_id}}</td>
+  <td scope="row">{{r[1].full_name}}</td>
+  <td scope="row">{{r[1].users}}</td>
+  <td scope="row">{{r[0].hits|length}}</td>
 </tr>
 {% endfor %}
 
@@ -333,26 +332,6 @@ rule example_rule
     modal_id = '#rule_'+rule_id
     $(modal_id).modal('show');
   }
-  function load_ext_data(){
-        var all_ids = document.getElementsByClassName('row_extid');
-        for (var i = 0; i < all_ids.length; i++) {
-          var ext_id = all_ids[i].cells[0].innerText;
-          console.log("Cell: ")
-          console.log(all_ids[i]);
-          var name_cell = all_ids[i].cells[1];
-          var user_cell = all_ids[i].cells[2];
-          var api_url = "/api/"+ext_id;
-          $.ajax({url: api_url,
-            method: "GET",
-            async: false,
-            success: function(response_data){
-              name_cell.innerText = response_data["full_name"];
-              user_cell.innerText = response_data["users"];
-            }
-          });
-
-      }
-    }
   function show_yara(rule_id) {
     var all = document.getElementsByClassName('yara_matches');
     for (var i = 0; i < all.length; i++) {
@@ -375,7 +354,7 @@ rule example_rule
     new_rule_editor.focus();
   }
 
-load_ext_data();
+//load_ext_data();
 CodeMirror.defineMode("yara", function(config) {
     function words(str) {
       var obj = {}, words = str.split(" ");

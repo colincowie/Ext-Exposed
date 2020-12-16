@@ -470,9 +470,10 @@ def detections():
         # Update detection hits
         for rule in user_rules:
             ext_matches = []
+            dup_checks = []
             tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}},size=3000)
             for tag in tag_res['hits']['hits']:
-                if tag['_source'] not in ext_matches:
+                if tag['_source'] not in dup_checks:
                     # query crx index for users and downloaders
                     search_obj = {'query': {'match': {'ext_id': tag['_source']['ext_id']}}}
                     ext_res = es.search(index="crx", body=search_obj)
@@ -480,14 +481,16 @@ def detections():
                     for hit in ext_res['hits']['hits']:
                         crx_data = hit['_source']
                     ext_matches.append([tag['_source'],crx_data])
+                    dup_checks.append(tag['_source'])
 
             rule.hits = ext_matches
             db.session.commit()
         for rule in community_rules:
             ext_matches = []
+            dup_checks = []
             tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}},size=3000)
             for tag in tag_res['hits']['hits']:
-                if tag['_source'] not in ext_matches:
+                if tag['_source'] not in dup_checks:
                     # query crx index for users and downloaders
                     search_obj = {'query': {'match': {'ext_id': tag['_source']['ext_id']}}}
                     ext_res = es.search(index="crx", body=search_obj)
@@ -495,6 +498,7 @@ def detections():
                     for hit in ext_res['hits']['hits']:
                         crx_data = hit['_source']
                     ext_matches.append([tag['_source'],crx_data])
+                    dup_checks.append(tag['_source'])
 
 
             print(ext_matches)

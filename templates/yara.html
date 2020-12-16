@@ -124,7 +124,7 @@ Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
 <tbody>
 </tr>
 {% for r in rule.hits %}
-<tr onclick="window.open('/report/{{r.ext_id}}', '_blank');"class="row_extid table">
+<tr onclick="window.open('/report/{{r[0].ext_id}}', '_blank');"class="row_extid table">
   <td scope="row">{{r[0].ext_id}}</td>
   <td scope="row">{{r[1].full_name}}</td>
   <td scope="row">{{r[1].users}}</td>
@@ -156,7 +156,7 @@ Matches: <span id="yara_rule_matches">{{rule.hits|length}}</span>
 <tbody>
 </tr>
 {% for r in rule.hits %}
-<tr onclick="window.open('/report/{{r.ext_id}}', '_blank');"class="row_extid table">
+<tr onclick="window.open('/report/{{r[0].ext_id}}', '_blank');"class="row_extid table">
   <td scope="row">{{r[0].ext_id}}</td>
   <td scope="row">{{r[1].full_name}}</td>
   <td scope="row">{{r[1].users}}</td>

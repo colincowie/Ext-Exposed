@@ -12,20 +12,25 @@
         <li class="nav-item">
             <a href="#community" class="nav-link" data-toggle="tab">Community Detections</a>
         </li>
+        <li class="nav-item">
+            <a href="#retro" class="nav-link" data-toggle="tab">Retrohunt</a>
+        </li>
 
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="mine">
         <br>
-        <p>My Detections: </p>
-        {% if user_rules %}
-          {% for rule in user_rules%}
-            <div class="row" >
-                <div class="container">
-                  <div class="row detection dflex">
-                    <div style="border-right: 1px solid;">
-                      <div class="custom-control custom-switch">
+        <div class="card d-flex">
+          <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+            <p>My Detections: </p>
+          </div>
+              <ul class="yara-list list-group">
 
+            {% if user_rules %}
+            {% for rule in user_rules%}
+              <li class="list-group-item">
+                  <div class="detection dflex">
+                      <div class="custom-control custom-switch">
                         {% if rule.enabled %}
                             <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});" id="ruleSwitch_{{rule.id}}" checked="">
                             <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
@@ -34,7 +39,6 @@
                              <label class="custom-control-label"  for="ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
                         {% endif %}
                       </div>
-                    </div>
                     <div  onclick="show_modal({{rule.id}})">
                     <div class="detection_desc">&nbsp;{{rule.description}}</div>
                     </div>
@@ -51,30 +55,32 @@
                       </svg>
                     </div>
                     <div >
-                      <span onclick="show_yara({{rule.id}})" style="font-size:12;"> Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
+                      <span onclick="show_yara({{rule.id}})" style="padding-left:20px;font-size:12;">Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
                     </div>
                   </div>
-                </div>
-            </div>
+                </li>
           {% endfor %}
         {% else %}
         <span> You haven't created any yara rules yet!</span>
         {% endif %}
+        </div>
+          </ul>
         <hr>
         <button id="btn_toggle" class="btn-primary" onclick="new_rule()">Add New Rule</button>&nbsp;&nbsp;
-        <button id="btn_toggle" class="btn-primary">Run Retrohunt</button>&nbsp;&nbsp;
 
         </div>
         <div class="tab-pane fade show" id="community">
           <br>
+          <div class="card d-flex">
+            <div class="card-header bg-primary d-flex justify-content-between align-items-center">
           <p>Community Detections:</p>
+          </div>
+          <ul class="yara-list list-group">
           {% if community_rules %}
             {% for rule in community_rules %}
-              <div class="row" >
-                  <div class="container">
-                    <div class="row detection dflex">
-                      <div style="border-right: 1px solid;">
-                        <div class="custom-control custom-switch">
+            <li class="list-group-item">
+                <div class="detection dflex">
+                    <div class="custom-control custom-switch">
                           {% if rule.enabled %}
                           <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled checked="">
                           <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
@@ -82,7 +88,6 @@
                           <input type="checkbox" class="custom-control-input" onclick="enable_rule({{rule.id}});"id="community_ruleSwitch_{{rule.id}}" disabled>
                           <label class="custom-control-label" for="community_ruleSwitch_{{rule.id}}">{{rule.name}}</label>&nbsp;
                           {% endif %}
-                        </div>
                       </div>
                       <div onclick="read_modal({{rule.id}})">
                       <div class="detection_desc">&nbsp;{{rule.description}}</div>
@@ -97,13 +102,22 @@
                         <span onclick="show_yara({{rule.id}})" style="font-size:12;">Hits: <b style="padding-left:3px;">{{rule.hits|length}}</b></span>
                       </div>
                     </div>
-                  </div>
-              </div>
 
+            </li>
             {% endfor %}
           {% endif %}
+          </ul>
+          </div>
         </div>
-    </div>
+        <div class="tab-pane fade show" id="retro">
+              <br>
+              This page is still in development, stay tuned for more!
+              <hr>
+              <br>
+              <button class="btn-primary">Run Retrohunt</button>&nbsp;&nbsp;
+
+            </div>
+        </div>
 <hr>
 {% if community_rules %}
   {% for rule in community_rules%}

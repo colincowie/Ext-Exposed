@@ -2,11 +2,13 @@
 .filter_match{
   color:green;
 }
+.yara-list li {
+  padding:0px;
+  min-height: 25px;
+}
 .detection{
-  border: 1px solid;
-  height: 40px;
   align-items: center;
-  padding: 5px;
+  padding: 10px;
   display: flex;
 }
 .content-row:hover{

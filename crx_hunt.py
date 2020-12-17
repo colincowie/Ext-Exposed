@@ -15,7 +15,7 @@ from ext_yara import EXT_yara, yara_run
 app = Flask(__name__)
 es = Elasticsearch()
 r = redis.Redis()
-q = Queue(connection=r)
+q = Queue(connection=r, default_timeout=1800)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
 app.secret_key = "changethiskey1337"

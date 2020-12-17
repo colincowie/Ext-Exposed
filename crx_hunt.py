@@ -1,7 +1,7 @@
-import re, os, uuid, json, time, redis, hashlib, argparse, requests
-import yara
+import re, os, uuid, json, time, redis, hashlib, argparse, requests, yara, urllib
 from rq import Queue
 from rq.job import Job
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
@@ -745,7 +745,23 @@ def check_ext_webstore():
         if id_check.status_code == 204:
             return "False"
         elif id_check.ok:
-            return "True"
+            ext_page = requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id)
+            # set up soup for some parsing
+            soup = BeautifulSoup(ext_page.content,features="lxml")
+            # Parse the <meta> tag for the exact number, remove junk characters and round it.
+            download_tag = soup.find(itemprop="interactionCount")
+            if download_tag is not None:
+                download_tag = download_tag.get("content")
+                download_tag = download_tag.rstrip()
+                download_count = round(float(download_tag.rsplit(':',1)[1].replace(',','').replace('+','').replace('.','')))
+            else:
+                download_count = 0
+            print("[*] Downloads for "+ext_id+" : "+str(download_count))
+            if download_count > 30000:
+                return "True"
+            else:
+                print("[-] Out of scope")
+                return "False"
         else:
             return "False"
 

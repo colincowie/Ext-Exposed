@@ -97,7 +97,10 @@ class EXT_Analyze():
                     print("No perms found ")
                     perms =  None
                 else:
-                    perms = data['permissions']
+                    try:
+                        perms = data['permissions']
+                    except:
+                        perms = []
                 # Get default icon path
         return perms
     # to do: user
@@ -231,7 +234,11 @@ def static_run(ext_scan, ext_id, name, scanlog_id):
                 try:
                     es.update(index='crx',body=body,id=hit['_id'])
                 except:
-                    pass
+                    body['permissions'] = []
+                    try:
+                        es.update(index='crx',body=body,id=hit['_id'])
+                    except:
+                        pass
     except:
         pass
     try:

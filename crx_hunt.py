@@ -528,14 +528,13 @@ def retrohunt():
             rule_id = request.form['rule_selected']
             r = DetectionRule.query.filter_by(id=rule_id).first()
             rule = [str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)]
-            hunt_id = uuid.uuid4()
+
             yaralog = {
                 'owner' : rule[4],
                 'rule_name' : rule[0],
                 'rule_id' : rule_id,
                 'rule_color' : rule[3],
-                'progress' : '0',
-                'hunt_id' : hunt_id
+                'progress' : '0'
             }
             # Check for options:
             try:
@@ -552,16 +551,18 @@ def retrohunt():
             if file_scan:
                 new_log = es.index(index='retro_log', body=yaralog)
                 file_job = q.enqueue(retrohunt_run, rule, 'files', new_log['_id'], result_ttl=6000)
+                hunt_id = uuid.uuid4()
                 update_body = {
-                    "doc": {'time':file_job.enqueued_at,'type':'files'}
+                    "doc": {'hunt_id':hunt_id, 'time':file_job.enqueued_at,'type':'files'}
                 }
                 es.update(index='retro_log',id=new_log['_id'], body=update_body)
 
             if networkdata_scan:
                 new_log = es.index(index='retro_log', body=yaralog)
                 dyn_job = q.enqueue(retrohunt_run, rule, 'network', new_log['_id'], result_ttl=6000)
+                hunt_id = uuid.uuid4()
                 update_body = {
-                    "doc": {'time':dyn_job.enqueued_at,'type':'network'}
+                    "doc": {'hunt_id':hunt_id, 'time':dyn_job.enqueued_at,'type':'network'}
                 }
                 es.update(index='retro_log',id=new_log['_id'], body=update_body)
 

@@ -10,7 +10,7 @@ from flask import Flask, flash, redirect, render_template, request, session ,url
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run
-from ext_yara import EXT_yara, yara_run
+from ext_yara import EXT_yara, yara_run, retrohunt_run
 
 app = Flask(__name__)
 es = Elasticsearch()
@@ -407,11 +407,11 @@ def status():
         else:
             es_status = True
             if es.indices.exists(index="crx"):
-                res = es.search(index="crx", q="*", size=1000,sort="'timestamp':{'order':'desc'}")
+                res = es.search(index="crx", q="*", size=10000,sort="'timestamp':{'order':'desc'}")
                 es_total=res['hits']['total']['value']
             else:
                 es_total=0
-            scans = es.search(index="scan_log", q="*", size=1000,sort="'timestamp':{'order':'desc'}")
+            scans = es.search(index="scan_log", q="*", size=10000,sort="'timestamp':{'order':'desc'}")
             scan_results = scans['hits']['hits']
 
         disk_total = len(next(os.walk('static/output'))[1])
@@ -501,15 +501,71 @@ def detections():
                     dup_checks.append(tag['_source'])
 
 
-            print(ext_matches)
 
             rule.hits = ext_matches
             db.session.commit()
         user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
         community_rules = DetectionRule.query.filter_by(global_rule=True).all()
+        retro_logs = []
+        # Get retro hunts
+        retro_hunts = es.search(index="retro_log", q="*", size=10000,sort="'timestamp':{'order':'desc'}")
+        for hunt in retro_hunts['hits']['hits']:
+            if hunt['_source']['owner']==session["username"]:
+                retro_logs.append(hunt['_source'])
 
-        return render_template('yara.html',es_status=es_status, user_rules=user_rules, community_rules=community_rules)
+        return render_template('yara.html',es_status=es_status, retrohunts=retro_logs, user_rules=user_rules, community_rules=community_rules)
 
+@app.route('/yara/retrohunt', methods=['POST'])
+def retrohunt():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        try:
+            es.indices.create(index='retro_log')
+        except:
+            pass
+        if request.form['rule_selected']:
+            rule_id = request.form['rule_selected']
+            r = DetectionRule.query.filter_by(id=rule_id).first()
+            rule = [str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)]
+            hunt_id = uuid.uuid4()
+            yaralog = {
+                'owner' : rule[4],
+                'rule_name' : rule[0],
+                'rule_id' : rule_id,
+                'rule_color' : rule[3],
+                'progress' : '0',
+                'hunt_id' : hunt_id
+            }
+            # Check for options:
+            try:
+                if request.form['yara_files']:
+                    file_scan = True
+            except:
+                file_scan = False
+            try:
+                if request.form['yara_dynamic']:
+                    networkdata_scan = True
+            except:
+                networkdata_scan = False
+            # Create retro hunt progress
+            if file_scan:
+                new_log = es.index(index='retro_log', body=yaralog)
+                file_job = q.enqueue(retrohunt_run, rule, 'files', new_log['_id'], result_ttl=6000)
+                update_body = {
+                    "doc": {'time':file_job.enqueued_at,'type':'files'}
+                }
+                es.update(index='retro_log',id=new_log['_id'], body=update_body)
+
+            if networkdata_scan:
+                new_log = es.index(index='retro_log', body=yaralog)
+                dyn_job = q.enqueue(retrohunt_run, rule, 'network', new_log['_id'], result_ttl=6000)
+                update_body = {
+                    "doc": {'time':dyn_job.enqueued_at,'type':'network'}
+                }
+                es.update(index='retro_log',id=new_log['_id'], body=update_body)
+
+        return redirect(url_for('detections'))
 @app.route('/yara/toggle', methods=['POST'])
 def update_enabled():
     if not session.get('logged_in'):

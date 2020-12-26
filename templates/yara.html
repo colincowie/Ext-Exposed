@@ -13,7 +13,7 @@
             <a href="#community" class="nav-link" data-toggle="tab">Community Detections</a>
         </li>
         <li class="nav-item">
-            <a href="#retro" class="nav-link" data-toggle="tab">Retrohunt</a>
+            <a href="#retro" class="nav-link" onclick="clean_page();" data-toggle="tab">Retrohunt</a>
         </li>
 
     </ul>
@@ -111,10 +111,87 @@
         </div>
         <div class="tab-pane fade show" id="retro">
               <br>
-              This page is still in development, stay tuned for more!
-              <hr>
+              <button onclick="show_modal('retro');"class="btn-primary">Run Retrohunt</button>&nbsp;&nbsp;
+            <hr>
+            <div class="modal fade" id="rule_retro">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Setup Retrohunt</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <form action="{{ url_for('retrohunt') }}" method="post">
+                  <div class="modal-body">
+                      Select Yara Rule:
+                      <div class="form-group">
+                        <select name="rule_selected" class="custom-select">
+                          {% if user_rules %}
+                            {% for rule in user_rules%}
+                                <option  id="rule_selected" value="{{rule.id}}">{{rule.name}} - {{rule.description}}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                        <br>
+                          <div class="custom-control custom-checkbox">
+                            <input name="yara_files" type="checkbox" class="custom-control-input" id="yara_files" checked="">
+                            <label class="custom-control-label" for="yara_files">Scan extension files</label>
+                          </div>
+                          <div class="custom-control custom-checkbox">
+                            <input name="yara_dynamic" type="checkbox" class="custom-control-input" id="yara_dynamic" >
+                            <label class="custom-control-label" for="yara_dynamic">Scan dynamic analysis data</label>
+                          </div>
+                        </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Run Scan</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  </div>
+                </form>
+
+                </div>
+              </div>
+            </div>
+            {% if retrohunts %}
+            <table id="retro_table" class="table table-hover" >
+              <thead class="table-primary">
+              <th scope="col">Progress</th>
+              <th scope="col">Type</th>
+              <th scope="col">Name</th>
+              <th scope="col">Owner</th>
+              <th scope="col">Start Time</th>
+              <th scope="col">Hits</th>
+              </thead>
+            <tbody>
+            </tr>
+            {% for retrohunt in retrohunts %}
+            <tr onclick="show_retro_hunt('{{retrohunt.hunt_id}}');" class="table-dark row_extid table">
+              <td scope="row">{{retrohunt['progress']}}%</td>
+              <td scope="row">  {% if retrohunt['type'] == 'files' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-file-binary" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M4 0h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H4z"/>
+                  <path d="M5.526 13.09c.976 0 1.524-.79 1.524-2.205 0-1.412-.548-2.203-1.524-2.203-.978 0-1.526.79-1.526 2.203 0 1.415.548 2.206 1.526 2.206zm-.832-2.205c0-1.05.29-1.612.832-1.612.358 0 .607.247.733.721L4.7 11.137a6.749 6.749 0 0 1-.006-.252zm.832 1.614c-.36 0-.606-.246-.732-.718l1.556-1.145c.003.079.005.164.005.249 0 1.052-.29 1.614-.829 1.614zm5.329.501v-.595H9.73V8.772h-.69l-1.19.786v.688L8.986 9.5h.05v2.906h-1.18V13h3z"/>
+                </svg><span style="padding-left:5px; font-size:11px;">Extension Files</span>
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-file-arrow-down" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M4 0h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H4z"/>
+                  <path fill-rule="evenodd" d="M8 5a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5A.5.5 0 0 1 8 5z"/>
+                </svg><span style="padding-left:5px; font-size:11px;">Network Data</span>
+                {% endif %}
+                 </td>
+              <td style="color:{{retrohunt['rule_color']}}" scope="row">{{retrohunt['rule_name']}}</td>
+              <td scope="row">{{retrohunt['owner']}}</td>
+              <td scope="row">{{retrohunt['time']}}</td>
+              <td scope="row">{{retrohunt['hits']|length}}</td>
+            </tr>
+            {% endfor %}
+
+            </tbody>
+            </table>
+
+            {% endif %}
               <br>
-              <button class="btn-primary">Run Retrohunt</button>&nbsp;&nbsp;
 
             </div>
         </div>
@@ -301,9 +378,56 @@ rule example_rule
     </div>
   </div>
 </div>
+{% for retrohunt in retrohunts %}
+<div class="modal fade" id="{{retrohunt.hunt_id}}">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Retrohunt Results</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Rule: <span style="color:{{retrohunt.rule_color}};">{{retrohunt.rule_name}}</span></p>
+        <p>Progress: {{retrohunt.progress}}%</p>
+        <p>Type: {{retrohunt.type}}</p>
+        <table class="table table-hover" >
+          <thead class="table-primary">
+            <th>Extension ID</th>
+            <th>Matches</th>
+          </thead>
+          <tbody>
+            {% for result in retrohunt.hits %}
+            <tr onclick="window.open('/report/{{result[0]}}')" class="table-dark">
+              <td>{{result[0]}}</td>
+              <td>{{result[1]|length}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
 
 
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}
 <script type="text/javascript">
+  $(document).ready(function () {
+    $('#retro_table').DataTable( {
+        "order": [[ 4, "desc" ]],
+        "language": {
+          "emptyTable": "No recently ran retrohunts available"
+        }
+    } );
+    $('.dataTables_length').addClass('bs-select');
+});
   function enable_rule(rule_id){
     switch_id = '#ruleSwitch_'+rule_id
     if($(switch_id)[0].checked == true){
@@ -345,6 +469,17 @@ rule example_rule
   function show_modal(rule_id) {
     modal_id = '#rule_'+rule_id
     $(modal_id).modal('show');
+  }
+  function show_retro_hunt(hunt_id){
+    console.log('[*] '+hunt_id);
+    modal_id = '#'+hunt_id;
+    $(modal_id).modal('show');
+  }
+  function clean_page(){
+    var all = document.getElementsByClassName('yara_matches');
+    for (var i = 0; i < all.length; i++) {
+      all[i].style.display = "none";
+    }
   }
   function show_yara(rule_id) {
     var all = document.getElementsByClassName('yara_matches');

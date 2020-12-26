@@ -157,6 +157,7 @@ def retrohunt_run(rule, type, es_id):
                             print(e)
 
             progress = (index_counter / scan_length) * 100
+            progress = '{0:.2f}'.format(progress)
             retro_body = {
                 "doc": {'progress':progress,'hits':matches}
             }

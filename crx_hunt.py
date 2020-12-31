@@ -566,7 +566,7 @@ def retrohunt():
                 }
                 es.update(index='retro_log',id=new_log['_id'], body=update_body)
 
-        return redirect(url_for('detections'))
+        return redirect(url_for('detections')+'#retro')
 @app.route('/yara/toggle', methods=['POST'])
 def update_enabled():
     if not session.get('logged_in'):

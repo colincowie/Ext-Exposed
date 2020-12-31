@@ -5,12 +5,12 @@
 <h1>Detection Rules</h1>
 <hr>
 <div class="bs-example">
-    <ul  class="nav nav-tabs">
+    <ul  class="nav nav-tabs" id="myTabs">
         <li class="nav-item">
-            <a href="#mine" class="nav-link active" data-toggle="tab">My Detection Rules </a>
+            <a href="#mine" class="nav-link active" onclick="clean_page();" data-toggle="tab">My Detection Rules </a>
         </li>
         <li class="nav-item">
-            <a href="#community" class="nav-link" data-toggle="tab">Community Detections</a>
+            <a href="#community" class="nav-link" onclick="clean_page();" data-toggle="tab">Community Detections</a>
         </li>
         <li class="nav-item">
             <a href="#retro" class="nav-link" onclick="clean_page();" data-toggle="tab">Retrohunt</a>
@@ -379,44 +379,31 @@ rule example_rule
   </div>
 </div>
 {% for retrohunt in retrohunts %}
-<div class="modal fade" id="{{retrohunt.hunt_id}}">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Retrohunt Results</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>Rule: <span style="color:{{retrohunt.rule_color}};">{{retrohunt.rule_name}}</span></p>
-        <p>Progress: {{retrohunt.progress}}%</p>
-        <p>Type: {{retrohunt.type}}</p>
-        <table class="table table-hover" >
-          <thead class="table-primary">
-            <th>Extension ID</th>
-            <th>Matches</th>
-          </thead>
-          <tbody>
-            {% for result in retrohunt.hits %}
-            <tr onclick="window.open('/report/{{result[0]}}')" class="table-dark">
-              <td>{{result[0]}}</td>
-              <td>{{result[1]|length}}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-
-        </ul>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
+<div id="table_{{retrohunt.hunt_id}}" class="retro_results row "style="display: none;">
+  <p>Rule: <span style="color:{{retrohunt.rule_color}};">{{retrohunt.rule_name}}</span></p>
+  <p>Progress: {{retrohunt.progress}}%</p>
+  <p>Type: {{retrohunt.type}}</p>
+  <button type="button" class="btn btn-primary" onclick="fetch_retroinfo('{{retrohunt.hunt_id}}');">Fetch Extension Info</button>
+  <table class="table table-hover">
+    <thead>
+    <th scope="col">Extension ID</th>
+    <th scope="col">Name</th>
+    <th scope="col">Users</th>
+    <th scope="col">Matched Files</th>
+    </thead>
+  <tbody>
+  </tr>
+  {% for result in retrohunt.hits %}
+  <tr onclick="window.open('/report/{{result[0]}}')" class="table-dark">
+    <td>{{result[0]}}</td>
+    <td> </td>
+    <td> </td>
+    <td>{{result[1]|length}}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
 </div>
-
 {% endfor %}
 <script type="text/javascript">
   $(document).ready(function () {
@@ -427,6 +414,9 @@ rule example_rule
         }
     } );
     $('.dataTables_length').addClass('bs-select');
+     if (window.location.href.indexOf("#retro") > -1) {
+       $('#myTabs a[href="#retro"]').tab('show');
+     }
 });
   function enable_rule(rule_id){
     switch_id = '#ruleSwitch_'+rule_id
@@ -470,13 +460,44 @@ rule example_rule
     modal_id = '#rule_'+rule_id
     $(modal_id).modal('show');
   }
+  function fetch_retroinfo(hunt_id){
+    var modal_id = 'table_'+hunt_id;
+    var x = document.getElementById(modal_id);
+    var rows = x.getElementsByTagName('td');
+    for (var i = 0; i < rows.length; i+=4) {
+      console.log(rows[i].innerText);
+      var response = $.ajax({
+        url: "/api/"+rows[i].innerText,
+        method: "GET",
+        dataType: "json",
+        async: false,
+        success: function (data) {
+          if(data != "False"){
+            console.log('Done with data fetch! ');
+             rows[i+1].innerText=data.name;
+             rows[i+2].innerText=data.users;
+           }
+        }
+      });
+    }
+  }
+
   function show_retro_hunt(hunt_id){
-    console.log('[*] '+hunt_id);
-    modal_id = '#'+hunt_id;
-    $(modal_id).modal('show');
+    clean_page()
+    modal_id = 'table_'+hunt_id;
+    var x = document.getElementById(modal_id);
+      if (x.style.display === "none") {
+        x.style.display = "inline";
+      } else {
+        x.style.display = "none";
+      }
   }
   function clean_page(){
     var all = document.getElementsByClassName('yara_matches');
+    for (var i = 0; i < all.length; i++) {
+      all[i].style.display = "none";
+    }
+    var all = document.getElementsByClassName('retro_results');
     for (var i = 0; i < all.length; i++) {
       all[i].style.display = "none";
     }

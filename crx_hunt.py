@@ -390,8 +390,20 @@ def report(ext):
                     #print(tag['_source']['rule_name'])
                     #print(tag['_source']['tag_color'])
                     tags.append([tag['_source']['rule_name'],tag['_source']['tag_color'],tag['_source']['hits']])
-                print(tags)
-                return render_template('report.html',whitelist=whitelist_domains,icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
+                # Parse the extension id from url
+                id_check = requests.get("https://clients2.google.com/service/update2/crx?response=redirect&os=win&arch=x86-64&os_arch=x86-64&nacl_arch=x86-64&prod=chromecrx&prodchannel=unknown&prodversion=81.0.4044.138&acceptformat=crx2,crx3&x=id%3D" + hit['_source']['ext_id'] + "%26uc", allow_redirects=True)
+                webstore_status = "error"
+                if id_check.status_code == 404:
+                    print("[-] ext id is 404")
+                    webstore_status = "Offline"
+                if id_check.status_code == 204:
+                    webstore_status = "Download Unavailable"
+                elif id_check.ok:
+                    webstore_status = "Online"
+
+
+
+                return render_template('report.html',webstore_status=webstore_status,whitelist=whitelist_domains,icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
         return render_template('404.html')
 
 @app.route('/status')

@@ -18,6 +18,20 @@
               <span>ID: <label id="ext_id">{{id}}</label></span>
             </div>
         </div>
+        <div class="col">
+          Webstore Status:
+          <br>
+          <a onclick="window.location.href='https://chrome.google.com/webstore/detail/{{name}}/{{id}}';" href="https://chrome.google.com/webstore/detail/{{name}}/{{id}}">
+          {% if webstore_status == 'Online'%}
+          <span class="badge badge-success">{{webstore_status}}</span>
+          {% elif webstore_status == 'Offline'%}
+          <span class="badge badge-danger">{{webstore_status}}</span>
+          {% else %}
+          <span class="badge badge-warning">{{webstore_status}}</span>
+          {% endif %}
+          </a>
+
+        </div>
         <div class="col align-right">
           Yara Detections:<br>
           {% for tag in tags %}

@@ -1,7 +1,7 @@
-import re, os, uuid, json, time, redis, hashlib, argparse, requests
-import yara
+import re, os, uuid, json, time, redis, hashlib, argparse, requests, yara, urllib
 from rq import Queue
 from rq.job import Job
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
@@ -10,12 +10,12 @@ from flask import Flask, flash, redirect, render_template, request, session ,url
 # import my python scripts for extensions
 from ext_sandbox import EXT_Sandbox, sandbox_run
 from ext_analyze import EXT_Analyze, static_run
-from ext_yara import EXT_yara, yara_run
+from ext_yara import EXT_yara, yara_run, retrohunt_run
 
 app = Flask(__name__)
 es = Elasticsearch()
 r = redis.Redis()
-q = Queue(connection=r)
+q = Queue(connection=r, default_timeout=1800)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
 app.secret_key = "changethiskey1337"
@@ -407,11 +407,11 @@ def status():
         else:
             es_status = True
             if es.indices.exists(index="crx"):
-                res = es.search(index="crx", q="*", size=100)
+                res = es.search(index="crx", q="*", size=10000,sort="'timestamp':{'order':'desc'}")
                 es_total=res['hits']['total']['value']
             else:
                 es_total=0
-            scans = es.search(index="scan_log", q="*",size=100)
+            scans = es.search(index="scan_log", q="*", size=10000,sort="'timestamp':{'order':'desc'}")
             scan_results = scans['hits']['hits']
 
         disk_total = len(next(os.walk('static/output'))[1])
@@ -470,21 +470,103 @@ def detections():
         # Update detection hits
         for rule in user_rules:
             ext_matches = []
-            tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}})
+            dup_checks = []
+            tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}},size=3000)
             for tag in tag_res['hits']['hits']:
-                ext_matches.append(tag['_source']['ext_id'])
+                if tag['_source'] not in dup_checks:
+                    # query crx index for users and downloaders
+                    search_obj = {'query': {'match': {'ext_id': tag['_source']['ext_id']}}}
+                    ext_res = es.search(index="crx", body=search_obj)
+                    crx_data = ""
+                    for hit in ext_res['hits']['hits']:
+                        crx_data = hit['_source']
+                    ext_matches.append([tag['_source'],crx_data])
+                    dup_checks.append(tag['_source'])
+
             rule.hits = ext_matches
             db.session.commit()
         for rule in community_rules:
             ext_matches = []
-            tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}})
+            dup_checks = []
+            tag_res = es.search(index="yara_hits", body={'query': {'match': {'rule_id': rule.id}}},size=3000)
             for tag in tag_res['hits']['hits']:
-                ext_matches.append(tag['_source']['ext_id'])
+                if tag['_source'] not in dup_checks:
+                    # query crx index for users and downloaders
+                    search_obj = {'query': {'match': {'ext_id': tag['_source']['ext_id']}}}
+                    ext_res = es.search(index="crx", body=search_obj)
+                    crx_data = ""
+                    for hit in ext_res['hits']['hits']:
+                        crx_data = hit['_source']
+                    ext_matches.append([tag['_source'],crx_data])
+                    dup_checks.append(tag['_source'])
+
+
+
             rule.hits = ext_matches
             db.session.commit()
+        user_rules = DetectionRule.query.filter_by(owner=session["username"]).all()
+        community_rules = DetectionRule.query.filter_by(global_rule=True).all()
+        retro_logs = []
+        # Get retro hunts
+        retro_hunts = es.search(index="retro_log", q="*", size=10000,sort="'timestamp':{'order':'desc'}")
+        for hunt in retro_hunts['hits']['hits']:
+            if hunt['_source']['owner']==session["username"]:
+                retro_logs.append(hunt['_source'])
 
-        return render_template('yara.html',es_status=es_status, user_rules=user_rules, community_rules=community_rules)
+        return render_template('yara.html',es_status=es_status, retrohunts=retro_logs, user_rules=user_rules, community_rules=community_rules)
 
+@app.route('/yara/retrohunt', methods=['POST'])
+def retrohunt():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        try:
+            es.indices.create(index='retro_log')
+        except:
+            pass
+        if request.form['rule_selected']:
+            rule_id = request.form['rule_selected']
+            r = DetectionRule.query.filter_by(id=rule_id).first()
+            rule = [str(r.name),str(r.yara),str(r.id),str(r.tag_color),str(r.owner)]
+
+            yaralog = {
+                'owner' : rule[4],
+                'rule_name' : rule[0],
+                'rule_id' : rule_id,
+                'rule_color' : rule[3],
+                'progress' : '0'
+            }
+            # Check for options:
+            try:
+                if request.form['yara_files']:
+                    file_scan = True
+            except:
+                file_scan = False
+            try:
+                if request.form['yara_dynamic']:
+                    networkdata_scan = True
+            except:
+                networkdata_scan = False
+            # Create retro hunt progress
+            if file_scan:
+                new_log = es.index(index='retro_log', body=yaralog)
+                file_job = q.enqueue(retrohunt_run, rule, 'files', new_log['_id'], result_ttl=6000)
+                hunt_id = uuid.uuid4()
+                update_body = {
+                    "doc": {'hunt_id':hunt_id, 'time':file_job.enqueued_at,'type':'files'}
+                }
+                es.update(index='retro_log',id=new_log['_id'], body=update_body)
+
+            if networkdata_scan:
+                new_log = es.index(index='retro_log', body=yaralog)
+                dyn_job = q.enqueue(retrohunt_run, rule, 'network', new_log['_id'], result_ttl=6000)
+                hunt_id = uuid.uuid4()
+                update_body = {
+                    "doc": {'hunt_id':hunt_id, 'time':dyn_job.enqueued_at,'type':'network'}
+                }
+                es.update(index='retro_log',id=new_log['_id'], body=update_body)
+
+        return redirect(url_for('detections')+'#retro')
 @app.route('/yara/toggle', methods=['POST'])
 def update_enabled():
     if not session.get('logged_in'):
@@ -503,7 +585,6 @@ def update_enabled():
         return "done"
 
 @app.route('/yara/update', methods=['POST'])
-
 def yara_update():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -596,7 +677,6 @@ def bounty():
         else:
             return render_template('404.html')
 
-
 @app.route('/ext_file', methods=['POST'])
 def file_read():
     if not session.get('logged_in'):
@@ -667,7 +747,7 @@ def sandbox_download(ext_id, uuid):
             filename=uuid+'.json'
             return Response(json.dumps(report['_source'],indent=4), mimetype='text/json')
 
-# Get extID from request.form['line']
+# Use regex to get extID from request form pram 'line'
 @app.route('/check/extid', methods=['POST'])
 def check_extid():
     if not session.get('logged_in'):
@@ -686,6 +766,18 @@ def check_extid():
         except:
             return "False"
 
+# Get ext information from crx index
+# Check if ext is in platform
+# ! WARNING ! NO AUTH NEEDED
+@app.route('/api/<ext_id>', methods=['GET'])
+def check_ext_api(ext_id):
+    print("checking: "+ext_id)
+    search_obj = {'query': {'match': {'ext_id': ext_id}}}
+    ext_res = es.search(index="crx", body=search_obj)
+    for hit in ext_res['hits']['hits']:
+        if ext_id == hit['_source']['ext_id']:
+            return hit['_source']
+    return "False"
 # ! WARNING ! NO AUTH NEEDED
 @app.route('/check/ext', methods=['POST'])
 def check_ext():
@@ -697,8 +789,8 @@ def check_ext():
             return "True"
     return "False"
 
-# ! WARNING ! NO AUTH NEEDED
 # Get webstore status
+# ! WARNING ! NO AUTH NEEDED
 @app.route('/check/ext/status', methods=['POST'])
 def check_ext_webstore():
         ext_id = request.form['ext_id']
@@ -710,7 +802,23 @@ def check_ext_webstore():
         if id_check.status_code == 204:
             return "False"
         elif id_check.ok:
-            return "True"
+            ext_page = requests.get("https://chrome.google.com/webstore/detail/z/"+ext_id)
+            # set up soup for some parsing
+            soup = BeautifulSoup(ext_page.content,features="lxml")
+            # Parse the <meta> tag for the exact number, remove junk characters and round it.
+            download_tag = soup.find(itemprop="interactionCount")
+            if download_tag is not None:
+                download_tag = download_tag.get("content")
+                download_tag = download_tag.rstrip()
+                download_count = round(float(download_tag.rsplit(':',1)[1].replace(',','').replace('+','').replace('.','')))
+            else:
+                download_count = 0
+            print("[*] Downloads for "+ext_id+" : "+str(download_count))
+            if download_count > 30000:
+                return "True"
+            else:
+                print("[-] Out of scope")
+                return "False"
         else:
             return "False"
 

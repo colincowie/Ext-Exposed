@@ -3,6 +3,8 @@ from rq import Queue
 from rq.job import Job
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from elasticsearch_dsl import Search
+from elasticsearch_dsl import connections
 from flask_sqlalchemy import SQLAlchemy
 from elasticsearch import Elasticsearch
 from sqlalchemy.ext.declarative import declarative_base
@@ -688,11 +690,18 @@ def bounty():
             # Fetch top url and ip info
             all_urls = []
             print("[!] Fetching top domain info")
-            sandbox_data = es.search(index="sandbox_data", q="*", size=10000,timeout="240s")
-            for scan_data in sandbox_data['hits']['hits']:
-                ext_id = scan_data['_source']['ext_id']
+            connections.create_connection(hosts=['localhost'])
+            s = Search(index="sandbox_data")
+            response = s.scan()
+
+
+    # print(hit)
+            #sandbox_data = es.search(index="sandbox_data", q="*", size=10000,timeout="240s")
+            for scan_data in response:
+                scan_data = scan_data.to_dict()
+                ext_id = scan_data['ext_id']
                 try:
-                    for url_data in scan_data['_source']['urls']['traffic']:
+                    for url_data in scan_data['urls']['traffic']:
                         try:
                             matched = False
                             for url in all_urls:

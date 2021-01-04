@@ -1,4 +1,4 @@
-11# @th3_protoCOL
+# @th3_protoCOL
 import os, sys, time, asyncio, threading, requests, zipfile, json
 from selenium import webdriver
 from multiprocessing import Process

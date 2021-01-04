@@ -6,10 +6,7 @@
 <div class="bs-example">
     <ul  class="nav nav-tabs">
         <li class="nav-item">
-            <a href="#bulk" class="nav-link active" data-toggle="tab">Bulk Importer</a>
-        </li>
-        <li class="nav-item">
-            <a href="#domains" class="nav-link" data-toggle="tab">Top Domains</a>
+            <a href="#domains" class="nav-link active" data-toggle="tab">Top Domains</a>
         </li>
         <li class="nav-item">
             <a href="#ips" class="nav-link" data-toggle="tab">Top IPs</a>
@@ -17,9 +14,35 @@
         <li class="nav-item">
             <a href="#scope" class="nav-link" data-toggle="tab">Scope Watch</a>
         </li>
+        <li class="nav-item">
+            <a href="#bulk" class="nav-link" data-toggle="tab">Bulk Importer</a>
+        </li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="bulk">
+        <div class="tab-pane fade show active" id="domains">
+          <br>
+          <table id="domain_table" class="table-dark">
+            <thead class="table-primary">
+              <th>Domain</th>
+              <th>Occurrences</th>
+              <th>IPs</th>
+              <th>Extensions</th>
+            </thead>
+            {% for domain_info in all_urls %}
+            <tr class="table-dark">
+              <td>{{domain_info[0]}}</td>
+              <td>{{domain_info[2]}}</td>
+              <td>{{domain_info[1]|count}}</td>
+              <td>{{domain_info[3]|count}}</td>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+        <div class="tab-pane fade show " id="ips">
+        </div>
+        <div class="tab-pane fade show " id="scope">
+        </div>
+        <div class="tab-pane fade show" id="bulk">
           <br>
           <div class="row">
             <div class="col">
@@ -28,7 +51,7 @@
               </form>
             </div>
             <div class="col">
-              Checked: <span id="total_checked">0</span>, Scaned: <span id="total_scanned">0</span>
+              Checked: <span id="total_checked">0</span>, Scanned: <span id="total_scanned">0</span>
             </div>
           </div>
           <br>
@@ -44,12 +67,6 @@
             <tbody>
             </tbody>
           </table>
-        </div>
-        <div class="tab-pane fade show active" id="domains">
-        </div>
-        <div class="tab-pane fade show active" id="ips">
-        </div>
-        <div class="tab-pane fade show active" id="scope">
         </div>
     </div>
 <hr>
@@ -190,5 +207,12 @@
   }
 });
 }
+$('#domain_table').DataTable( {
+    "order": [[ 1, "desc" ]],
+    "language": {
+      "emptyTable": "No domain info available"
+    }
+} );
+$('.dataTables_length').addClass('bs-select');
 </script>
 {% endblock %}

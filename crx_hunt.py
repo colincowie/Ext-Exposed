@@ -685,7 +685,34 @@ def bounty():
         else:
             es_status = True
         if session['username'] == 'admin':
-            return render_template('bounty.html',es_status=es_status,hunter="yes")
+            # Fetch top url and ip info
+            all_urls = []
+            print("[!] Fetching top domain info")
+            sandbox_data = es.search(index="sandbox_data", q="*", size=10000)
+            for scan_data in sandbox_data['hits']['hits']:
+                ext_id = scan_data['_source']['ext_id']
+                try:
+                    for url_data in scan_data['_source']['urls']['traffic']:
+                        try:
+                            matched = False
+                            for url in all_urls:
+                                if url[0] == url_data['server_domain']:
+                                    matched = True
+                                    url[2] = url[2] + 1 # update occurrences
+                                    # check if ip is known with domain
+                                    if url_data['server_ip'] not in url[1]:
+                                        url[1].append(url_data['server_ip'])
+                                    # Check if ext id is known with domain
+                                    if ext_id not in url[3]:
+                                        url[3].append(ext_id)
+                            if not matched:
+                                print(url_data['server_domain'])
+                                all_urls.append([url_data['server_domain'],[url_data['server_ip']],1,[ext_id]])
+                        except Exception as e:
+                            pass
+                except Exception as e:
+                    pass
+            return render_template('bounty.html',es_status=es_status,hunter="yes", all_urls=all_urls)
         else:
             return render_template('404.html')
 

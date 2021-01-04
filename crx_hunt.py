@@ -692,6 +692,7 @@ def bounty():
             print("[!] Fetching top domain info")
             connections.create_connection(hosts=['localhost'])
             s = Search(index="sandbox_data")
+            s.fields(["urls","ext_id"])
             response = s.scan()
 
 

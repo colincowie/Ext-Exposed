@@ -688,7 +688,7 @@ def bounty():
             # Fetch top url and ip info
             all_urls = []
             print("[!] Fetching top domain info")
-            sandbox_data = es.search(index="sandbox_data", q="*", size=10000,timeout="60")
+            sandbox_data = es.search(index="sandbox_data", q="*", size=10000,timeout="240s")
             for scan_data in sandbox_data['hits']['hits']:
                 ext_id = scan_data['_source']['ext_id']
                 try:

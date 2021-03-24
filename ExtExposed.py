@@ -10,28 +10,28 @@ from elasticsearch import Elasticsearch
 from sqlalchemy.ext.declarative import declarative_base
 from flask import Flask, flash, redirect, render_template, request, session ,url_for, send_from_directory, send_file, Response, make_response
 # import my python scripts for extensions
-from ext_sandbox import EXT_Sandbox, sandbox_run
-from ext_analyze import EXT_Analyze, static_run
-from ext_yara import EXT_yara, yara_run, retrohunt_run
+from ext_tools.ext_sandbox import EXT_Sandbox, sandbox_run
+from ext_tools.ext_analyze import EXT_Analyze, static_run
+from ext_tools.ext_yara import EXT_yara, yara_run, retrohunt_run
+
+Build_Ver = "Alpha"
 
 app = Flask(__name__)
 es = Elasticsearch()
 r = redis.Redis()
 q = Queue(connection=r, default_timeout=1800)
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crxhunt.db'
 app.secret_key = "changethiskey1337"
-
 db = SQLAlchemy(app)
 Base = declarative_base()
 Base.query = db.session.query_property()
 
-Build_Ver = "Alpha"
 
-class User(db.Model):
+
+class User(db.Model): # Class for user accounts
     """ Create user table"""
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True)
+    username = db.Column(db.String(80), unique=True) # SHA hash
     email = db.Column(db.String(), unique=True)
     password = db.Column(db.String())
 
@@ -40,7 +40,7 @@ class User(db.Model):
         self.password = password
         self.email = email
 
-class DetectionRule(db.Model):
+class DetectionRule(db.Model): # Class for yara detections rules, stores ext hits
     id = db.Column(db.Integer, primary_key=True)
     """ Create detection rules table"""
     yara = db.Column(db.Text)
@@ -62,7 +62,22 @@ class DetectionRule(db.Model):
         self.tag_color = tag_color
 
 
-@app.route('/hunt')
+@app.route('/') # Extension submission page
+def home():
+    #DetectionRule.__table__.drop(db.engine)
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        if not es.ping():
+            es_status = False
+        else:
+            es_status = True
+        if session['username'] == 'admin':
+            return render_template('index.html',es_status=es_status,hunter="yes")
+        else:
+            return render_template('index.html',es_status=es_status)
+
+@app.route('/hunt') # Search page
 def hunt():
     """ Session control"""
     if not session.get('logged_in'):
@@ -76,53 +91,86 @@ def hunt():
             es_status = True
         return render_template("hunt.html",es_status=es_status)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Login Form"""
-    if request.method == 'GET':
+@app.route('/search', methods=['POST']) # Search Function (W.I.P.)
+def search():
+    if not session.get('logged_in'):
         return render_template('login.html')
-
+    elif not es:
+        return "Elasticsearch database error"
     else:
-        name = request.form['username']
-        password = hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
-        user = User.query.filter_by(username=request.form["username"]).first()
-        if user and user.password == password:
-            # Todo: Research how to improve access tokens
-            session['logged_in'] = True
-            session['username'] = name
-            session['email'] = user.email
-            flash('Welcome to Ext Exposed, '+str(name)+'!', "info")
-
+        if not es.ping():
+            flash('Error: The elasticsearch database is not connected.',"danger")
             return redirect(url_for('home'))
         else:
-            return render_template('login.html',message='Invalid Login')
+            es_status = True
+        # Get search query
+        keyword = request.form['hunt_query']
+        keyword = str(keyword)
+        sandbox_search = False
+        exts = []
+        url_data = []
+        search_fields = []
+        if request.form.get("static_urls"):
+            search_fields.append("urls")
+        if request.form.get("ext_names"):
+            search_fields.append("name")
+            search_fields.append("full_name")
+        if request.form.get("ext_ids"):
+            search_fields.append("ext_id")
+        if request.form.get("permissions"):
+            search_fields.append("permissions")
+        if request.form.get("sandbox_urls"):
+            sandbox_search = True
 
-@app.route('/nobotsplz/register/', methods=['GET', 'POST'])
-def register():
-    """Register Form"""
-    if request.method == 'POST':
-        # Create new user with sha256 hashed password
-        new_user = User(
-            username=request.form['username'],
-            password=hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest(),
-            email = request.form['email'],
-            )
-        user = User.query.filter_by(username=request.form["username"]).first()
-        if user:
-            return 'That username is taken.'
-        else:
-            db.session.add(new_user)
-            db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('register.html')
+        if sandbox_search:
+            ext_search = {
+                "query": {
+                    "query_string" : {
+                        "query" : keyword,
+                    }
+                }
 
-@app.route("/logout")
-def logout():
-    """Logout Form"""
-    session['logged_in'] = False
-    return redirect(url_for('home'))
+            }
+            ext_sandbox = es.search(index="sandbox_data", body=ext_search)
+            ext_sandboxs = ext_sandbox['hits']['hits']
+            #print(ext_sandboxs)
+            matched_urls = []
+            for sandbox in ext_sandboxs:
+                ext_id = sandbox['_source']['ext_id']
+                if ext_id not in exts:
+                    for url_line in sandbox['_source']['urls']['traffic']:
+                        try:
+                            if keyword in url_line['url']:
+                                 matched_urls.append(url_line['url'])
+                        except:
+                            pass
+                if ext_id not in exts:
+                    search_obj = {'query': {'match': {'ext_id': ext_id}}}
+                    ext_res = es.search(index="crx", body=search_obj)
+                    for hit in ext_res['hits']['hits']:
+                        if ext_id == hit['_source']['ext_id']:
 
-@app.route('/scan', methods=['POST'])
+                            results = hit['_source']
+                            results['urls'] = matched_urls
+                            url_data.append(results)
+                            exts.append(ext_id)
+
+
+        if search_fields != [] or not sandbox_search:
+            # build search for elasticsearch
+            search_object = { "query": {"multi_match" : {'query':keyword, 'type':'phrase', 'fields':search_fields}}}
+            # query es
+            res = es.search(index="crx", body=search_object,size=1000)
+            for hit in res['hits']['hits']:
+                row = []
+                if hit['_source']['ext_id'] not in exts:
+                    results = hit['_source']
+                    url_data.append(results)
+                    exts.append(hit['_source']['ext_id'])
+
+        return render_template('results.html', url_data=url_data,keyword=keyword,es_status=es_status)
+
+@app.route('/scan', methods=['POST']) # Ext Scan & Analysis Function
 def scan():
         if not es.ping():
             flash('Error: The elasticsearch database is not connected.',"danger")
@@ -250,7 +298,7 @@ def scan():
             print(e)
         return new_jobs
 
-@app.route('/status/<job_id>')
+@app.route('/status/<job_id>') # Check Status of analysis job
 def job_status(job_id):
     job = q.fetch_job(job_id)
     if job is None:
@@ -265,86 +313,7 @@ def job_status(job_id):
             response['message'] = job.exc_info.strip().split('\n')[-1]
     return json.dumps(response)
 
-@app.route('/search', methods=['POST'])
-def search():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    elif not es:
-        return "Elasticsearch database error"
-    else:
-        if not es.ping():
-            flash('Error: The elasticsearch database is not connected.',"danger")
-            return redirect(url_for('home'))
-        else:
-            es_status = True
-        # Get search query
-        keyword = request.form['hunt_query']
-        keyword = str(keyword)
-        sandbox_search = False
-        exts = []
-        url_data = []
-        search_fields = []
-        if request.form.get("static_urls"):
-            search_fields.append("urls")
-        if request.form.get("ext_names"):
-            search_fields.append("name")
-            search_fields.append("full_name")
-        if request.form.get("ext_ids"):
-            search_fields.append("ext_id")
-        if request.form.get("permissions"):
-            search_fields.append("permissions")
-        if request.form.get("sandbox_urls"):
-            sandbox_search = True
-
-        if sandbox_search:
-            ext_search = {
-                "query": {
-                    "query_string" : {
-                        "query" : keyword,
-                    }
-                }
-
-            }
-            ext_sandbox = es.search(index="sandbox_data", body=ext_search)
-            ext_sandboxs = ext_sandbox['hits']['hits']
-            #print(ext_sandboxs)
-            matched_urls = []
-            for sandbox in ext_sandboxs:
-                ext_id = sandbox['_source']['ext_id']
-                if ext_id not in exts:
-                    for url_line in sandbox['_source']['urls']['traffic']:
-                        try:
-                            if keyword in url_line['url']:
-                                 matched_urls.append(url_line['url'])
-                        except:
-                            pass
-                if ext_id not in exts:
-                    search_obj = {'query': {'match': {'ext_id': ext_id}}}
-                    ext_res = es.search(index="crx", body=search_obj)
-                    for hit in ext_res['hits']['hits']:
-                        if ext_id == hit['_source']['ext_id']:
-
-                            results = hit['_source']
-                            results['urls'] = matched_urls
-                            url_data.append(results)
-                            exts.append(ext_id)
-
-
-        if search_fields != [] or not sandbox_search:
-            # build search for elasticsearch
-            search_object = { "query": {"multi_match" : {'query':keyword, 'type':'phrase', 'fields':search_fields}}}
-            # query es
-            res = es.search(index="crx", body=search_object,size=1000)
-            for hit in res['hits']['hits']:
-                row = []
-                if hit['_source']['ext_id'] not in exts:
-                    results = hit['_source']
-                    url_data.append(results)
-                    exts.append(hit['_source']['ext_id'])
-
-        return render_template('results.html', url_data=url_data,keyword=keyword,es_status=es_status)
-
-@app.route('/report/<ext>')
+@app.route('/report/<ext>') # Extension report page
 def report(ext):
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -408,7 +377,7 @@ def report(ext):
                 return render_template('report.html',webstore_status=webstore_status,whitelist=whitelist_domains,icon=hit['_source']['logo'],full_name=hit['_source']['full_name'],name=hit['_source']['name'],id=hit['_source']['ext_id'],users=hit['_source']['users'],urls=hit['_source']['urls'],perms=hit['_source']['permissions'],sandboxs=ext_sandbox,es_status=es_status,tags=tags,tree=make_tree(ext_path))
         return render_template('404.html')
 
-@app.route('/status')
+@app.route('/status') # Platform status page
 def status():
     """Logout Form"""
     if not session.get('logged_in'):
@@ -440,22 +409,7 @@ def status():
         user_count = db.session.execute('select count(id) as c from user').scalar()
         return render_template('status.html', es_status=es_status,user_count=user_count, es_total=es_total,disk_total=disk_total,jobs=job_results, scans=scan_results, ver=Build_Ver)
 
-@app.route('/')
-def home():
-    #DetectionRule.__table__.drop(db.engine)
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        if not es.ping():
-            es_status = False
-        else:
-            es_status = True
-        if session['username'] == 'admin':
-            return render_template('index.html',es_status=es_status,hunter="yes")
-        else:
-            return render_template('index.html',es_status=es_status)
-
-@app.route('/user')
+@app.route('/user') # User Settings page
 def user_page():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -470,7 +424,53 @@ def user_page():
 
     return render_template('user.html',es_status=es_status, user=username, email=email)
 
-@app.route('/yara')
+@app.route('/login', methods=['GET', 'POST']) # Authentication
+def login():
+    """Login Form"""
+    if request.method == 'GET':
+        return render_template('login.html')
+
+    else:
+        name = request.form['username']
+        password = hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
+        user = User.query.filter_by(username=request.form["username"]).first()
+        if user and user.password == password:
+            # Todo: Research how to improve access tokens
+            session['logged_in'] = True
+            session['username'] = name
+            session['email'] = user.email
+            flash('Welcome to Ext Exposed, '+str(name)+'!', "info")
+
+            return redirect(url_for('home'))
+        else:
+            return render_template('login.html',message='Invalid Login')
+
+@app.route("/logout") # Deauthentication
+def logout():
+    """Logout Form"""
+    session['logged_in'] = False
+    return redirect(url_for('home'))
+
+@app.route('/nobotsplz/register/', methods=['GET', 'POST']) # Sign up page
+def register():
+    """Register Form"""
+    if request.method == 'POST':
+        # Create new user with sha256 hashed password
+        new_user = User(
+            username=request.form['username'],
+            password=hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest(),
+            email = request.form['email'],
+            )
+        user = User.query.filter_by(username=request.form["username"]).first()
+        if user:
+            return 'That username is taken.'
+        else:
+            db.session.add(new_user)
+            db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+@app.route('/yara') # Detection Signatures View
 def detections():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -529,7 +529,7 @@ def detections():
 
         return render_template('yara.html',es_status=es_status, retrohunts=retro_logs, user_rules=user_rules, community_rules=community_rules)
 
-@app.route('/yara/retrohunt', methods=['POST'])
+@app.route('/yara/retrohunt', methods=['POST']) # RetroHunt function
 def retrohunt():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -581,7 +581,8 @@ def retrohunt():
                 es.update(index='retro_log',id=new_log['_id'], body=update_body)
 
         return redirect(url_for('detections')+'#retro')
-@app.route('/yara/toggle', methods=['POST'])
+
+@app.route('/yara/toggle', methods=['POST']) # Enable a detection rule
 def update_enabled():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -598,7 +599,7 @@ def update_enabled():
             db.session.commit()
         return "done"
 
-@app.route('/yara/update', methods=['POST'])
+@app.route('/yara/update', methods=['POST']) # Update a detection rule, for community viewing
 def yara_update():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -628,7 +629,7 @@ def yara_update():
 
         return redirect(url_for('detections'))
 
-@app.route('/yara/edit', methods=['POST'])
+@app.route('/yara/edit', methods=['POST']) # Edit a detection rule
 def yara_edit():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -661,7 +662,7 @@ def yara_edit():
 
         return redirect(url_for('detections'))
 
-@app.route('/yara/delete', methods=['POST'])
+@app.route('/yara/delete', methods=['POST']) # Delete a detection rule
 def yara_delete():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -676,7 +677,30 @@ def yara_delete():
                 flash("yara delete error: "+str(e),"danger")
         return redirect(url_for('detections'))
 
-@app.route('/bounty')
+## API Functions ##
+
+@app.route('/ip/<ip>')
+def ip_stats(ip):
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        return render_template('ip.html',ip=ip)
+
+@app.route('/domain/<domain>')
+def domain_stats(domain):
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        return render_template('domain.html',domain=domain)
+
+@app.route('/url/<url>')
+def url_stats(url):
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        return render_template('url.html',url=url)
+
+@app.route('/bounty') # Testing Functions
 def bounty():
     #DetectionRule.__table__.drop(db.engine)
     if not session.get('logged_in'):
@@ -694,7 +718,6 @@ def bounty():
             s = Search(index="sandbox_data")
             s.source(["urls","ext_id"])
             response = s.scan()
-
 
     # print(hit)
             #sandbox_data = es.search(index="sandbox_data", q="*", size=10000,timeout="240s")
@@ -726,7 +749,7 @@ def bounty():
         else:
             return render_template('404.html')
 
-@app.route('/ext_file', methods=['POST'])
+@app.route('/ext_file', methods=['POST']) # View Ext file content
 def file_read():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -749,8 +772,7 @@ def file_read():
             resp.headers['fileType'] = ''
         return resp
 
-# Get static urls from extension
-@app.route('/urls/<ext_id>')
+@app.route('/urls/<ext_id>') # Get static urls from extension
 def urls_download(ext_id):
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -760,8 +782,7 @@ def urls_download(ext_id):
         file = 'static_urls.csv'
         return send_from_directory(directory=dir,filename=file)
 
-# Get json of dynamic analysis
-@app.route('/sandboxes/<ext_id>/<uuid>')
+@app.route('/sandboxes/<ext_id>/<uuid>') # Get json of dynamic analysis
 def sandbox_download(ext_id, uuid):
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -796,8 +817,7 @@ def sandbox_download(ext_id, uuid):
             filename=uuid+'.json'
             return Response(json.dumps(report['_source'],indent=4), mimetype='text/json')
 
-# Use regex to get extID from request form pram 'line'
-@app.route('/check/extid', methods=['POST'])
+@app.route('/check/extid', methods=['POST']) # Use regex to get extID from request form pram 'line'
 def check_extid():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -815,10 +835,10 @@ def check_extid():
         except:
             return "False"
 
-# Get ext information from crx index
+# ! WARNING ! NO AUTH NEEDED for these functions
 # Check if ext is in platform
-# ! WARNING ! NO AUTH NEEDED
-@app.route('/api/<ext_id>', methods=['GET'])
+
+@app.route('/api/<ext_id>', methods=['GET']) # Get ext information from crx index
 def check_ext_api(ext_id):
     print("checking: "+ext_id)
     search_obj = {'query': {'match': {'ext_id': ext_id}}}
@@ -827,8 +847,8 @@ def check_ext_api(ext_id):
         if ext_id == hit['_source']['ext_id']:
             return hit['_source']
     return "False"
-# ! WARNING ! NO AUTH NEEDED
-@app.route('/check/ext', methods=['POST'])
+
+@app.route('/check/ext', methods=['POST']) # Get ext information from crx index
 def check_ext():
     ext_id = request.form['ext_id']
     search_obj = {'query': {'match': {'ext_id': ext_id}}}
@@ -838,9 +858,7 @@ def check_ext():
             return "True"
     return "False"
 
-# Get webstore status
-# ! WARNING ! NO AUTH NEEDED
-@app.route('/check/ext/status', methods=['POST'])
+@app.route('/check/ext/status', methods=['POST']) # Get webstore status for a ext
 def check_ext_webstore():
         ext_id = request.form['ext_id']
         # Parse the extension id from url
@@ -871,23 +889,22 @@ def check_ext_webstore():
         else:
             return "False"
 
-@app.route('/favicon.ico')
+@app.route('/favicon.ico') # Website Icon
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                           'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
-@app.errorhandler(404)
+@app.errorhandler(404) # Error Page
 def page_not_found(e):
     return render_template('404.html'),444
 
-# Parse script arguments
-def parse_args():
+def parse_args(): # Parse script arguments
     parser = argparse.ArgumentParser(description="Ext Exposed platform ")
     parser.add_argument('-es', help="Load elastic search data",action='store_true', required=False)
     args = parser.parse_args()
     return args
 
-def make_tree(path):
+def make_tree(path): # Function used in sorting of search results
     tree = dict(name=os.path.basename(path), children=[])
     try: lst = os.listdir(path)
     except OSError:
@@ -901,7 +918,7 @@ def make_tree(path):
                 tree['children'].append(dict(name=name))
     return tree
 
-def create_es():
+def create_es(): # Initalize Elasticsearch database (outdated, sorry)
     es = Elasticsearch()
     mapping = {"mapping":{
        "properties":{
